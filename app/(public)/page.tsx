@@ -1,3 +1,4 @@
+import { signUpUser } from '@/actions/actions';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -18,6 +19,7 @@ export default async function Home() {
         <Button variant='outline' asChild>
           <Link href='/contact'>Contact Us</Link>
         </Button>
+        <Button onClick={signUpUser}>Create User</Button>
       </div>
     </div>
   );
