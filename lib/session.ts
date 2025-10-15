@@ -37,6 +37,7 @@ export async function decrypt(
     });
     return payload as SessionPayload;
   } catch (err) {
+    console.error(err);
     return null;
   }
 }
@@ -94,6 +95,7 @@ export async function deleteSession(): Promise<void> {
 export const verifySession = cache(async (): Promise<SessionPayload> => {
   const cookie = (await cookies()).get('session')?.value;
   const session = await decrypt(cookie);
+  console.log('Verified session:', session);
 
   if (!session?.userId) {
     redirect('/login');

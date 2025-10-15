@@ -3,9 +3,15 @@
 import { LoginFormSchema, LoginFormState } from '@/lib/definitions';
 import { createSession, deleteSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
-import z from 'zod';
+import { db } from '@/db/drizzle';
+import { users } from '@/db/schema';
+import { eq } from 'drizzle-orm';
+import bcrypt from 'bcryptjs';
 
-export async function login(state: LoginFormState, formData: FormData) {
+export async function login(
+  state: LoginFormState,
+  formData: FormData,
+): Promise<LoginFormState> {
   const validatedFields = LoginFormSchema.safeParse({
     email: formData.get('email') as string,
     password: formData.get('password') as string,
@@ -13,21 +19,27 @@ export async function login(state: LoginFormState, formData: FormData) {
 
   if (!validatedFields.success) {
     return {
-      errors: z.treeifyError(validatedFields.error).errors,
+      errors: validatedFields.error.flatten().fieldErrors,
     };
   }
 
   const { email, password } = validatedFields.data;
 
-  const user = {};
+  const result = await db.select().from(users).where(eq(users.email, email));
+  const passwordMatches = await bcrypt.compare(
+    password,
+    result[0]?.password || '',
+  );
 
-  if (!user) {
+  if (result.length === 0 || !passwordMatches) {
     return {
       message: 'An error occured while trying to log you in. Please try again.',
     };
   }
 
-  await createSession('', '', '', '');
+  const user = result[0];
+
+  await createSession(user.id, user.email, user.firstName, user.lastName);
 
   redirect('/dashboard');
 }

@@ -1,9 +1,9 @@
+import { logout } from '@/actions/auth';
 import { Button } from '@/components/ui/button';
 import { verifySession } from '@/lib/session';
-import { redirect } from 'next/navigation';
 
 export default async function DashboardPage() {
-  const session = await verifySession();
+  await verifySession();
 
   return (
     <section className='w-full rounded-2xl bg-white p-7'>
@@ -12,7 +12,7 @@ export default async function DashboardPage() {
       </div>
       <div>
         <div className='mt-7 w-full overflow-hidden'>
-          <Button>Sign Out</Button>
+          <Button onClick={logout}>Sign Out</Button>
         </div>
       </div>
     </section>
