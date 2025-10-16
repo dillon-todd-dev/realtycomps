@@ -1,41 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server';
-import {
-  encrypt,
-  decrypt,
-  SESSION_DURATION,
-  SESSION_REFRESH_THRESHOLD,
-} from '@/lib/session';
+import { decrypt } from '@/lib/session';
 
 export async function middleware(req: NextRequest) {
-  // const cookie = req.cookies.get('session')?.value;
-  // const payload = await decrypt(cookie);
+  const session = req.cookies.get('session')?.value;
 
-  // if (!payload) {
-  //   return NextResponse.redirect('/login');
-  // }
+  const isProtectedRoute =
+    req.nextUrl.pathname.startsWith('/dashboard') ||
+    req.nextUrl.pathname.startsWith('/properties') ||
+    req.nextUrl.pathname.startsWith('/investors') ||
+    req.nextUrl.pathname.startsWith('/users');
 
-  // if (payload.expiresAt.getTime() - Date.now() < SESSION_REFRESH_THRESHOLD) {
-  //   const expiresAt = new Date(Date.now() + SESSION_DURATION);
-  //   const refreshedSession = await encrypt({
-  //     ...payload,
-  //     expiresAt,
-  //   });
+  if (isProtectedRoute && !session) {
+    return NextResponse.redirect(new URL('/login', req.url));
+  }
 
-  //   const response = NextResponse.next();
-  //   response.cookies.set('session', refreshedSession, {
-  //     httpOnly: true,
-  //     secure: true,
-  //     expires: expiresAt,
-  //     sameSite: 'lax',
-  //     path: '/',
-  //   });
-
-  //   return response;
-  // }
-
-  return NextResponse.next();
+  if (session) {
+    try {
+      const payload = await decrypt(session);
+      const requestHeaders = new Headers(req.headers);
+      requestHeaders.set('x-user-id', payload.userId);
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    } catch (err) {
+      const response = NextResponse.redirect(new URL('/login', req.url));
+      response.cookies.delete('session');
+      return response;
+    }
+  }
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico|login|register).*)'],
+  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
 };

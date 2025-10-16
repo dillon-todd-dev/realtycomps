@@ -14,9 +14,6 @@ export const SESSION_REFRESH_THRESHOLD = 5 * 60 * 1000; // Refresh if < 5 min le
 
 export type SessionPayload = {
   userId: string;
-  email: string;
-  firstName: string;
-  lastName: string;
   expiresAt: Date;
 };
 
@@ -30,30 +27,17 @@ export async function encrypt(payload: SessionPayload): Promise<string> {
 
 export async function decrypt(
   session: string | undefined = '',
-): Promise<SessionPayload | null> {
-  try {
-    const { payload } = await jwtVerify(session, ENCODED_KEY, {
-      algorithms: ['HS256'],
-    });
-    return payload as SessionPayload;
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
+): Promise<SessionPayload> {
+  const { payload } = await jwtVerify(session, ENCODED_KEY, {
+    algorithms: ['HS256'],
+  });
+  return payload as SessionPayload;
 }
 
-export async function createSession(
-  userId: string,
-  email: string,
-  firstName: string,
-  lastName: string,
-): Promise<void> {
+export async function createSession(userId: string): Promise<void> {
   const expiresAt = new Date(Date.now() + SESSION_DURATION);
   const session = await encrypt({
     userId,
-    email,
-    firstName,
-    lastName,
     expiresAt,
   });
   const cookieStore = await cookies();

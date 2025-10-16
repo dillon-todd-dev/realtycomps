@@ -39,7 +39,7 @@ export async function login(
 
   const user = result[0];
 
-  await createSession(user.id, user.email, user.firstName, user.lastName);
+  await createSession(user.id);
 
   redirect('/dashboard');
 }
