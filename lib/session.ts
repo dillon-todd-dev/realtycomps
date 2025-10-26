@@ -5,6 +5,10 @@ import { cookies } from 'next/headers';
 import { ENV } from '@/lib/env';
 import { cache } from 'react';
 import { redirect } from 'next/navigation';
+import { User } from './types';
+import { db } from '@/db/drizzle';
+import { eq } from 'drizzle-orm';
+import { usersTable } from '@/db/schema';
 
 const SESSION_SECRET = ENV.SESSION_SECRET;
 const ENCODED_KEY = new TextEncoder().encode(SESSION_SECRET);
@@ -78,12 +82,47 @@ export async function deleteSession(): Promise<void> {
 
 export const verifySession = cache(async (): Promise<SessionPayload> => {
   const cookie = (await cookies()).get('session')?.value;
-  const session = await decrypt(cookie);
-  console.log('Verified session:', session);
-
-  if (!session?.userId) {
+  if (!cookie) {
     redirect('/login');
   }
 
-  return session;
+  try {
+    const session = await decrypt(cookie);
+
+    if (!session?.userId) {
+      redirect('/login');
+    }
+
+    if (new Date(session.expiresAt) < new Date()) {
+      redirect('/login');
+    }
+
+    return session;
+  } catch (err) {
+    redirect('/login');
+  }
+});
+
+export const requireUser = cache(async (): Promise<User> => {
+  const session = await verifySession();
+
+  const user = await db.query.usersTable.findFirst({
+    where: eq(usersTable.id, session.userId),
+  });
+
+  if (!user || !user.isActive) {
+    redirect('/login');
+  }
+
+  return user;
+});
+
+export const requireAdmin = cache(async (): Promise<User> => {
+  const user = await requireUser();
+
+  if (user.role !== 'ROLE_ADMIN') {
+    redirect('/dashboard');
+  }
+
+  return user;
 });

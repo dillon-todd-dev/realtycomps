@@ -1,4 +1,3 @@
-// components/users-table.tsx
 'use client';
 
 import { User } from '@/lib/types';

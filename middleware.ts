@@ -1,33 +1,41 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { decrypt } from '@/lib/session';
 
-export async function middleware(req: NextRequest) {
-  const session = req.cookies.get('session')?.value;
+const protectedRoutes = ['/dashboard', '/properties', '/users', '/investors'];
+const authRoutes = ['/login'];
 
-  const isProtectedRoute =
-    req.nextUrl.pathname.startsWith('/dashboard') ||
-    req.nextUrl.pathname.startsWith('/properties') ||
-    req.nextUrl.pathname.startsWith('/investors') ||
-    req.nextUrl.pathname.startsWith('/users');
+export default function middleware(req: NextRequest) {
+  const path = req.nextUrl.pathname;
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    path.startsWith(route),
+  );
+  const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
 
-  if (isProtectedRoute && !session) {
-    return NextResponse.redirect(new URL('/login', req.url));
+  const hasSession = req.cookies.has('session');
+
+  // Redirect to login if accessing protected route without session
+  if (isProtectedRoute && !hasSession) {
+    const url = new URL('/login', req.url);
+    url.searchParams.set('from', path);
+    return NextResponse.redirect(url);
   }
 
-  if (session) {
-    try {
-      const payload = await decrypt(session);
-      const requestHeaders = new Headers(req.headers);
-      requestHeaders.set('x-user-id', payload.userId);
-      return NextResponse.next({ request: { headers: requestHeaders } });
-    } catch (err) {
-      const response = NextResponse.redirect(new URL('/login', req.url));
-      response.cookies.delete('session');
-      return response;
-    }
+  // Redirect to dashboard if accessing auth routes with session
+  if (isAuthRoute && hasSession) {
+    return NextResponse.redirect(new URL('/dashboard', req.url));
   }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|favicon.ico).*)'],
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 };

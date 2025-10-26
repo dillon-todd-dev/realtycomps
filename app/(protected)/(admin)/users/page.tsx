@@ -1,8 +1,11 @@
 import CreateUserForm from '@/components/create-user-form';
 import UsersTable from '@/components/users-table';
 import { db } from '@/db/drizzle';
+import { requireAdmin } from '@/lib/session';
 
 export default async function AdminUsersPage() {
+  await requireAdmin();
+
   const users = await db.query.usersTable.findMany({
     orderBy: (users, { desc }) => [desc(users.createdAt)],
   });
