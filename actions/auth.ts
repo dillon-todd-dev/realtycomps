@@ -48,7 +48,10 @@ export async function login(
 
   await createSession(user.id);
 
-  redirect('/dashboard');
+  return {
+    success: true,
+    message: `Welcome back, ${user.firstName}`,
+  };
 }
 
 export async function logout() {

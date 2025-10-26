@@ -1,5 +1,6 @@
 'use client';
 
+import { updateUserStatus } from '@/actions/users';
 import { User } from '@/lib/types';
 import { format } from 'date-fns';
 
@@ -62,9 +63,7 @@ export default function UsersTable({ users }: UsersTableProps) {
                     {user.isActive ? '● Active' : '● Inactive'}
                   </span>
                   <span className='text-xs text-gray-500'>
-                    {user.hasSetPassword
-                      ? 'Password set'
-                      : 'Invitation pending'}
+                    {user.hasSetPassword ? 'Accepted' : 'Pending'}
                   </span>
                 </div>
               </td>
@@ -75,7 +74,10 @@ export default function UsersTable({ users }: UsersTableProps) {
                 <button className='text-indigo-600 hover:text-indigo-900 mr-4'>
                   Edit
                 </button>
-                <button className='text-red-600 hover:text-red-900'>
+                <button
+                  onClick={() => updateUserStatus(user.id, !user.isActive)}
+                  className='text-red-600 hover:text-red-900'
+                >
                   {user.isActive ? 'Deactivate' : 'Activate'}
                 </button>
               </td>

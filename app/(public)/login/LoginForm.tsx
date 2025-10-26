@@ -4,10 +4,22 @@ import { login } from '@/actions/auth';
 import { SubmitButton } from '@/components/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useActionState } from 'react';
+import { redirect, useRouter } from 'next/navigation';
+import { useActionState, useEffect } from 'react';
+import { toast } from 'sonner';
 
 export default function LoginForm() {
   const [state, formAction, pending] = useActionState(login, undefined);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (state?.success) {
+      toast.success(state.message);
+      router.push('/dashboard');
+    } else if (state?.message) {
+      toast.error(state.message);
+    }
+  }, [state]);
 
   return (
     <form action={formAction} className='flex flex-col gap-y-4'>

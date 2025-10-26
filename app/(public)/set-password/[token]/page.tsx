@@ -9,9 +9,11 @@ export default async function SetPasswordPage({
 }: {
   params: { token: string };
 }) {
+  const { token } = await params;
+
   const invitation = await db.query.userInvitationsTable.findFirst({
     where: and(
-      eq(userInvitationsTable.token, params.token),
+      eq(userInvitationsTable.token, token),
       eq(userInvitationsTable.used, false),
       gt(userInvitationsTable.expiresAt, new Date()),
     ),
@@ -37,7 +39,7 @@ export default async function SetPasswordPage({
           </p>
         </div>
 
-        <SetPasswordForm token={params.token} />
+        <SetPasswordForm token={token} />
       </div>
     </div>
   );

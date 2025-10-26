@@ -7,6 +7,7 @@ const envSchema = z.object({
     .min(32, 'SESSION_SECRET must be at least 32 characters long'),
   RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required'),
   EMAIL_FROM: z.email().min(1, 'EMAIL_FROM is required'),
+  NEXT_PUBLIC_APP_URL: z.url(),
 });
 
 const _env = {
@@ -14,6 +15,7 @@ const _env = {
   SESSION_SECRET: process.env.SESSION_SECRET,
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   EMAIL_FROM: process.env.EMAIL_FROM,
+  NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
 };
 
 export const ENV: z.infer<typeof envSchema> = envSchema.parse(_env);

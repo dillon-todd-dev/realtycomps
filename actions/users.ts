@@ -7,6 +7,7 @@ import { and, eq, gt } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
 import { sendInvitationEmail } from '@/lib/email';
+import { revalidatePath } from 'next/cache';
 
 export async function createUserByAdmin(state: unknown, formData: FormData) {
   const email = formData.get('email') as string;
@@ -15,7 +16,9 @@ export async function createUserByAdmin(state: unknown, formData: FormData) {
   const role = formData.get('role') as 'ROLE_USER' | 'ROLE_ADMIN';
 
   if (!email || !firstName || !lastName) {
-    throw new Error('Missing required fields');
+    return {
+      error: 'Missing required fields',
+    };
   }
 
   try {
@@ -48,6 +51,8 @@ export async function createUserByAdmin(state: unknown, formData: FormData) {
       });
 
       await sendInvitationEmail({ email, firstName, lastName, token });
+
+      revalidatePath('/users');
     });
 
     return { success: true, message: 'User created and invitation sent' };
@@ -100,6 +105,7 @@ export async function acceptInvitation(
         .set({
           password: hashedPassword,
           hasSetPassword: true,
+          isActive: true,
           updatedAt: new Date(),
         })
         .where(eq(usersTable.id, invitation.userId));
@@ -117,4 +123,18 @@ export async function acceptInvitation(
   }
 
   redirect('/login');
+}
+
+export async function updateUserStatus(userId: string, isActive: boolean) {
+  try {
+    await db
+      .update(usersTable)
+      .set({ isActive })
+      .where(eq(usersTable.id, userId));
+
+    revalidatePath('/users');
+  } catch (err) {
+    console.error('Error deactivating user', err);
+    throw err;
+  }
 }

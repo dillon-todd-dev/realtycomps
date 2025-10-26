@@ -2,14 +2,23 @@
 'use client';
 
 import { createUserByAdmin } from '@/actions/users';
-import { useActionState } from 'react';
+import { useActionState, useEffect } from 'react';
 import { SubmitButton } from './submit-button';
+import { toast } from 'sonner';
 
 export default function CreateUserForm() {
   const [state, action, isLoading] = useActionState(
     createUserByAdmin,
     undefined,
   );
+
+  useEffect(() => {
+    if (state?.success) {
+      toast.success(state.message);
+    } else if (state?.error) {
+      toast.error(state.error);
+    }
+  }, [state]);
 
   return (
     <form action={action} className='space-y-4 max-w-md'>

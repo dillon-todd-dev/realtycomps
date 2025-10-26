@@ -12,7 +12,7 @@ export const usersTable = pgTable('users', {
   firstName: text('first_name').notNull(),
   lastName: text('last_name').notNull(),
   role: userRoleEnum('role').notNull().default('ROLE_USER'),
-  isActive: boolean('is_active').default(true),
+  isActive: boolean('is_active').default(false),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
     .defaultNow()
     .notNull(),
