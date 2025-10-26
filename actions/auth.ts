@@ -1,11 +1,11 @@
 'use server';
 
-import { LoginFormSchema, LoginFormState } from '@/lib/definitions';
+import { LoginFormSchema, LoginFormState } from '@/lib/schema';
 import { createSession, deleteSession } from '@/lib/session';
 import { redirect } from 'next/navigation';
 import { db } from '@/db/drizzle';
-import { users } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { usersTable } from '@/db/schema';
+import { and, eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 
 export async function login(
@@ -25,19 +25,26 @@ export async function login(
 
   const { email, password } = validatedFields.data;
 
-  const result = await db.select().from(users).where(eq(users.email, email));
-  const passwordMatches = await bcrypt.compare(
-    password,
-    result[0]?.password || '',
-  );
+  const user = await db.query.usersTable.findFirst({
+    where: and(
+      eq(usersTable.email, email),
+      eq(usersTable.hasSetPassword, true),
+      eq(usersTable.isActive, true),
+    ),
+  });
 
-  if (result.length === 0 || !passwordMatches) {
+  if (!user || !user.password) {
     return {
       message: 'An error occured while trying to log you in. Please try again.',
     };
   }
 
-  const user = result[0];
+  const validPassword = await bcrypt.compare(password, user.password);
+  if (!validPassword) {
+    return {
+      message: 'An error occured while trying to log you in. Please try again.',
+    };
+  }
 
   await createSession(user.id);
 
