@@ -12,7 +12,11 @@ export default async function DashboardLayout({
   return (
     <main className='flex min-h-screen w-full'>
       <div className='bg-light-300 xs:p-10 flex w-[calc(100%-264px)] flex-1 flex-col p-5'>
-        <DashboardHeader firstName={user.firstName} lastName={user.lastName} />
+        <DashboardHeader
+          firstName={user.firstName}
+          lastName={user.lastName}
+          role={user.role}
+        />
         {children}
       </div>
     </main>
