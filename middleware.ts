@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 const protectedRoutes = ['/dashboard', '/properties', '/users', '/investors'];
-const authRoutes = ['/login'];
+const publicRoutes = ['/', '/login', '/set-password'];
 
 export default function middleware(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const isProtectedRoute = protectedRoutes.some((route) =>
     path.startsWith(route),
   );
-  const isAuthRoute = authRoutes.some((route) => path.startsWith(route));
+  const isPublicRoute = publicRoutes.some((route) => path.startsWith(route));
 
   const hasSession = req.cookies.has('session');
 
@@ -19,8 +19,8 @@ export default function middleware(req: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Redirect to dashboard if accessing auth routes with session
-  if (isAuthRoute && hasSession) {
+  // Redirect to dashboard if accessing public routes with session
+  if (isPublicRoute && hasSession) {
     return NextResponse.redirect(new URL('/dashboard', req.url));
   }
 
