@@ -1,13 +1,14 @@
 import CreateUserForm from '@/components/create-user-form';
-import UsersTable from '@/components/users-table';
-import { db } from '@/db/drizzle';
+import UsersDataTable from '@/components/users-data-table';
+import { getUsers } from '@/actions/users';
 import { requireAdmin } from '@/lib/session';
 
 export default async function AdminUsersPage() {
   await requireAdmin();
 
-  const users = await db.query.usersTable.findMany({
-    orderBy: (users, { desc }) => [desc(users.createdAt)],
+  const initialData = await getUsers({
+    page: 1,
+    pageSize: 10,
   });
 
   return (
@@ -19,7 +20,6 @@ export default async function AdminUsersPage() {
               User Management
             </h1>
 
-            {/* Create User Form */}
             <div className='mb-8 pb-8 border-b border-gray-200'>
               <h2 className='text-lg font-medium text-gray-900 mb-4'>
                 Create New User
@@ -27,12 +27,11 @@ export default async function AdminUsersPage() {
               <CreateUserForm />
             </div>
 
-            {/* Users Table */}
             <div>
               <h2 className='text-lg font-medium text-gray-900 mb-4'>
                 All Users
               </h2>
-              <UsersTable users={users} />
+              <UsersDataTable initialData={initialData} />
             </div>
           </div>
         </div>

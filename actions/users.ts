@@ -3,7 +3,7 @@
 import crypto from 'crypto';
 import { db } from '@/db/drizzle';
 import { userInvitationsTable, usersTable } from '@/db/schema';
-import { and, eq, gt } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, ilike, or, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
 import { sendInvitationEmail } from '@/lib/email';
@@ -137,4 +137,94 @@ export async function updateUserStatus(userId: string, isActive: boolean) {
     console.error('Error deactivating user', err);
     throw err;
   }
+}
+
+type GetUserParams = {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  role?: 'ROLE_USER' | 'ROLE_ADMIN';
+  status?: 'all' | 'active' | 'inactive';
+  sortBy?: 'createdAt' | 'email' | 'name';
+  sortOrder?: 'asc' | 'desc';
+};
+
+export async function getUsers({
+  page = 1,
+  pageSize = 10,
+  search = '',
+  role,
+  status = 'all',
+  sortBy = 'createdAt',
+  sortOrder = 'desc',
+}: GetUserParams) {
+  const offset = (page - 1) * pageSize;
+
+  const conditions = [];
+
+  if (search) {
+    conditions.push(
+      or(
+        ilike(usersTable.firstName, `%${search}%`),
+        ilike(usersTable.lastName, `%${search}%`),
+        ilike(usersTable.email, `%${search}%`),
+      ),
+    );
+  }
+
+  if (role) {
+    conditions.push(eq(usersTable.role, role));
+  }
+
+  if (status === 'active') {
+    conditions.push(eq(usersTable.isActive, true));
+  } else if (status === 'inactive') {
+    conditions.push(eq(usersTable.isActive, false));
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  let orderByClause;
+  switch (sortBy) {
+    case 'name':
+      orderByClause =
+        sortOrder === 'asc'
+          ? [asc(usersTable.firstName), asc(usersTable.lastName)]
+          : [desc(usersTable.firstName), desc(usersTable.lastName)];
+      break;
+    case 'email':
+      orderByClause =
+        sortOrder === 'asc'
+          ? [asc(usersTable.email)]
+          : [desc(usersTable.email)];
+      break;
+    default:
+      orderByClause =
+        sortOrder === 'asc'
+          ? [asc(usersTable.createdAt)]
+          : [desc(usersTable.createdAt)];
+      break;
+  }
+
+  const [users, totalCount] = await Promise.all([
+    db
+      .select()
+      .from(usersTable)
+      .where(whereClause)
+      .orderBy(...orderByClause)
+      .limit(pageSize)
+      .offset(offset),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(usersTable)
+      .where(whereClause)
+      .then((result) => result[0].count),
+  ]);
+
+  return {
+    users,
+    totalCount,
+    pageCount: Math.ceil(totalCount / pageSize),
+    currentPage: page,
+  };
 }
