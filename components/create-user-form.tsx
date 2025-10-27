@@ -1,10 +1,20 @@
-// components/create-user-form.tsx
 'use client';
 
 import { createUserByAdmin } from '@/actions/users';
 import { useActionState, useEffect } from 'react';
 import { SubmitButton } from './submit-button';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function CreateUserForm() {
   const [state, action, isLoading] = useActionState(
@@ -21,90 +31,103 @@ export default function CreateUserForm() {
   }, [state]);
 
   return (
-    <form action={action} className='space-y-4 max-w-md'>
-      <div>
-        <label
-          htmlFor='email'
-          className='block text-sm font-medium text-gray-700'
-        >
-          Email
-        </label>
-        <input
-          type='email'
-          name='email'
-          id='email'
-          required
-          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
-          placeholder='user@example.com'
-        />
-      </div>
+    <div className='w-full max-w-4xl'>
+      <Card>
+        <CardHeader>
+          <CardTitle>User Information</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={action} className='space-y-8'>
+            {/* Email - full width with larger input */}
+            <div className='space-y-3'>
+              <Label htmlFor='email' className='text-base font-medium'>
+                Email Address
+              </Label>
+              <Input
+                type='email'
+                name='email'
+                id='email'
+                required
+                placeholder='user@example.com'
+                className='h-12 text-base'
+              />
+            </div>
 
-      <div className='grid grid-cols-2 gap-4'>
-        <div>
-          <label
-            htmlFor='firstName'
-            className='block text-sm font-medium text-gray-700'
-          >
-            First Name
-          </label>
-          <input
-            type='text'
-            name='firstName'
-            id='firstName'
-            required
-            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
-            placeholder='John'
-          />
-        </div>
+            {/* First and Last Name - responsive grid with proper spacing */}
+            <div className='grid grid-cols-1 lg:grid-cols-2 gap-8'>
+              <div className='space-y-3'>
+                <Label htmlFor='firstName' className='text-base font-medium'>
+                  First Name
+                </Label>
+                <Input
+                  type='text'
+                  name='firstName'
+                  id='firstName'
+                  required
+                  placeholder='John'
+                  className='h-12 text-base'
+                />
+              </div>
 
-        <div>
-          <label
-            htmlFor='lastName'
-            className='block text-sm font-medium text-gray-700'
-          >
-            Last Name
-          </label>
-          <input
-            type='text'
-            name='lastName'
-            id='lastName'
-            required
-            className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
-            placeholder='Doe'
-          />
-        </div>
-      </div>
+              <div className='space-y-3'>
+                <Label htmlFor='lastName' className='text-base font-medium'>
+                  Last Name
+                </Label>
+                <Input
+                  type='text'
+                  name='lastName'
+                  id='lastName'
+                  required
+                  placeholder='Doe'
+                  className='h-12 text-base'
+                />
+              </div>
+            </div>
 
-      <div>
-        <label
-          htmlFor='role'
-          className='block text-sm font-medium text-gray-700'
-        >
-          Role
-        </label>
-        <select
-          name='role'
-          id='role'
-          className='mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm'
-        >
-          <option value='ROLE_USER'>User</option>
-          <option value='ROLE_ADMIN'>Admin</option>
-        </select>
-      </div>
+            {/* Role - constrained width but larger select */}
+            <div className='space-y-3 max-w-md'>
+              <Label htmlFor='role' className='text-base font-medium'>
+                User Role
+              </Label>
+              <Select name='role' defaultValue='ROLE_USER'>
+                <SelectTrigger className='h-12 text-base'>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value='ROLE_USER'>User</SelectItem>
+                  <SelectItem value='ROLE_ADMIN'>Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
-      {state?.error && (
-        <div className='rounded-md bg-red-50 p-4'>
-          <p className='text-sm text-red-800'>{state.error}</p>
-        </div>
-      )}
+            {/* Error/Success Messages */}
+            {state?.error && (
+              <Alert variant='destructive'>
+                <AlertDescription className='text-base'>
+                  {state.error}
+                </AlertDescription>
+              </Alert>
+            )}
 
-      {state?.success && (
-        <div className='rounded-md bg-green-50 p-4'>
-          <p className='text-sm text-green-800'>{state.message}</p>
-        </div>
-      )}
+            {state?.success && (
+              <Alert className='border-green-200 bg-green-50'>
+                <AlertDescription className='text-green-800 text-base'>
+                  {state.message}
+                </AlertDescription>
+              </Alert>
+            )}
 
-      <SubmitButton text='Send Invitation' isLoading={isLoading} />
-    </form>
+            {/* Submit Button - larger and more prominent */}
+            <div className='pt-6'>
+              <SubmitButton
+                text='Send Invitation'
+                isLoading={isLoading}
+                styles='h-12 px-8 text-base min-w-48'
+              />
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

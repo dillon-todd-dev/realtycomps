@@ -1,7 +1,10 @@
-import CreateUserForm from '@/components/create-user-form';
 import UsersDataTable from '@/components/users-data-table';
 import { getUsers } from '@/actions/users';
 import { requireAdmin } from '@/lib/session';
+import PageHeader from '@/components/page-header';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
 
 export default async function AdminUsersPage() {
   await requireAdmin();
@@ -12,30 +15,23 @@ export default async function AdminUsersPage() {
   });
 
   return (
-    <div className='min-h-screen bg-gray-50 py-8'>
-      <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
-        <div className='bg-white shadow rounded-lg'>
-          <div className='px-4 py-5 sm:p-6'>
-            <h1 className='text-2xl font-bold text-gray-900 mb-8'>
-              User Management
-            </h1>
+    <>
+      <PageHeader
+        title='User Management'
+        description='Manage all of your users here'
+        action={
+          <Button asChild>
+            <Link href='/dashboard/users/create'>
+              <Plus className='h-4 w-4 mr-2' />
+              Add User
+            </Link>
+          </Button>
+        }
+      />
 
-            <div className='mb-8 pb-8 border-b border-gray-200'>
-              <h2 className='text-lg font-medium text-gray-900 mb-4'>
-                Create New User
-              </h2>
-              <CreateUserForm />
-            </div>
-
-            <div>
-              <h2 className='text-lg font-medium text-gray-900 mb-4'>
-                All Users
-              </h2>
-              <UsersDataTable initialData={initialData} />
-            </div>
-          </div>
-        </div>
+      <div className='p-6'>
+        <UsersDataTable initialData={initialData} />
       </div>
-    </div>
+    </>
   );
 }

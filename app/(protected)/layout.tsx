@@ -1,6 +1,5 @@
-import DashboardHeader from '@/components/dashboard-header';
+import DashboardSidebar from '@/components/dashboard-sidebar';
 import { requireUser } from '@/lib/session';
-import React from 'react';
 
 export default async function DashboardLayout({
   children,
@@ -10,15 +9,16 @@ export default async function DashboardLayout({
   const user = await requireUser();
 
   return (
-    <main className='flex min-h-screen w-full'>
-      <div className='bg-light-300 xs:p-10 flex w-[calc(100%-264px)] flex-1 flex-col p-5'>
-        <DashboardHeader
-          firstName={user.firstName}
-          lastName={user.lastName}
-          role={user.role}
-        />
-        {children}
-      </div>
-    </main>
+    <div className='flex min-h-screen bg-background'>
+      {/* Sidebar */}
+      <DashboardSidebar
+        firstName={user.firstName}
+        lastName={user.lastName}
+        role={user.role}
+      />
+
+      {/* Main content - no padding since PageHeader handles the layout */}
+      <main className='flex-1 lg:ml-64'>{children}</main>
+    </div>
   );
 }

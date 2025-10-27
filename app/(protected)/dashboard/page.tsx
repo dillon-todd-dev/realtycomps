@@ -1,20 +1,40 @@
-import { logout } from '@/actions/auth';
-import { Button } from '@/components/ui/button';
 import { requireUser } from '@/lib/session';
+import PageHeader from '@/components/page-header';
 
-export default async function DashboardPage() {
-  await requireUser();
+export default async function DashboardHomePage() {
+  const user = await requireUser();
 
   return (
-    <section className='w-full rounded-2xl bg-white p-7'>
-      <div className='flex flex-wrap items-center justify-between gap-2'>
-        <h2 className='text-xl font-semibold'>Home</h2>
-      </div>
-      <div>
-        <div className='mt-7 w-full overflow-hidden'>
-          <Button onClick={logout}>Sign Out</Button>
+    <>
+      <PageHeader
+        title='Dashboard'
+        description="Welcome back! Here's what's happening with your properties."
+      />
+
+      <div className='p-6'>
+        <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-4'>
+          {/* Your dashboard cards/widgets here */}
+          <div className='rounded-lg border bg-card text-card-foreground shadow-sm p-6'>
+            <h3 className='text-2xl font-bold'>42</h3>
+            <p className='text-sm text-muted-foreground'>Total Properties</p>
+          </div>
+
+          <div className='rounded-lg border bg-card text-card-foreground shadow-sm p-6'>
+            <h3 className='text-2xl font-bold'>12</h3>
+            <p className='text-sm text-muted-foreground'>Active Users</p>
+          </div>
+
+          <div className='rounded-lg border bg-card text-card-foreground shadow-sm p-6'>
+            <h3 className='text-2xl font-bold'>8</h3>
+            <p className='text-sm text-muted-foreground'>Investors</p>
+          </div>
+
+          <div className='rounded-lg border bg-card text-card-foreground shadow-sm p-6'>
+            <h3 className='text-2xl font-bold'>$2.4M</h3>
+            <p className='text-sm text-muted-foreground'>Total Value</p>
+          </div>
         </div>
       </div>
-    </section>
+    </>
   );
 }
