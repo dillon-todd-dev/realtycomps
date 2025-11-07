@@ -3,7 +3,7 @@
 import crypto from 'crypto';
 import { db } from '@/db/drizzle';
 import { userInvitationsTable, usersTable } from '@/db/schema';
-import { and, asc, desc, eq, gt, ilike, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, ilike, not, or, sql } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
 import { redirect } from 'next/navigation';
 import { sendInvitationEmail } from '@/lib/email';
@@ -140,6 +140,7 @@ export async function updateUserStatus(userId: string, isActive: boolean) {
 }
 
 type GetUserParams = {
+  userId: string;
   page?: number;
   pageSize?: number;
   search?: string;
@@ -150,6 +151,7 @@ type GetUserParams = {
 };
 
 export async function getUsers({
+  userId,
   page = 1,
   pageSize = 10,
   search = '',
@@ -159,8 +161,9 @@ export async function getUsers({
   sortOrder = 'desc',
 }: GetUserParams) {
   const offset = (page - 1) * pageSize;
-
   const conditions = [];
+
+  conditions.push(not(eq(usersTable.id, userId)));
 
   if (search) {
     conditions.push(

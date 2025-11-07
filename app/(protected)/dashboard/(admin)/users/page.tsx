@@ -7,9 +7,10 @@ import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
 export default async function AdminUsersPage() {
-  await requireAdmin();
+  const user = await requireAdmin();
 
   const initialData = await getUsers({
+    userId: user.id,
     page: 1,
     pageSize: 10,
   });
@@ -30,7 +31,7 @@ export default async function AdminUsersPage() {
       />
 
       <div className='p-6'>
-        <UsersDataTable initialData={initialData} />
+        <UsersDataTable userId={user.id} initialData={initialData} />
       </div>
     </>
   );

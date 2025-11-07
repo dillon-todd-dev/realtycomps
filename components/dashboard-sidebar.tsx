@@ -11,6 +11,7 @@ import {
   LogOut,
   ChevronDown,
   Menu,
+  Settings,
 } from 'lucide-react';
 
 import {
@@ -174,6 +175,12 @@ function SidebarContent({
           <DropdownMenuContent align='end' className='w-56'>
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href='/dashboard/settings'>
+                <Settings className='h-4 w-4 mr-2' />
+                Settings
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleSignOut}
               className='gap-2 text-destructive focus:text-destructive'

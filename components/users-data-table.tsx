@@ -23,7 +23,6 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
   PaginationLink,
   PaginationNext,
@@ -36,6 +35,7 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'sonner';
 
 interface UsersDataTableProps {
+  userId: string;
   initialData: {
     users: User[];
     totalCount: number;
@@ -44,7 +44,10 @@ interface UsersDataTableProps {
   };
 }
 
-export default function UsersDataTable({ initialData }: UsersDataTableProps) {
+export default function UsersDataTable({
+  userId,
+  initialData,
+}: UsersDataTableProps) {
   const [users, setUsers] = useState(initialData.users);
   const [totalCount, setTotalCount] = useState(initialData.totalCount);
   const [pageCount, setPageCount] = useState(initialData.pageCount);
@@ -67,6 +70,7 @@ export default function UsersDataTable({ initialData }: UsersDataTableProps) {
     startTransition(async () => {
       try {
         const result = await getUsers({
+          userId,
           page: currentPage,
           pageSize,
           search: debouncedSearch,
