@@ -4,6 +4,7 @@ import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
+import CreatePropertyForm from '@/components/create-property-form';
 
 export default async function AddPropertyPage() {
   await requireAdmin();
@@ -23,7 +24,9 @@ export default async function AddPropertyPage() {
         }
       />
 
-      <div className='p-6'>Add property form</div>
+      <div className='p-6 flex justify-center'>
+        <CreatePropertyForm />
+      </div>
     </>
   );
 }

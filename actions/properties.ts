@@ -11,6 +11,21 @@ import {
   NewProperty,
   PropertyUpdate,
 } from '@/lib/types';
+import { findProperty } from '@/lib/bridge';
+import { requireUser } from '@/lib/session';
+
+type BridgeMedia = {
+  Order: number;
+  MediaKey: string;
+  MediaURL: string;
+  ResourceRecordKey: string;
+  ResourceName: string;
+  ClassName: string;
+  MediaCategory: string;
+  MimeType: string;
+  MediaObjectID: string;
+  ShortDescription: string | null;
+};
 
 // Using the generated types in function parameters and returns
 export async function getProperties({
@@ -39,8 +54,8 @@ export async function getProperties({
       or(
         ilike(propertiesTable.title, `%${search}%`),
         ilike(propertiesTable.description, `%${search}%`),
-        ilike(propertiesTable.address, `%${search}%`),
-      ),
+        ilike(propertiesTable.address, `%${search}%`)
+      )
     );
   }
 
@@ -75,10 +90,8 @@ export async function getProperties({
           .from(propertyImagesTable)
           .where(
             or(
-              ...propertyIds.map((id) =>
-                eq(propertyImagesTable.propertyId, id),
-              ),
-            ),
+              ...propertyIds.map((id) => eq(propertyImagesTable.propertyId, id))
+            )
           )
           .orderBy(asc(propertyImagesTable.order))
       : [];
@@ -97,7 +110,7 @@ export async function getProperties({
     (property) => ({
       ...property,
       images: imagesByPropertyId[property.id] || [],
-    }),
+    })
   );
 
   const pageCount = Math.ceil(totalCount / pageSize);
@@ -113,7 +126,7 @@ export async function getProperties({
 // Get single property with all related data (images + user) for detail view
 export async function getProperty(
   propertyId: string,
-  userId?: string,
+  userId?: string
 ): Promise<PropertyWithAll | null> {
   const whereConditions = [eq(propertiesTable.id, propertyId)];
 
@@ -198,9 +211,70 @@ export async function getProperty(
   };
 }
 
+export async function createPropertyAction(
+  prevState: unknown,
+  formData: FormData
+) {
+  const user = await requireUser();
+
+  const street = formData.get('address') as string;
+  const city = formData.get('city') as string;
+  const state = formData.get('state') as string;
+  const postalCode = formData.get('postalCode') as string;
+
+  const address = `${street}, ${city}, ${state} ${postalCode}`;
+
+  try {
+    const mlsProperty = await findProperty(address);
+    await db.transaction(async (tx) => {
+      const [{ id: propertyId }] = await tx
+        .insert(propertiesTable)
+        .values({
+          userId: user.id,
+          address: `${mlsProperty.StreetNumber} ${mlsProperty.StreetName} ${mlsProperty.StreetSuffix}`,
+          city: mlsProperty.City,
+          state: mlsProperty.StateOrProvince,
+          postalCode: mlsProperty.PostalCode,
+          country: mlsProperty.Country,
+          originalListPrice: mlsProperty.OriginalListPrice,
+          currentPrice: mlsProperty.CurrentPrice,
+          closePrice: mlsProperty.ClosePrice,
+          pricePerSqFt: mlsProperty.HAR_PriceSqFtList,
+          status: mlsProperty.MlsStatus,
+          bedrooms: mlsProperty.BedroomsTotal,
+          bathrooms: mlsProperty.BathroomsTotalDecimal,
+          livingArea: mlsProperty.LivingArea,
+          yearBuilt: mlsProperty.YearBuilt,
+          lotSize: mlsProperty.LotSizeSquareFeet,
+        })
+        .returning({ id: propertiesTable.id });
+
+      const images = mlsProperty.Media.filter(
+        (media: BridgeMedia) => media.MediaCategory === 'Photo'
+      ).map((media: BridgeMedia) => ({
+        order: media.Order,
+        url: media.MediaURL,
+        alt: media.ShortDescription,
+        propertyId,
+      }));
+
+      await tx.insert(propertyImagesTable).values(images);
+    });
+
+    return {
+      success: true,
+      message: 'Successfully created property',
+    };
+  } catch (err) {
+    console.error('Error creating property', err);
+    const msg = err instanceof Error ? err.message : String(err);
+    return { success: false, error: msg };
+  }
+}
+
 // Create property using the NewProperty type
 export async function createProperty(
-  propertyData: Omit<NewProperty, 'id' | 'createdAt' | 'updatedAt'>,
+  propertyData: Omit<NewProperty, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<Property> {
   const [newProperty] = await db
     .insert(propertiesTable)
@@ -217,7 +291,7 @@ export async function createProperty(
 // Update property using the PropertyUpdate type
 export async function updateProperty(
   propertyId: string,
-  updates: PropertyUpdate,
+  updates: PropertyUpdate
 ): Promise<Property | null> {
   const [updatedProperty] = await db
     .update(propertiesTable)

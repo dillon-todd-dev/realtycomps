@@ -52,7 +52,7 @@ export async function createUserByAdmin(state: unknown, formData: FormData) {
 
       await sendInvitationEmail({ email, firstName, lastName, token });
 
-      revalidatePath('/users');
+      revalidatePath('/dashboard/users');
     });
 
     return { success: true, message: 'User created and invitation sent' };
@@ -67,7 +67,7 @@ export async function createUserByAdmin(state: unknown, formData: FormData) {
 export async function acceptInvitation(
   token: string,
   state: unknown,
-  formData: FormData,
+  formData: FormData
 ) {
   const password = formData.get('password') as string;
   const confirmPassword = formData.get('confirmPassword') as string;
@@ -90,7 +90,7 @@ export async function acceptInvitation(
         where: and(
           eq(userInvitationsTable.token, token),
           eq(userInvitationsTable.used, false),
-          gt(userInvitationsTable.expiresAt, new Date()),
+          gt(userInvitationsTable.expiresAt, new Date())
         ),
         with: { user: true },
       });
@@ -170,8 +170,8 @@ export async function getUsers({
       or(
         ilike(usersTable.firstName, `%${search}%`),
         ilike(usersTable.lastName, `%${search}%`),
-        ilike(usersTable.email, `%${search}%`),
-      ),
+        ilike(usersTable.email, `%${search}%`)
+      )
     );
   }
 

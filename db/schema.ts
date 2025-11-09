@@ -62,16 +62,23 @@ export const propertiesTable = pgTable('properties', {
   address: text('address'),
   city: text('city'),
   state: text('state'),
-  zipCode: text('zip_code'),
+  postalCode: text('postal_code'),
   country: text('country').default('United States'),
-  price: decimal('price', { precision: 12, scale: 2 }), // Up to $999,999,999.99
+  listPrice: decimal('list_price', { precision: 12, scale: 2 }),
+  originalListPrice: decimal('original_list_price', {
+    precision: 12,
+    scale: 2,
+  }),
+  currentPrice: decimal('current_price', { precision: 12, scale: 2 }),
+  closePrice: decimal('close_price', { precision: 12, scale: 2 }),
+  pricePerSqFt: decimal('price_per_sq_ft', { precision: 12, scale: 2 }),
   type: propertyTypeEnum('type'),
   bedrooms: integer('bedrooms'),
   bathrooms: decimal('bathrooms', { precision: 3, scale: 1 }), // Allows 2.5 bathrooms
-  squareFootage: integer('square_footage'),
+  livingArea: integer('living_area'),
   yearBuilt: integer('year_built'),
   lotSize: decimal('lot_size', { precision: 10, scale: 2 }), // Lot size in square feet
-  status: propertyStatusEnum('status').default('active'),
+  status: text('status'),
   userId: uuid('user_id')
     .references(() => usersTable.id)
     .notNull(),
@@ -111,7 +118,7 @@ export const userInvitationsRelations = relations(
       fields: [userInvitationsTable.userId],
       references: [usersTable.id],
     }),
-  }),
+  })
 );
 
 export const propertiesRelations = relations(
@@ -122,7 +129,7 @@ export const propertiesRelations = relations(
       references: [usersTable.id],
     }),
     images: many(propertyImagesTable),
-  }),
+  })
 );
 
 export const propertyImagesRelations = relations(
@@ -132,5 +139,5 @@ export const propertyImagesRelations = relations(
       fields: [propertyImagesTable.propertyId],
       references: [propertiesTable.id],
     }),
-  }),
+  })
 );

@@ -8,6 +8,8 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().min(1, 'RESEND_API_KEY is required'),
   EMAIL_FROM: z.email().min(1, 'EMAIL_FROM is required'),
   NEXT_PUBLIC_APP_URL: z.url(),
+  BRIDGE_ACCESS_TOKEN: z.string(),
+  BRIDGE_BASE_URL: z.url(),
 });
 
 const _env = {
@@ -16,6 +18,8 @@ const _env = {
   RESEND_API_KEY: process.env.RESEND_API_KEY,
   EMAIL_FROM: process.env.EMAIL_FROM,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+  BRIDGE_ACCESS_TOKEN: process.env.BRIDGE_ACCESS_TOKEN,
+  BRIDGE_BASE_URL: process.env.BRIDGE_BASE_URL,
 };
 
 export const ENV: z.infer<typeof envSchema> = envSchema.parse(_env);

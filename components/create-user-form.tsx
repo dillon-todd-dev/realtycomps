@@ -15,16 +15,19 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useRouter } from 'next/navigation';
 
 export default function CreateUserForm() {
+  const router = useRouter();
   const [state, action, isLoading] = useActionState(
     createUserByAdmin,
-    undefined,
+    undefined
   );
 
   useEffect(() => {
     if (state?.success) {
       toast.success(state.message);
+      router.push('/dashboard/users');
     } else if (state?.error) {
       toast.error(state.error);
     }
@@ -99,23 +102,6 @@ export default function CreateUserForm() {
                 </SelectContent>
               </Select>
             </div>
-
-            {/* Error/Success Messages */}
-            {state?.error && (
-              <Alert variant='destructive'>
-                <AlertDescription className='text-base'>
-                  {state.error}
-                </AlertDescription>
-              </Alert>
-            )}
-
-            {state?.success && (
-              <Alert className='border-green-200 bg-green-50'>
-                <AlertDescription className='text-green-800 text-base'>
-                  {state.message}
-                </AlertDescription>
-              </Alert>
-            )}
 
             {/* Submit Button - larger and more prominent */}
             <div className='pt-6'>
