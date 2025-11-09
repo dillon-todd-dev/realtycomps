@@ -3,6 +3,7 @@ import { pgEnum, integer, decimal } from 'drizzle-orm/pg-core';
 import { pgTable, text, timestamp, boolean, uuid } from 'drizzle-orm/pg-core';
 
 export const userRoleEnum = pgEnum('user_role', ['ROLE_USER', 'ROLE_ADMIN']);
+export const comparableTypeEnum = pgEnum('comparable_type', ['SALE', 'RENT']);
 
 export const usersTable = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -86,6 +87,198 @@ export const propertyImagesTable = pgTable('property_images', {
     .notNull(),
 });
 
+export const evaluationsTable = pgTable('evaluations', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  propertyId: uuid('property_id')
+    .references(() => propertiesTable.id, { onDelete: 'cascade' })
+    .notNull(),
+  name: text('name'), // Optional name/label for this evaluation
+
+  // Core property evaluation fields
+  estimatedSalePrice: decimal('estimated_sale_price', {
+    precision: 12,
+    scale: 2,
+  }).default('0'),
+  purchasePrice: decimal('purchase_price', { precision: 12, scale: 2 }).default(
+    '0'
+  ),
+  hardAppraisedPrice: decimal('hard_appraised_price', {
+    precision: 12,
+    scale: 2,
+  }).default('0'),
+
+  // Costs
+  sellerContribution: decimal('seller_contribution', {
+    precision: 12,
+    scale: 2,
+  }).default('0'),
+  repairs: decimal('repairs', { precision: 12, scale: 2 }).default('0'),
+  insurance: decimal('insurance', { precision: 12, scale: 2 }).default('0'),
+  survey: decimal('survey', { precision: 12, scale: 2 }).default('400'),
+  inspection: decimal('inspection', { precision: 12, scale: 2 }).default('400'),
+  appraisal: decimal('appraisal', { precision: 12, scale: 2 }).default('400'),
+  miscellaneous: decimal('miscellaneous', { precision: 12, scale: 2 }).default(
+    '0'
+  ),
+
+  // Income
+  rent: decimal('rent', { precision: 12, scale: 2 }).default('0'),
+  hoa: decimal('hoa', { precision: 12, scale: 2 }).default('0'),
+  propertyTax: decimal('property_tax', { precision: 12, scale: 2 }).default(
+    '0'
+  ),
+
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// Separate table for conventional loan parameters
+export const conventionalLoanParamsTable = pgTable('conventional_loan_params', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  evaluationId: uuid('evaluation_id')
+    .references(() => evaluationsTable.id, { onDelete: 'cascade' })
+    .notNull()
+    .unique(),
+
+  downPayment: decimal('down_payment', { precision: 5, scale: 2 }).default(
+    '20'
+  ),
+  loanTerm: integer('loan_term').default(30),
+  interestRate: decimal('interest_rate', { precision: 5, scale: 3 }).default(
+    '5.000'
+  ),
+  lenderFees: decimal('lender_fees', { precision: 12, scale: 2 }).default(
+    '6000'
+  ),
+  mortgageInsurance: decimal('mortgage_insurance', {
+    precision: 12,
+    scale: 2,
+  }).default('0'),
+  monthsOfTaxes: integer('months_of_taxes').default(0),
+
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// Separate table for hard money loan parameters
+export const hardMoneyLoanParamsTable = pgTable('hard_money_loan_params', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  evaluationId: uuid('evaluation_id')
+    .references(() => evaluationsTable.id, { onDelete: 'cascade' })
+    .notNull()
+    .unique(),
+
+  loanToValue: decimal('loan_to_value', { precision: 5, scale: 2 }).default(
+    '70'
+  ),
+  lenderFees: decimal('lender_fees', { precision: 12, scale: 2 }).default(
+    '10000'
+  ),
+  interestRate: decimal('interest_rate', { precision: 5, scale: 3 }).default(
+    '14.000'
+  ),
+  monthsToRefi: integer('months_to_refi').default(3),
+  rollInLenderFees: boolean('roll_in_lender_fees').default(true),
+  weeksUntilLeased: integer('weeks_until_leased').default(8),
+  maxRefiCashback: decimal('max_refi_cashback', {
+    precision: 12,
+    scale: 2,
+  }).default('2000'),
+
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+// Separate table for refinance parameters
+export const refinanceLoanParamsTable = pgTable('refinance_loan_params', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  evaluationId: uuid('evaluation_id')
+    .references(() => evaluationsTable.id, { onDelete: 'cascade' })
+    .notNull()
+    .unique(),
+
+  loanToValue: decimal('loan_to_value', { precision: 5, scale: 2 }).default(
+    '75'
+  ),
+  loanTerm: integer('loan_term').default(30),
+  interestRate: decimal('interest_rate', { precision: 5, scale: 3 }).default(
+    '5.000'
+  ),
+  lenderFees: decimal('lender_fees', { precision: 12, scale: 2 }).default(
+    '5000'
+  ),
+  monthsOfTaxes: integer('months_of_taxes').default(2),
+  mortgageInsurance: decimal('mortgage_insurance', {
+    precision: 12,
+    scale: 2,
+  }).default('0'),
+
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const comparablesTable = pgTable('comparables', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  evaluationId: uuid('evaluation_id')
+    .references(() => evaluationsTable.id, { onDelete: 'cascade' })
+    .notNull(),
+
+  // Address info
+  address: text('address').notNull(),
+  city: text('city').notNull(),
+  state: text('state').notNull(),
+  postalCode: text('postal_code'),
+
+  // Property details
+  subdivision: text('subdivision'),
+  bedrooms: integer('bedrooms').notNull(),
+  bathrooms: decimal('bathrooms', { precision: 3, scale: 1 }).notNull(),
+  garageSpaces: integer('garage_spaces'),
+  squareFootage: integer('square_footage').notNull(),
+  lotSize: integer('lot_size').notNull(),
+  yearBuilt: integer('year_built').notNull(),
+
+  // Pricing
+  price: decimal('price', { precision: 12, scale: 2 }).notNull(),
+  type: comparableTypeEnum('type').notNull(), // SALE or RENT
+
+  // Listing details
+  listingType: text('listing_type').notNull(),
+  listedDate: text('listed_date').notNull(),
+  removedDate: text('removed_date'),
+  lastSeenDate: text('last_seen_date').notNull(),
+  daysOnMarket: integer('days_on_market').notNull(),
+  daysOld: integer('days_old').notNull(),
+
+  // Analysis fields
+  distance: decimal('distance', { precision: 10, scale: 2 }).notNull(), // miles from subject property
+  correlation: decimal('correlation', { precision: 5, scale: 4 }).notNull(), // similarity score
+  included: boolean('included').default(true).notNull(), // include in analysis
+
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const usersRelations = relations(usersTable, ({ one, many }) => ({
   invitation: one(userInvitationsTable),
   properties: many(propertiesTable),
@@ -98,7 +291,7 @@ export const userInvitationsRelations = relations(
       fields: [userInvitationsTable.userId],
       references: [usersTable.id],
     }),
-  }),
+  })
 );
 
 export const propertiesRelations = relations(
@@ -109,7 +302,7 @@ export const propertiesRelations = relations(
       references: [usersTable.id],
     }),
     images: many(propertyImagesTable),
-  }),
+  })
 );
 
 export const propertyImagesRelations = relations(
@@ -119,5 +312,27 @@ export const propertyImagesRelations = relations(
       fields: [propertyImagesTable.propertyId],
       references: [propertiesTable.id],
     }),
-  }),
+  })
 );
+
+// Update evaluations relations
+export const evaluationsRelations = relations(
+  evaluationsTable,
+  ({ one, many }) => ({
+    property: one(propertiesTable, {
+      fields: [evaluationsTable.propertyId],
+      references: [propertiesTable.id],
+    }),
+    conventionalLoanParams: one(conventionalLoanParamsTable),
+    hardMoneyLoanParams: one(hardMoneyLoanParamsTable),
+    refinanceLoanParams: one(refinanceLoanParamsTable),
+    comparables: many(comparablesTable),
+  })
+);
+
+export const comparablesRelations = relations(comparablesTable, ({ one }) => ({
+  evaluation: one(evaluationsTable, {
+    fields: [comparablesTable.evaluationId],
+    references: [evaluationsTable.id],
+  }),
+}));
