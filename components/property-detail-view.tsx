@@ -1,6 +1,5 @@
 'use client';
 
-import { PropertyWithAll } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -14,9 +13,10 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState } from 'react';
+import { PropertyWithImages } from '@/lib/types';
 
 interface PropertyDetailViewProps {
-  property: PropertyWithAll;
+  property: PropertyWithImages;
 }
 
 export default function PropertyDetailView({
@@ -31,7 +31,7 @@ export default function PropertyDetailView({
     return parseFloat(value);
   };
 
-  const price = parseDecimal(property.price);
+  const price = parseDecimal(property.currentPrice);
   const bathrooms = parseDecimal(property.bathrooms);
   const lotSize = parseDecimal(property.lotSize);
 
@@ -99,34 +99,21 @@ export default function PropertyDetailView({
               <div className='flex items-start justify-between'>
                 <div>
                   <CardTitle className='text-2xl'>
-                    {property.title || 'Untitled Property'}
+                    {property.address && (
+                      <div className='flex items-center gap-1 text-muted-foreground mt-2'>
+                        <MapPin className='h-4 w-4' />
+                        <span>
+                          {property.address}
+                          {property.city && `, ${property.city}`}
+                          {property.state && `, ${property.state}`}
+                          {property.postalCode && ` ${property.postalCode}`}
+                        </span>
+                      </div>
+                    )}
                   </CardTitle>
-                  {property.address && (
-                    <div className='flex items-center gap-1 text-muted-foreground mt-2'>
-                      <MapPin className='h-4 w-4' />
-                      <span>
-                        {property.address}
-                        {property.city && `, ${property.city}`}
-                        {property.state && `, ${property.state}`}
-                        {property.zipCode && ` ${property.zipCode}`}
-                      </span>
-                    </div>
-                  )}
                 </div>
-                {property.type && (
-                  <Badge variant='secondary' className='capitalize'>
-                    {property.type}
-                  </Badge>
-                )}
               </div>
             </CardHeader>
-            {property.description && (
-              <CardContent>
-                <p className='text-muted-foreground leading-relaxed'>
-                  {property.description}
-                </p>
-              </CardContent>
-            )}
           </Card>
 
           {/* Property Features */}
@@ -160,12 +147,12 @@ export default function PropertyDetailView({
                   </div>
                 )}
 
-                {property.squareFootage && (
+                {property.livingArea && (
                   <div className='flex items-center gap-2'>
                     <Square className='h-5 w-5 text-muted-foreground' />
                     <div>
                       <div className='font-semibold'>
-                        {property.squareFootage.toLocaleString()}
+                        {property.livingArea.toLocaleString()}
                       </div>
                       <div className='text-sm text-muted-foreground'>Sq Ft</div>
                     </div>
@@ -264,25 +251,6 @@ export default function PropertyDetailView({
               </div>
             </CardContent>
           </Card>
-
-          {/* Owner Info */}
-          {property.user && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Property Owner</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className='text-lg font-semibold'>
-                  {property.user.firstName} {property.user.lastName}
-                </div>
-                {property.user.email && (
-                  <div className='text-sm text-muted-foreground mt-1'>
-                    {property.user.email}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
         </div>
       </div>
     </div>

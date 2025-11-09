@@ -1,18 +1,12 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import { propertiesTable, propertyImagesTable, usersTable } from '@/db/schema';
+import { propertiesTable, propertyImagesTable } from '@/db/schema';
 import { eq, and, or, ilike, count, desc, asc } from 'drizzle-orm';
-import {
-  Property,
-  PropertyWithImages,
-  PropertyWithAll,
-  GetPropertiesResponse,
-  NewProperty,
-  PropertyUpdate,
-} from '@/lib/types';
+import { PropertyWithImages, GetPropertiesResponse } from '@/lib/types';
 import { findProperty } from '@/lib/bridge';
 import { requireUser } from '@/lib/session';
+import { success } from 'zod';
 
 type BridgeMedia = {
   Order: number;
@@ -27,18 +21,15 @@ type BridgeMedia = {
   ShortDescription: string | null;
 };
 
-// Using the generated types in function parameters and returns
 export async function getProperties({
   page = 1,
   pageSize = 12,
   search = '',
-  type,
   userId,
 }: {
   page: number;
   pageSize: number;
   search?: string;
-  type?: Property['type']; // Uses the inferred enum type
   userId?: string;
 }): Promise<GetPropertiesResponse> {
   const offset = (page - 1) * pageSize;
@@ -50,29 +41,17 @@ export async function getProperties({
   }
 
   if (search) {
-    whereConditions.push(
-      or(
-        ilike(propertiesTable.title, `%${search}%`),
-        ilike(propertiesTable.description, `%${search}%`),
-        ilike(propertiesTable.address, `%${search}%`)
-      )
-    );
-  }
-
-  if (type) {
-    whereConditions.push(eq(propertiesTable.type, type));
+    whereConditions.push(or(ilike(propertiesTable.address, `%${search}%`)));
   }
 
   const whereClause =
     whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
-  // Get total count
   const [{ totalCount }] = await db
     .select({ totalCount: count() })
     .from(propertiesTable)
     .where(whereClause);
 
-  // Get properties - Drizzle will infer the return type
   const properties = await db
     .select()
     .from(propertiesTable)
@@ -81,7 +60,6 @@ export async function getProperties({
     .limit(pageSize)
     .offset(offset);
 
-  // Get images for these properties
   const propertyIds = properties.map((p) => p.id);
   const images =
     propertyIds.length > 0
@@ -90,13 +68,14 @@ export async function getProperties({
           .from(propertyImagesTable)
           .where(
             or(
-              ...propertyIds.map((id) => eq(propertyImagesTable.propertyId, id))
-            )
+              ...propertyIds.map((id) =>
+                eq(propertyImagesTable.propertyId, id),
+              ),
+            ),
           )
           .orderBy(asc(propertyImagesTable.order))
       : [];
 
-  // Group images by property ID
   const imagesByPropertyId = images.reduce((acc, image) => {
     if (!acc[image.propertyId]) {
       acc[image.propertyId] = [];
@@ -105,12 +84,11 @@ export async function getProperties({
     return acc;
   }, {} as Record<string, PropertyWithImages['images']>);
 
-  // Combine properties with images - TypeScript knows the exact shape
   const propertiesWithImages: PropertyWithImages[] = properties.map(
     (property) => ({
       ...property,
       images: imagesByPropertyId[property.id] || [],
-    })
+    }),
   );
 
   const pageCount = Math.ceil(totalCount / pageSize);
@@ -123,55 +101,46 @@ export async function getProperties({
   };
 }
 
-// Get single property with all related data (images + user) for detail view
 export async function getProperty(
   propertyId: string,
-  userId?: string
-): Promise<PropertyWithAll | null> {
+  userId?: string,
+): Promise<PropertyWithImages | null> {
   const whereConditions = [eq(propertiesTable.id, propertyId)];
 
-  // If userId is provided, ensure the user owns the property
   if (userId) {
     whereConditions.push(eq(propertiesTable.userId, userId));
   }
 
-  const [propertyWithUser] = await db
+  const [property] = await db
     .select({
-      // Property fields
       id: propertiesTable.id,
-      title: propertiesTable.title,
-      description: propertiesTable.description,
       address: propertiesTable.address,
       city: propertiesTable.city,
       state: propertiesTable.state,
-      zipCode: propertiesTable.zipCode,
+      postalCode: propertiesTable.postalCode,
       country: propertiesTable.country,
-      price: propertiesTable.price,
-      type: propertiesTable.type,
+      originalListPrice: propertiesTable.originalListPrice,
+      closePrice: propertiesTable.closePrice,
+      currentPrice: propertiesTable.currentPrice,
+      pricePerSqFt: propertiesTable.pricePerSqFt,
       bedrooms: propertiesTable.bedrooms,
       bathrooms: propertiesTable.bathrooms,
-      squareFootage: propertiesTable.squareFootage,
+      livingArea: propertiesTable.livingArea,
       yearBuilt: propertiesTable.yearBuilt,
       lotSize: propertiesTable.lotSize,
       status: propertiesTable.status,
       userId: propertiesTable.userId,
       createdAt: propertiesTable.createdAt,
       updatedAt: propertiesTable.updatedAt,
-      // User fields
-      userFirstName: usersTable.firstName,
-      userLastName: usersTable.lastName,
-      userEmail: usersTable.email,
     })
     .from(propertiesTable)
-    .leftJoin(usersTable, eq(propertiesTable.userId, usersTable.id))
     .where(and(...whereConditions))
     .limit(1);
 
-  if (!propertyWithUser) {
+  if (!property) {
     return null;
   }
 
-  // Get images for this property
   const images = await db
     .select()
     .from(propertyImagesTable)
@@ -179,41 +148,32 @@ export async function getProperty(
     .orderBy(asc(propertyImagesTable.order));
 
   return {
-    id: propertyWithUser.id,
-    title: propertyWithUser.title,
-    description: propertyWithUser.description,
-    address: propertyWithUser.address,
-    city: propertyWithUser.city,
-    state: propertyWithUser.state,
-    zipCode: propertyWithUser.zipCode,
-    country: propertyWithUser.country,
-    price: propertyWithUser.price,
-    type: propertyWithUser.type,
-    bedrooms: propertyWithUser.bedrooms,
-    bathrooms: propertyWithUser.bathrooms,
-    squareFootage: propertyWithUser.squareFootage,
-    yearBuilt: propertyWithUser.yearBuilt,
-    lotSize: propertyWithUser.lotSize,
-    status: propertyWithUser.status,
-    userId: propertyWithUser.userId,
-    createdAt: propertyWithUser.createdAt,
-    updatedAt: propertyWithUser.updatedAt,
+    id: property.id,
+    address: property.address,
+    city: property.city,
+    state: property.state,
+    postalCode: property.postalCode,
+    country: property.country,
+    originalListPrice: property.originalListPrice,
+    currentPrice: property.currentPrice,
+    closePrice: property.closePrice,
+    pricePerSqFt: property.pricePerSqFt,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    livingArea: property.livingArea,
+    yearBuilt: property.yearBuilt,
+    lotSize: property.lotSize,
+    status: property.status,
+    userId: property.userId,
+    createdAt: property.createdAt,
+    updatedAt: property.updatedAt,
     images,
-    user:
-      propertyWithUser.userFirstName && propertyWithUser.userLastName
-        ? {
-            id: propertyWithUser.userId,
-            firstName: propertyWithUser.userFirstName,
-            lastName: propertyWithUser.userLastName,
-            email: propertyWithUser.userEmail,
-          }
-        : undefined,
   };
 }
 
 export async function createPropertyAction(
   prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ) {
   const user = await requireUser();
 
@@ -222,10 +182,12 @@ export async function createPropertyAction(
   const state = formData.get('state') as string;
   const postalCode = formData.get('postalCode') as string;
 
-  const address = `${street}, ${city}, ${state} ${postalCode}`;
-
   try {
-    const mlsProperty = await findProperty(address);
+    const mlsProperty = await findProperty(street, city, state, postalCode);
+    if (!mlsProperty) {
+      return { success: false, error: 'Property not found' };
+    }
+
     await db.transaction(async (tx) => {
       const [{ id: propertyId }] = await tx
         .insert(propertiesTable)
@@ -250,7 +212,7 @@ export async function createPropertyAction(
         .returning({ id: propertiesTable.id });
 
       const images = mlsProperty.Media.filter(
-        (media: BridgeMedia) => media.MediaCategory === 'Photo'
+        (media: BridgeMedia) => media.MediaCategory === 'Photo',
       ).map((media: BridgeMedia) => ({
         order: media.Order,
         url: media.MediaURL,
@@ -270,34 +232,4 @@ export async function createPropertyAction(
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: msg };
   }
-}
-
-// Create property using the NewProperty type
-export async function createProperty(
-  propertyData: Omit<NewProperty, 'id' | 'createdAt' | 'updatedAt'>
-): Promise<Property> {
-  const [newProperty] = await db
-    .insert(propertiesTable)
-    .values({
-      ...propertyData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    })
-    .returning();
-
-  return newProperty;
-}
-
-// Update property using the PropertyUpdate type
-export async function updateProperty(
-  propertyId: string,
-  updates: PropertyUpdate
-): Promise<Property | null> {
-  const [updatedProperty] = await db
-    .update(propertiesTable)
-    .set(updates)
-    .where(eq(propertiesTable.id, propertyId))
-    .returning();
-
-  return updatedProperty || null;
 }

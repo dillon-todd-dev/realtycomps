@@ -28,7 +28,7 @@ export default async function PropertyDetailPage({
     return (
       <>
         <PageHeader
-          title={property.title || 'Property Details'}
+          title='Property Details'
           description={property.address || ''}
           action={
             <div className='flex gap-2'>

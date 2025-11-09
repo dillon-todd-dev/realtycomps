@@ -26,29 +26,16 @@ export type PropertyWithImages = Property & {
   images: PropertyImage[];
 };
 
-export type PropertyWithOwner = Property & {
-  user: Pick<User, 'id' | 'firstName' | 'lastName'>;
-};
-
-export type PropertyWithAll = Property & {
-  images: PropertyImage[];
-  user: Pick<User, 'id' | 'firstName' | 'lastName' | 'email'>;
-};
-
 // For your specific use cases
 export type UserRole = User['role']; // 'ROLE_USER' | 'ROLE_ADMIN'
-export type PropertyType = Property['type']; // 'house' | 'apartment' | etc.
 export type PropertyStatus = Property['status']; // 'active' | 'sold' | etc.
 
-// Partial types for updates
-export type PropertyUpdate = Partial<
-  Pick<
-    Property,
-    'title' | 'description' | 'address' | 'price' | 'type' | 'status'
-  >
-> & {
-  updatedAt: Date;
-};
+// // Partial types for updates
+// export type PropertyUpdate = Partial<
+//   Pick<Property, 'title' | 'description' | 'address' | 'price' | 'status'>
+// > & {
+//   updatedAt: Date;
+// };
 
 export type UserUpdate = Partial<
   Pick<User, 'firstName' | 'lastName' | 'isActive'>
@@ -69,4 +56,13 @@ export type GetUsersResponse = {
   totalCount: number;
   pageCount: number;
   currentPage: number;
+};
+
+export type Address = {
+  streetNumber: string;
+  streetName: string;
+  streetSuffix: string;
+  city: string;
+  state: string;
+  postalCode: string;
 };

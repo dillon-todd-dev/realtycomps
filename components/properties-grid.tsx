@@ -2,15 +2,8 @@
 
 import { useState, useEffect, useTransition, useCallback } from 'react';
 import { getProperties } from '@/actions/properties';
-import { Property, PropertyWithImages } from '@/lib/types';
+import { PropertyWithImages } from '@/lib/types';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import {
   Pagination,
   PaginationContent,
@@ -45,7 +38,8 @@ function PropertyCard({ property }: { property: PropertyWithImages }) {
     return parseFloat(value);
   };
 
-  const price = parseDecimal(property.price);
+  console.log(property.images);
+  const price = parseDecimal(property.currentPrice);
   const bathrooms = parseDecimal(property.bathrooms);
 
   return (
@@ -55,7 +49,7 @@ function PropertyCard({ property }: { property: PropertyWithImages }) {
           {property.images && property.images.length > 0 ? (
             <Image
               src={property.images[0].url}
-              alt={property.title || 'Property image'}
+              alt={property.images[0].alt || 'Property image'}
               fill
               className='object-cover group-hover:scale-105 transition-transform duration-200'
               sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
@@ -63,15 +57,6 @@ function PropertyCard({ property }: { property: PropertyWithImages }) {
           ) : (
             <div className='w-full h-full bg-muted flex items-center justify-center'>
               <Home className='h-12 w-12 text-muted-foreground' />
-            </div>
-          )}
-
-          {/* Property type badge */}
-          {property.type && (
-            <div className='absolute top-3 left-3'>
-              <span className='bg-background/90 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-medium capitalize'>
-                {property.type}
-              </span>
             </div>
           )}
 
@@ -89,21 +74,11 @@ function PropertyCard({ property }: { property: PropertyWithImages }) {
       <CardContent className='p-4'>
         <Link href={`/dashboard/properties/${property.id}`}>
           <div className='space-y-2'>
-            <h3 className='font-semibold text-lg line-clamp-1 group-hover:text-primary transition-colors'>
-              {property.title || 'Untitled Property'}
-            </h3>
-
             {property.address && (
               <div className='flex items-center gap-1 text-muted-foreground'>
                 <MapPin className='h-4 w-4' />
                 <span className='text-sm line-clamp-1'>{property.address}</span>
               </div>
-            )}
-
-            {property.description && (
-              <p className='text-sm text-muted-foreground line-clamp-2'>
-                {property.description}
-              </p>
             )}
 
             <div className='flex items-center justify-between pt-2'>
@@ -113,9 +88,9 @@ function PropertyCard({ property }: { property: PropertyWithImages }) {
                 </div>
               ) : null}
 
-              {property.squareFootage && (
+              {property.livingArea && (
                 <div className='text-sm text-muted-foreground'>
-                  {property.squareFootage.toLocaleString()} sq ft
+                  {property.livingArea.toLocaleString()} sq ft
                 </div>
               )}
             </div>
@@ -135,7 +110,6 @@ export default function PropertiesGrid({
   const [pageCount, setPageCount] = useState(initialData.pageCount);
   const [currentPage, setCurrentPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [typeFilter, setTypeFilter] = useState<Property['type'] | 'all'>('all');
   const [isPending, startTransition] = useTransition();
 
   const debouncedSearch = useDebounce(search, 300);
@@ -147,7 +121,6 @@ export default function PropertiesGrid({
           page: currentPage,
           pageSize: 12,
           search: debouncedSearch,
-          type: typeFilter === 'all' ? undefined : typeFilter,
           userId,
         });
 
@@ -158,7 +131,7 @@ export default function PropertiesGrid({
         toast.error('Failed to fetch properties');
       }
     });
-  }, [currentPage, debouncedSearch, typeFilter, userId]);
+  }, [currentPage, debouncedSearch, userId]);
 
   useEffect(() => {
     fetchProperties();
@@ -167,7 +140,7 @@ export default function PropertiesGrid({
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, typeFilter]);
+  }, [debouncedSearch]);
 
   return (
     <div className='space-y-6'>
@@ -184,26 +157,6 @@ export default function PropertiesGrid({
                 className='pl-11 h-11'
               />
             </div>
-
-            <Select
-              value={typeFilter}
-              onValueChange={(value) =>
-                setTypeFilter(value as Property['type'] | 'all')
-              }
-            >
-              <SelectTrigger className='w-full md:w-[200px] h-11'>
-                <SelectValue placeholder='Property type' />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value='all'>All types</SelectItem>
-                <SelectItem value='house'>House</SelectItem>
-                <SelectItem value='apartment'>Apartment</SelectItem>
-                <SelectItem value='condo'>Condo</SelectItem>
-                <SelectItem value='townhouse'>Townhouse</SelectItem>
-                <SelectItem value='land'>Land</SelectItem>
-                <SelectItem value='commercial'>Commercial</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </CardContent>
       </Card>
@@ -233,11 +186,11 @@ export default function PropertiesGrid({
                     No properties found
                   </h3>
                   <p className='text-muted-foreground'>
-                    {search || typeFilter !== 'all'
+                    {search
                       ? 'Try adjusting your search or filters'
                       : 'Get started by adding your first property'}
                   </p>
-                  {!search && typeFilter === 'all' && (
+                  {!search && (
                     <Button asChild className='mt-4'>
                       <Link href='/dashboard/properties/create'>
                         <Plus className='h-4 w-4 mr-2' />

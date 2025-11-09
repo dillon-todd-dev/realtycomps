@@ -2,22 +2,6 @@ import { relations } from 'drizzle-orm';
 import { pgEnum, integer, decimal } from 'drizzle-orm/pg-core';
 import { pgTable, text, timestamp, boolean, uuid } from 'drizzle-orm/pg-core';
 
-export const propertyTypeEnum = pgEnum('property_type', [
-  'house',
-  'apartment',
-  'condo',
-  'townhouse',
-  'land',
-  'commercial',
-]);
-
-export const propertyStatusEnum = pgEnum('property_status', [
-  'active',
-  'sold',
-  'pending',
-  'inactive',
-]);
-
 export const userRoleEnum = pgEnum('user_role', ['ROLE_USER', 'ROLE_ADMIN']);
 
 export const usersTable = pgTable('users', {
@@ -57,14 +41,11 @@ export const userInvitationsTable = pgTable('user_invitations', {
 
 export const propertiesTable = pgTable('properties', {
   id: uuid('id').primaryKey().defaultRandom(),
-  title: text('title'),
-  description: text('description'),
   address: text('address'),
   city: text('city'),
   state: text('state'),
   postalCode: text('postal_code'),
   country: text('country').default('United States'),
-  listPrice: decimal('list_price', { precision: 12, scale: 2 }),
   originalListPrice: decimal('original_list_price', {
     precision: 12,
     scale: 2,
@@ -72,7 +53,6 @@ export const propertiesTable = pgTable('properties', {
   currentPrice: decimal('current_price', { precision: 12, scale: 2 }),
   closePrice: decimal('close_price', { precision: 12, scale: 2 }),
   pricePerSqFt: decimal('price_per_sq_ft', { precision: 12, scale: 2 }),
-  type: propertyTypeEnum('type'),
   bedrooms: integer('bedrooms'),
   bathrooms: decimal('bathrooms', { precision: 3, scale: 1 }), // Allows 2.5 bathrooms
   livingArea: integer('living_area'),
@@ -118,7 +98,7 @@ export const userInvitationsRelations = relations(
       fields: [userInvitationsTable.userId],
       references: [usersTable.id],
     }),
-  })
+  }),
 );
 
 export const propertiesRelations = relations(
@@ -129,7 +109,7 @@ export const propertiesRelations = relations(
       references: [usersTable.id],
     }),
     images: many(propertyImagesTable),
-  })
+  }),
 );
 
 export const propertyImagesRelations = relations(
@@ -139,5 +119,5 @@ export const propertyImagesRelations = relations(
       fields: [propertyImagesTable.propertyId],
       references: [propertiesTable.id],
     }),
-  })
+  }),
 );

@@ -5,13 +5,11 @@ import PropertiesGrid from '@/components/properties-grid';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
-import { PropertyType } from '@/lib/types';
 
 interface PropertiesPageProps {
   searchParams: {
     page?: string;
     search?: string;
-    type?: PropertyType;
   };
 }
 
@@ -22,13 +20,11 @@ export default async function PropertiesPage({
 
   const page = parseInt(searchParams.page || '1');
   const search = searchParams.search || '';
-  const type = searchParams.type || undefined;
 
   const initialData = await getProperties({
     page,
     pageSize: 12, // Good for grid layout
     search,
-    type,
     userId: user.id,
   });
 
