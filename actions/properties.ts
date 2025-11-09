@@ -68,10 +68,8 @@ export async function getProperties({
           .from(propertyImagesTable)
           .where(
             or(
-              ...propertyIds.map((id) =>
-                eq(propertyImagesTable.propertyId, id),
-              ),
-            ),
+              ...propertyIds.map((id) => eq(propertyImagesTable.propertyId, id))
+            )
           )
           .orderBy(asc(propertyImagesTable.order))
       : [];
@@ -88,7 +86,7 @@ export async function getProperties({
     (property) => ({
       ...property,
       images: imagesByPropertyId[property.id] || [],
-    }),
+    })
   );
 
   const pageCount = Math.ceil(totalCount / pageSize);
@@ -103,7 +101,7 @@ export async function getProperties({
 
 export async function getProperty(
   propertyId: string,
-  userId?: string,
+  userId?: string
 ): Promise<PropertyWithImages | null> {
   const whereConditions = [eq(propertiesTable.id, propertyId)];
 
@@ -173,7 +171,7 @@ export async function getProperty(
 
 export async function createPropertyAction(
   prevState: unknown,
-  formData: FormData,
+  formData: FormData
 ) {
   const user = await requireUser();
 
@@ -182,8 +180,10 @@ export async function createPropertyAction(
   const state = formData.get('state') as string;
   const postalCode = formData.get('postalCode') as string;
 
+  const address = `${street}, ${city} ${state} ${postalCode}`;
+
   try {
-    const mlsProperty = await findProperty(street, city, state, postalCode);
+    const mlsProperty = await findProperty(address);
     if (!mlsProperty) {
       return { success: false, error: 'Property not found' };
     }
@@ -212,7 +212,7 @@ export async function createPropertyAction(
         .returning({ id: propertiesTable.id });
 
       const images = mlsProperty.Media.filter(
-        (media: BridgeMedia) => media.MediaCategory === 'Photo',
+        (media: BridgeMedia) => media.MediaCategory === 'Photo'
       ).map((media: BridgeMedia) => ({
         order: media.Order,
         url: media.MediaURL,
@@ -220,7 +220,9 @@ export async function createPropertyAction(
         propertyId,
       }));
 
-      await tx.insert(propertyImagesTable).values(images);
+      if (images.length > 0) {
+        await tx.insert(propertyImagesTable).values(images);
+      }
     });
 
     return {
