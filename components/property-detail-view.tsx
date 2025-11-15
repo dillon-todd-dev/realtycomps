@@ -1,18 +1,18 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
-  MapPin,
-  Bed,
-  Bath,
-  Square,
-  Calendar,
-  DollarSign,
-  Ruler,
-} from 'lucide-react';
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+  type CarouselApi,
+} from '@/components/ui/carousel';
+import { MapPin, Bed, Bath, Square, Calendar, Ruler } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PropertyWithImages } from '@/lib/types';
 
 interface PropertyDetailViewProps {
@@ -22,8 +22,29 @@ interface PropertyDetailViewProps {
 export default function PropertyDetailView({
   property,
 }: PropertyDetailViewProps) {
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [api, setApi] = useState<CarouselApi>();
+  const [thumbnailApi, setThumbnailApi] = useState<CarouselApi>();
+  const [current, setCurrent] = useState(0);
+  const [count, setCount] = useState(0);
   const images = property.images || [];
+
+  useEffect(() => {
+    if (!api) {
+      return;
+    }
+
+    setCount(api.scrollSnapList().length);
+    setCurrent(api.selectedScrollSnap() + 1);
+
+    api.on('select', () => {
+      setCurrent(api.selectedScrollSnap() + 1);
+
+      // Sync thumbnail carousel with main carousel
+      if (thumbnailApi) {
+        thumbnailApi.scrollTo(api.selectedScrollSnap());
+      }
+    });
+  }, [api, thumbnailApi]);
 
   // Helper function to parse decimal strings from Drizzle
   const parseDecimal = (value: string | null) => {
@@ -37,222 +58,219 @@ export default function PropertyDetailView({
 
   return (
     <div className='space-y-6'>
-      {/* Image Gallery */}
+      {/* Image Carousel */}
       {images.length > 0 && (
         <Card>
-          <CardContent className='p-0'>
-            <div className='grid grid-cols-1 lg:grid-cols-4 gap-2'>
-              {/* Main Image */}
-              <div className='lg:col-span-3'>
-                <div className='relative aspect-[16/10] overflow-hidden rounded-l-lg'>
-                  <Image
-                    src={images[selectedImageIndex]?.url || images[0].url}
-                    alt={images[selectedImageIndex]?.alt || 'Property image'}
-                    fill
-                    className='object-cover'
-                    sizes='(max-width: 1024px) 100vw, 75vw'
-                    priority
-                  />
-                </div>
-              </div>
-
-              {/* Thumbnail Grid */}
-              <div className='space-y-2'>
-                {images.slice(0, 4).map((image, index) => (
-                  <div
-                    key={image.id}
-                    className={`relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer transition-opacity ${
-                      index === selectedImageIndex
-                        ? 'ring-2 ring-primary'
-                        : 'hover:opacity-80'
-                    }`}
-                    onClick={() => setSelectedImageIndex(index)}
-                  >
-                    <Image
-                      src={image.url}
-                      alt={image.alt || `Property image ${index + 1}`}
-                      fill
-                      className='object-cover'
-                      sizes='(max-width: 1024px) 25vw, 200px'
-                    />
-                    {index === 3 && images.length > 4 && (
-                      <div className='absolute inset-0 bg-black/50 flex items-center justify-center'>
-                        <span className='text-white font-semibold'>
-                          +{images.length - 4} more
-                        </span>
-                      </div>
-                    )}
-                  </div>
+          <CardContent className='p-6'>
+            <Carousel setApi={setApi} className='w-full'>
+              <CarouselContent>
+                {images.map((image) => (
+                  <CarouselItem key={image.id}>
+                    <div className='relative aspect-[21/9] overflow-hidden rounded-lg'>
+                      <Image
+                        src={image.url}
+                        alt={image.alt || 'Property image'}
+                        fill
+                        className='object-cover'
+                        sizes='100vw'
+                        priority
+                      />
+                    </div>
+                  </CarouselItem>
                 ))}
+              </CarouselContent>
+              <CarouselPrevious className='left-4' />
+              <CarouselNext className='right-4' />
+            </Carousel>
+
+            {/* Thumbnail Navigation */}
+            {images.length > 1 && (
+              <div className='mt-4'>
+                <Carousel
+                  setApi={setThumbnailApi}
+                  opts={{
+                    align: 'start',
+                    dragFree: true,
+                  }}
+                  className='w-full'
+                >
+                  <CarouselContent className='-ml-2'>
+                    {images.map((image, index) => (
+                      <CarouselItem
+                        key={`thumb-${image.id}`}
+                        className='pl-2 basis-1/4 md:basis-1/6 lg:basis-1/8'
+                      >
+                        <div
+                          className={`relative aspect-[4/3] overflow-hidden rounded-md cursor-pointer transition-all ${
+                            current === index + 1
+                              ? 'ring-2 ring-primary'
+                              : 'hover:opacity-80 opacity-60'
+                          }`}
+                          onClick={() => api?.scrollTo(index)}
+                        >
+                          <Image
+                            src={image.url}
+                            alt={image.alt || `Thumbnail ${index + 1}`}
+                            fill
+                            className='object-cover'
+                            sizes='150px'
+                          />
+                        </div>
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                </Carousel>
               </div>
-            </div>
+            )}
+
+            {/* Image Counter */}
+            {images.length > 1 && (
+              <div className='text-center text-sm text-muted-foreground mt-3'>
+                Image {current} of {count}
+              </div>
+            )}
           </CardContent>
         </Card>
       )}
 
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
-        {/* Main Details */}
-        <div className='lg:col-span-2 space-y-6'>
-          {/* Basic Info */}
-          <Card>
-            <CardHeader>
-              <div className='flex items-start justify-between'>
-                <div>
-                  <CardTitle className='text-2xl'>
-                    {property.address && (
-                      <div className='flex items-center gap-1 text-muted-foreground mt-2'>
-                        <MapPin className='h-4 w-4' />
-                        <span>
-                          {property.address}
-                          {property.city && `, ${property.city}`}
-                          {property.state && `, ${property.state}`}
-                          {property.postalCode && ` ${property.postalCode}`}
-                        </span>
-                      </div>
-                    )}
-                  </CardTitle>
-                </div>
-              </div>
-            </CardHeader>
-          </Card>
-
-          {/* Property Features */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Property Features</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
-                {property.bedrooms && (
-                  <div className='flex items-center gap-2'>
-                    <Bed className='h-5 w-5 text-muted-foreground' />
-                    <div>
-                      <div className='font-semibold'>{property.bedrooms}</div>
-                      <div className='text-sm text-muted-foreground'>
-                        Bedrooms
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {bathrooms && (
-                  <div className='flex items-center gap-2'>
-                    <Bath className='h-5 w-5 text-muted-foreground' />
-                    <div>
-                      <div className='font-semibold'>{bathrooms}</div>
-                      <div className='text-sm text-muted-foreground'>
-                        Bathrooms
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {property.livingArea && (
-                  <div className='flex items-center gap-2'>
-                    <Square className='h-5 w-5 text-muted-foreground' />
-                    <div>
-                      <div className='font-semibold'>
-                        {property.livingArea.toLocaleString()}
-                      </div>
-                      <div className='text-sm text-muted-foreground'>Sq Ft</div>
-                    </div>
-                  </div>
-                )}
-
-                {property.yearBuilt && (
-                  <div className='flex items-center gap-2'>
-                    <Calendar className='h-5 w-5 text-muted-foreground' />
-                    <div>
-                      <div className='font-semibold'>{property.yearBuilt}</div>
-                      <div className='text-sm text-muted-foreground'>
-                        Year Built
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {lotSize && (
-                  <div className='flex items-center gap-2'>
-                    <Ruler className='h-5 w-5 text-muted-foreground' />
-                    <div>
-                      <div className='font-semibold'>
-                        {lotSize.toLocaleString()}
-                      </div>
-                      <div className='text-sm text-muted-foreground'>
-                        Lot Size (sq ft)
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className='space-y-6'>
-          {/* Price & Status */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Property Details</CardTitle>
-            </CardHeader>
-            <CardContent className='space-y-4'>
+      {/* Property Information */}
+      <Card>
+        <CardHeader>
+          <div className='flex items-start justify-between flex-wrap gap-4'>
+            <div className='space-y-2'>
+              {/* Price */}
               {price && (
                 <div className='flex items-center gap-2'>
-                  <DollarSign className='h-5 w-5 text-muted-foreground' />
-                  <div>
-                    <div className='text-2xl font-bold'>
-                      ${price.toLocaleString()}
-                    </div>
-                    <div className='text-sm text-muted-foreground'>Price</div>
+                  <div className='text-3xl font-bold'>
+                    ${price.toLocaleString()}
                   </div>
+                  {property.status && (
+                    <Badge
+                      variant={
+                        property.status === 'active' ? 'default' : 'secondary'
+                      }
+                      className='capitalize'
+                    >
+                      {property.status}
+                    </Badge>
+                  )}
                 </div>
               )}
 
-              {property.status && (
+              {/* Address */}
+              {property.address && (
+                <div className='flex items-center gap-2 text-muted-foreground'>
+                  <MapPin className='h-4 w-4 flex-shrink-0' />
+                  <span>
+                    {property.address}
+                    {property.city && `, ${property.city}`}
+                    {property.state && `, ${property.state}`}
+                    {property.postalCode && ` ${property.postalCode}`}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent>
+          {/* Key Features */}
+          <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-6'>
+            {property.bedrooms && (
+              <div className='flex items-center gap-3'>
+                <div className='p-2 bg-muted rounded-lg'>
+                  <Bed className='h-5 w-5 text-muted-foreground' />
+                </div>
                 <div>
-                  <div className='text-sm text-muted-foreground mb-1'>
-                    Status
+                  <div className='font-semibold text-lg'>
+                    {property.bedrooms}
                   </div>
-                  <Badge
-                    variant={
-                      property.status === 'active' ? 'default' : 'secondary'
-                    }
-                    className='capitalize'
-                  >
-                    {property.status}
-                  </Badge>
-                </div>
-              )}
-
-              <div>
-                <div className='text-sm text-muted-foreground mb-1'>
-                  Property ID
-                </div>
-                <div className='font-mono text-sm'>{property.id}</div>
-              </div>
-
-              <div>
-                <div className='text-sm text-muted-foreground mb-1'>
-                  Created
-                </div>
-                <div className='text-sm'>
-                  {new Date(property.createdAt).toLocaleDateString()}
+                  <div className='text-sm text-muted-foreground'>Bedrooms</div>
                 </div>
               </div>
+            )}
 
-              <div>
-                <div className='text-sm text-muted-foreground mb-1'>
-                  Last Updated
+            {bathrooms && (
+              <div className='flex items-center gap-3'>
+                <div className='p-2 bg-muted rounded-lg'>
+                  <Bath className='h-5 w-5 text-muted-foreground' />
                 </div>
-                <div className='text-sm'>
-                  {new Date(property.updatedAt).toLocaleDateString()}
+                <div>
+                  <div className='font-semibold text-lg'>{bathrooms}</div>
+                  <div className='text-sm text-muted-foreground'>Bathrooms</div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+            )}
+
+            {property.livingArea && (
+              <div className='flex items-center gap-3'>
+                <div className='p-2 bg-muted rounded-lg'>
+                  <Square className='h-5 w-5 text-muted-foreground' />
+                </div>
+                <div>
+                  <div className='font-semibold text-lg'>
+                    {property.livingArea.toLocaleString()}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>Sq Ft</div>
+                </div>
+              </div>
+            )}
+
+            {property.yearBuilt && (
+              <div className='flex items-center gap-3'>
+                <div className='p-2 bg-muted rounded-lg'>
+                  <Calendar className='h-5 w-5 text-muted-foreground' />
+                </div>
+                <div>
+                  <div className='font-semibold text-lg'>
+                    {property.yearBuilt}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>
+                    Year Built
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {lotSize && (
+              <div className='flex items-center gap-3'>
+                <div className='p-2 bg-muted rounded-lg'>
+                  <Ruler className='h-5 w-5 text-muted-foreground' />
+                </div>
+                <div>
+                  <div className='font-semibold text-lg'>
+                    {lotSize.toLocaleString()}
+                  </div>
+                  <div className='text-sm text-muted-foreground'>
+                    Lot (sq ft)
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Additional Details */}
+          <div className='border-t pt-6'>
+            <h3 className='text-sm font-semibold text-muted-foreground mb-4'>
+              ADDITIONAL DETAILS
+            </h3>
+            <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-sm'>
+              <div>
+                <div className='text-muted-foreground mb-1'>Property ID</div>
+                <div className='font-mono'>{property.id}</div>
+              </div>
+              <div>
+                <div className='text-muted-foreground mb-1'>Created</div>
+                <div>{new Date(property.createdAt).toLocaleDateString()}</div>
+              </div>
+              <div>
+                <div className='text-muted-foreground mb-1'>Last Updated</div>
+                <div>{new Date(property.updatedAt).toLocaleDateString()}</div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
