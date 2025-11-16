@@ -1,4 +1,4 @@
-import UsersDataTable from '@/components/users-data-table';
+import UsersDataTable from '@/components/user/users-data-table';
 import { getUsers } from '@/actions/users';
 import { requireAdmin } from '@/lib/session';
 import PageHeader from '@/components/page-header';

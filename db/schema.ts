@@ -92,7 +92,9 @@ export const evaluationsTable = pgTable('evaluations', {
   propertyId: uuid('property_id')
     .references(() => propertiesTable.id, { onDelete: 'cascade' })
     .notNull(),
-  name: text('name'), // Optional name/label for this evaluation
+  userId: uuid('user_id')
+    .references(() => usersTable.id, { onDelete: 'cascade' })
+    .notNull(),
 
   // Core property evaluation fields
   estimatedSalePrice: decimal('estimated_sale_price', {
@@ -127,6 +129,18 @@ export const evaluationsTable = pgTable('evaluations', {
   propertyTax: decimal('property_tax', { precision: 12, scale: 2 }).default(
     '0'
   ),
+
+  // calculated metrics
+  cashOnCashROI: decimal('cash_on_cash_roi', { precision: 5, scale: 2 }),
+  totalROI: decimal('total_roi', { precision: 5, scale: 2 }),
+  capRate: decimal('cap_rate', { precision: 5, scale: 2 }),
+  monthlyCashFlow: decimal('monthly_cash_flow', { precision: 12, scale: 2 }),
+  annualCashFlow: decimal('annual_cash_flow', { precision: 12, scale: 2 }),
+  totalCashOutOfPocket: decimal('total_cash_out_of_pocket', {
+    precision: 12,
+    scale: 2,
+  }),
+  equityCapture: decimal('equity_capture', { precision: 12, scale: 2 }),
 
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
     .defaultNow()
@@ -302,6 +316,7 @@ export const propertiesRelations = relations(
       references: [usersTable.id],
     }),
     images: many(propertyImagesTable),
+    evaluations: many(evaluationsTable),
   })
 );
 
@@ -322,6 +337,10 @@ export const evaluationsRelations = relations(
     property: one(propertiesTable, {
       fields: [evaluationsTable.propertyId],
       references: [propertiesTable.id],
+    }),
+    user: one(usersTable, {
+      fields: [evaluationsTable.userId],
+      references: [usersTable.id],
     }),
     conventionalLoanParams: one(conventionalLoanParamsTable),
     hardMoneyLoanParams: one(hardMoneyLoanParamsTable),

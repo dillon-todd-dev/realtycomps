@@ -18,7 +18,7 @@ import { Loader2, Search, Home, Plus } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'sonner';
 import Link from 'next/link';
-import PropertyCard from '@/components/property-card';
+import PropertyCard from '@/components/property/property-card';
 
 interface PropertiesGridProps {
   initialData: {

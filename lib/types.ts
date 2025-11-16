@@ -6,6 +6,7 @@ import {
   userInvitationsTable,
   propertiesTable,
   propertyImagesTable,
+  evaluationsTable,
 } from '@/db/schema';
 
 // Extract types from tables
@@ -20,6 +21,9 @@ export type NewProperty = InferInsertModel<typeof propertiesTable>;
 
 export type PropertyImage = InferSelectModel<typeof propertyImagesTable>;
 export type NewPropertyImage = InferInsertModel<typeof propertyImagesTable>;
+
+export type Evaluation = InferSelectModel<typeof evaluationsTable>;
+export type NewEvaluation = InferInsertModel<typeof evaluationsTable>;
 
 // You can also create custom types by extending the base types
 export type PropertyWithImages = Property & {
@@ -65,4 +69,15 @@ export type Address = {
   city: string;
   state: string;
   postalCode: string;
+};
+
+export type EvaluationListItem = {
+  id: string;
+  strategyType?: 'conventional' | 'hard_money' | null;
+  cashOnCashROI?: string | null;
+  monthlyCashFlow?: string | null;
+  capRate?: string | null;
+  totalROI?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
 };

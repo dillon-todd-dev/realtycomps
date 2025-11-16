@@ -1,6 +1,6 @@
 'use client';
 
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
   Carousel,
@@ -10,17 +10,30 @@ import {
   CarouselPrevious,
   type CarouselApi,
 } from '@/components/ui/carousel';
-import { MapPin, Bed, Bath, Square, Calendar, Ruler } from 'lucide-react';
+import {
+  MapPin,
+  Bed,
+  Bath,
+  Square,
+  Calendar,
+  Ruler,
+  Calculator,
+} from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { PropertyWithImages } from '@/lib/types';
+import { EvaluationListItem, PropertyWithImages } from '@/lib/types';
+import { Button } from '../ui/button';
+import EvaluationListItemCard from '../evaluation/evaluation-list-item';
+import { createEvaluation } from '@/actions/evaluations';
 
 interface PropertyDetailViewProps {
   property: PropertyWithImages;
+  evaluations?: EvaluationListItem[];
 }
 
 export default function PropertyDetailView({
   property,
+  evaluations = [],
 }: PropertyDetailViewProps) {
   const [api, setApi] = useState<CarouselApi>();
   const [thumbnailApi, setThumbnailApi] = useState<CarouselApi>();
@@ -269,6 +282,52 @@ export default function PropertyDetailView({
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Property Evaluations */}
+      <Card>
+        <CardHeader>
+          <div className='flex items-center justify-between'>
+            <CardTitle>Investment Evaluations</CardTitle>
+            <p className='text-sm text-muted-foreground mt-1'>
+              Analyze this property's investment potential
+            </p>
+          </div>
+          <Button
+            onClick={() =>
+              createEvaluation({
+                propertyId: property.id,
+                userId: property.userId,
+              })
+            }
+          >
+            Create Evaluation
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {evaluations?.length === 0 ? (
+            <div className='text-center py-12'>
+              <div className='inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4'>
+                <Calculator className='h-8 w-8 text-muted-foreground' />
+              </div>
+              <h3 className='text-lg font-semibold mb-2'>No evaluations yet</h3>
+              <p className='text-sm text-muted-foreground mb-4'>
+                Create your first investment evaluation to analyze this
+                property's potential ROI, cash flow, and profitability.
+              </p>
+            </div>
+          ) : (
+            <div className='space-y-3'>
+              {evaluations.map((evaluation) => (
+                <EvaluationListItemCard
+                  key={evaluation.id}
+                  evaluation={evaluation}
+                  propertyId={property.id}
+                />
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

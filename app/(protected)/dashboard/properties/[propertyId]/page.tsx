@@ -1,36 +1,26 @@
 import { getProperty } from '@/actions/properties';
 import { requireUser } from '@/lib/session';
 import PageHeader from '@/components/page-header';
-import PropertyDetailView from '@/components/property-detail-view';
+import PropertyDetailView from '@/components/property/property-detail-view';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Edit } from 'lucide-react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { PropertyWithImages } from '@/lib/types';
+import { getEvaluationsByProperty } from '@/actions/evaluations';
 
 interface PropertyDetailPageProps {
   params: {
-    id: string;
+    propertyId: string;
   };
-}
-
-async function fetchProperty(
-  propertyId: string,
-  userId: string
-): Promise<PropertyWithImages | null> {
-  try {
-    return getProperty(propertyId, userId);
-  } catch (err) {
-    return null;
-  }
 }
 
 export default async function PropertyDetailPage({
   params,
 }: PropertyDetailPageProps) {
   const user = await requireUser();
-
-  const property = await getProperty(params.id, user.id);
+  const { propertyId } = await params;
+  const property = await getProperty(propertyId, user.id);
+  const evaluations = await getEvaluationsByProperty(propertyId, user.id);
 
   if (!property) {
     notFound();
@@ -50,7 +40,7 @@ export default async function PropertyDetailPage({
               </Link>
             </Button>
             <Button asChild>
-              <Link href={`/dashboard/properties/${params.id}/edit`}>
+              <Link href={`/dashboard/properties/${propertyId}/edit`}>
                 <Edit className='h-4 w-4 mr-2' />
                 Edit Property
               </Link>
@@ -60,7 +50,7 @@ export default async function PropertyDetailPage({
       />
 
       <div className='p-6'>
-        <PropertyDetailView property={property} />
+        <PropertyDetailView property={property} evaluations={evaluations} />
       </div>
     </>
   );
