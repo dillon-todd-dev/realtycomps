@@ -349,6 +349,36 @@ export const evaluationsRelations = relations(
   })
 );
 
+export const conventionalLoanParamsRelations = relations(
+  conventionalLoanParamsTable,
+  ({ one }) => ({
+    evaluation: one(evaluationsTable, {
+      fields: [conventionalLoanParamsTable.evaluationId],
+      references: [evaluationsTable.id],
+    }),
+  })
+);
+
+export const hardMoneyLoanParamsRelations = relations(
+  hardMoneyLoanParamsTable,
+  ({ one }) => ({
+    evaluation: one(evaluationsTable, {
+      fields: [hardMoneyLoanParamsTable.evaluationId],
+      references: [evaluationsTable.id],
+    }),
+  })
+);
+
+export const refinanceLoanParamsRelations = relations(
+  refinanceLoanParamsTable,
+  ({ one }) => ({
+    evaluation: one(evaluationsTable, {
+      fields: [refinanceLoanParamsTable.evaluationId],
+      references: [evaluationsTable.id],
+    }),
+  })
+);
+
 export const comparablesRelations = relations(comparablesTable, ({ one }) => ({
   evaluation: one(evaluationsTable, {
     fields: [comparablesTable.evaluationId],

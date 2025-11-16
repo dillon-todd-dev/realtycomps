@@ -9,7 +9,6 @@ import { notFound } from 'next/navigation';
 
 interface EvaluationDetailPageProps {
   params: {
-    propertyId: string;
     evaluationId: string;
   };
 }
@@ -18,7 +17,7 @@ export default async function EvaluationDetailPage({
   params,
 }: EvaluationDetailPageProps) {
   const user = await requireUser();
-  const { propertyId, evaluationId } = await params;
+  const { evaluationId } = await params;
   const evaluation = await getEvaluation(evaluationId, user.id);
 
   if (!evaluation) {
@@ -35,7 +34,7 @@ export default async function EvaluationDetailPage({
         }`}
         action={
           <Button variant='outline' asChild>
-            <Link href={`/dashboard/properties/${propertyId}`}>
+            <Link href={`/dashboard/properties/${evaluation.property.id}`}>
               <ArrowLeft className='h-4 w-4 mr-2' />
               Back to Property
             </Link>
