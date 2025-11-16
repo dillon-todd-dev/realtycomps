@@ -6,7 +6,6 @@ import { eq, and, or, ilike, count, desc, asc } from 'drizzle-orm';
 import { PropertyWithImages, GetPropertiesResponse } from '@/lib/types';
 import { findProperty } from '@/lib/bridge';
 import { requireUser } from '@/lib/session';
-import { success } from 'zod';
 
 type BridgeMedia = {
   Order: number;

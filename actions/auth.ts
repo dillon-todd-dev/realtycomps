@@ -10,7 +10,7 @@ import bcrypt from 'bcryptjs';
 
 export async function login(
   state: LoginFormState,
-  formData: FormData,
+  formData: FormData
 ): Promise<LoginFormState> {
   const validatedFields = LoginFormSchema.safeParse({
     email: formData.get('email') as string,
@@ -29,11 +29,12 @@ export async function login(
     where: and(
       eq(usersTable.email, email),
       eq(usersTable.hasSetPassword, true),
-      eq(usersTable.isActive, true),
+      eq(usersTable.isActive, true)
     ),
   });
 
   if (!user || !user.password) {
+    console.log('no user or no password');
     return {
       message: 'An error occured while trying to log you in. Please try again.',
     };

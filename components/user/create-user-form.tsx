@@ -2,7 +2,7 @@
 
 import { createUserByAdmin } from '@/actions/users';
 import { useActionState, useEffect } from 'react';
-import { SubmitButton } from './submit-button';
+import { SubmitButton } from '@/components/submit-button';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';

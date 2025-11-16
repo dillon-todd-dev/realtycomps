@@ -1,10 +1,9 @@
-import CreateUserForm from '@/components/create-user-form';
 import { requireAdmin } from '@/lib/session';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import CreatePropertyForm from '@/components/create-property-form';
+import CreatePropertyForm from '@/components/property/create-property-form';
 
 export default async function AddPropertyPage() {
   await requireAdmin();

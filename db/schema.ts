@@ -253,37 +253,19 @@ export const comparablesTable = pgTable('comparables', {
     .references(() => evaluationsTable.id, { onDelete: 'cascade' })
     .notNull(),
 
-  // Address info
   address: text('address').notNull(),
-  city: text('city').notNull(),
-  state: text('state').notNull(),
-  postalCode: text('postal_code'),
-
-  // Property details
-  subdivision: text('subdivision'),
+  subdivision: text('subdivision').notNull(),
   bedrooms: integer('bedrooms').notNull(),
   bathrooms: decimal('bathrooms', { precision: 3, scale: 1 }).notNull(),
-  garageSpaces: integer('garage_spaces'),
-  squareFootage: integer('square_footage').notNull(),
-  lotSize: integer('lot_size').notNull(),
+  garageSpaces: integer('garage_spaces').notNull(),
   yearBuilt: integer('year_built').notNull(),
-
-  // Pricing
-  price: decimal('price', { precision: 12, scale: 2 }).notNull(),
+  squareFootage: integer('square_footage').notNull(),
+  listPrice: decimal('list_price', { precision: 12, scale: 2 }).notNull(),
+  salePrice: decimal({ precision: 12, scale: 2 }).notNull(),
+  closeDate: timestamp('close_date').notNull(),
   type: comparableTypeEnum('type').notNull(), // SALE or RENT
-
-  // Listing details
-  listingType: text('listing_type').notNull(),
-  listedDate: text('listed_date').notNull(),
-  removedDate: text('removed_date'),
-  lastSeenDate: text('last_seen_date').notNull(),
   daysOnMarket: integer('days_on_market').notNull(),
-  daysOld: integer('days_old').notNull(),
-
-  // Analysis fields
-  distance: decimal('distance', { precision: 10, scale: 2 }).notNull(), // miles from subject property
-  correlation: decimal('correlation', { precision: 5, scale: 4 }).notNull(), // similarity score
-  included: boolean('included').default(true).notNull(), // include in analysis
+  included: boolean('included').default(true).notNull(),
 
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
     .defaultNow()

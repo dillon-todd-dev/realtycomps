@@ -1,4 +1,4 @@
-import CreateUserForm from '@/components/create-user-form';
+import CreateUserForm from '@/components/user/create-user-form';
 import { requireAdmin } from '@/lib/session';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';

@@ -7,6 +7,7 @@ import { useState } from 'react';
 import DealTermsForm from '@/components/evaluation/forms/deal-terms-form';
 import ConventionalFinancingForm from '@/components/evaluation/forms/conventional-financing-form';
 import HardMoneyFinancingForm from '@/components/evaluation/forms/hard-money-financing-form';
+import Comparables from '@/components/evaluation/comparables';
 
 // This type should match your actual evaluation type from the database
 type Evaluation = {
@@ -112,6 +113,12 @@ export default function EvaluationDetailView({
           </div>
         </CardHeader>
       </Card>
+
+      <Comparables
+        evaluationId={evaluation.id}
+        initialComparables={[]}
+        propertyAddress={evaluation.property.address}
+      />
 
       {/* Deal Terms - Always visible */}
       <DealTermsForm evaluation={evaluation} />
