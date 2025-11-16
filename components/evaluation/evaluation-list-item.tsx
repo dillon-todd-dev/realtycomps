@@ -23,7 +23,6 @@ export default function EvaluationListItemCard({
         <div className='flex items-start justify-between'>
           <div className='flex-1'>
             <div className='flex items-center gap-2 mb-3'>
-              <h4 className='font-semibold'>{'Unnamed Evaluation'}</h4>
               {evaluation.strategyType && (
                 <Badge variant='outline' className='capitalize'>
                   {evaluation.strategyType.replace('_', ' ')}
@@ -77,9 +76,6 @@ export default function EvaluationListItemCard({
               {new Date(evaluation.updatedAt).toLocaleDateString()}
             </div>
           </div>
-          <Button variant='ghost' size='icon' className='flex-shrink-0'>
-            <ChevronRight className='h-4 w-4' />
-          </Button>
         </div>
       </div>
     </Link>

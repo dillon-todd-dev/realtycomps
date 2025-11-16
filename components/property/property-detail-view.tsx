@@ -289,21 +289,23 @@ export default function PropertyDetailView({
       <Card>
         <CardHeader>
           <div className='flex items-center justify-between'>
-            <CardTitle>Investment Evaluations</CardTitle>
-            <p className='text-sm text-muted-foreground mt-1'>
-              Analyze this property's investment potential
-            </p>
+            <div>
+              <CardTitle>Investment Evaluations</CardTitle>
+              <p className='text-sm text-muted-foreground mt-1'>
+                Analyze this property's investment potential
+              </p>
+            </div>
+            <Button
+              onClick={() =>
+                createEvaluation({
+                  propertyId: property.id,
+                  userId: property.userId,
+                })
+              }
+            >
+              Create Evaluation
+            </Button>
           </div>
-          <Button
-            onClick={() =>
-              createEvaluation({
-                propertyId: property.id,
-                userId: property.userId,
-              })
-            }
-          >
-            Create Evaluation
-          </Button>
         </CardHeader>
         <CardContent>
           {evaluations?.length === 0 ? (
