@@ -18,11 +18,11 @@ export default async function PropertiesPage({
 }: PropertiesPageProps) {
   const user = await requireUser();
 
-  const page = parseInt(searchParams.page || '1');
-  const search = searchParams.search || '';
+  const { page = '1', search = '' } = await searchParams;
+  const pageParam = parseInt(page);
 
   const initialData = await getProperties({
-    page,
+    page: pageParam,
     pageSize: 12, // Good for grid layout
     search,
     userId: user.id,

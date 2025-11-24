@@ -13,10 +13,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Search, Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Search, Loader2, Eye } from 'lucide-react';
 import { useState, useTransition } from 'react';
 import { searchSaleComparables, toggleComparable } from '@/actions/comparables';
 import { toast } from 'sonner';
+import Image from 'next/image';
 
 type Comparable = {
   id: string;
@@ -34,6 +42,7 @@ type Comparable = {
   daysOnMarket: number;
   type: 'SALE' | 'RENT';
   included: boolean;
+  images?: Array<{ url: string; description?: string }>;
 };
 
 interface ComparablesProps {
@@ -51,6 +60,9 @@ export default function Comparables({
     useState<Comparable[]>(initialComparables);
   const [isPending, startTransition] = useTransition();
   const [hasSearched, setHasSearched] = useState(initialComparables.length > 0);
+  const [selectedComparable, setSelectedComparable] =
+    useState<Comparable | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   async function handleSearch(formData: FormData) {
     startTransition(async () => {
@@ -85,304 +97,499 @@ export default function Comparables({
     comparableId: string,
     currentState: boolean
   ) {
-    // Optimistic update
-    setComparables((prev) =>
-      prev.map((comp) =>
-        comp.id === comparableId ? { ...comp, included: !currentState } : comp
-      )
-    );
+    const newState = !currentState;
+
+    // Optimistic update with reordering
+    setComparables((prev) => {
+      // Update the included status
+      const updated = prev.map((comp) =>
+        comp.id === comparableId ? { ...comp, included: newState } : comp
+      );
+
+      // Sort: included first (true = -1), excluded at bottom (false = 1)
+      return updated.sort((a, b) => {
+        if (a.included === b.included) return 0;
+        return a.included ? -1 : 1;
+      });
+    });
 
     try {
-      await toggleComparable(comparableId, !currentState);
+      await toggleComparable(comparableId, newState);
+
+      setComparables((prev) => {
+        return [...prev].sort((a, b) => {
+          if (a.included === b.included) return 0;
+          return a.included ? -1 : 1;
+        });
+      });
+
+      toast.success(newState ? 'Comparable included' : 'Comparable excluded');
     } catch (error) {
       // Revert on error
-      setComparables((prev) =>
-        prev.map((comp) =>
+      setComparables((prev) => {
+        const reverted = prev.map((comp) =>
           comp.id === comparableId ? { ...comp, included: currentState } : comp
-        )
-      );
+        );
+
+        // Re-sort after reverting
+        return reverted.sort((a, b) => {
+          if (a.included === b.included) return 0;
+          return a.included ? -1 : 1;
+        });
+      });
       toast.error('Failed to update comparable');
     }
+  }
+
+  function handleViewDetails(comparable: Comparable) {
+    setSelectedComparable(comparable);
+    setDetailModalOpen(true);
   }
 
   const formatCurrency = (value: string) => {
     return `$${parseFloat(value).toLocaleString()}`;
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
-  };
-
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Comparable Properties</CardTitle>
-        <p className='text-sm text-muted-foreground mt-1'>
-          Search for similar properties to analyze market values
-        </p>
-      </CardHeader>
-      <CardContent className='space-y-6'>
-        {/* Search Form */}
-        <form action={handleSearch} className='space-y-4'>
-          {/* First Row: Radius, Min/Max Beds, Min/Max Baths */}
-          <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='maxRadius'>Max Radius (miles)</Label>
-              <Input
-                id='maxRadius'
-                name='maxRadius'
-                type='number'
-                step='0.1'
-                defaultValue='5'
-                placeholder='5'
-                required
-              />
-            </div>
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Comparable Properties</CardTitle>
+          <p className='text-sm text-muted-foreground mt-1'>
+            Search for similar properties to analyze market values
+          </p>
+        </CardHeader>
+        <CardContent className='space-y-6'>
+          {/* Search Form */}
+          <form action={handleSearch} className='space-y-4'>
+            {/* First Row: Radius, Min/Max Beds, Min/Max Baths */}
+            <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='maxRadius'>Max Radius (miles)</Label>
+                <Input
+                  id='maxRadius'
+                  name='maxRadius'
+                  type='number'
+                  step='0.1'
+                  defaultValue='5'
+                  placeholder='5'
+                  required
+                />
+              </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='minBeds'>Min Beds</Label>
-              <Input
-                id='minBeds'
-                name='minBeds'
-                type='number'
-                placeholder='Any'
-              />
-            </div>
+              <div className='space-y-2'>
+                <Label htmlFor='minBeds'>Min Beds</Label>
+                <Input
+                  id='minBeds'
+                  name='minBeds'
+                  type='number'
+                  placeholder='Any'
+                />
+              </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='maxBeds'>Max Beds</Label>
-              <Input
-                id='maxBeds'
-                name='maxBeds'
-                type='number'
-                placeholder='Any'
-              />
-            </div>
+              <div className='space-y-2'>
+                <Label htmlFor='maxBeds'>Max Beds</Label>
+                <Input
+                  id='maxBeds'
+                  name='maxBeds'
+                  type='number'
+                  placeholder='Any'
+                />
+              </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='minBaths'>Min Baths</Label>
-              <Input
-                id='minBaths'
-                name='minBaths'
-                type='number'
-                step='0.5'
-                placeholder='Any'
-              />
-            </div>
+              <div className='space-y-2'>
+                <Label htmlFor='minBaths'>Min Baths</Label>
+                <Input
+                  id='minBaths'
+                  name='minBaths'
+                  type='number'
+                  step='0.5'
+                  placeholder='Any'
+                />
+              </div>
 
-            <div className='space-y-2'>
-              <Label htmlFor='maxBaths'>Max Baths</Label>
-              <Input
-                id='maxBaths'
-                name='maxBaths'
-                type='number'
-                step='0.5'
-                placeholder='Any'
-              />
-            </div>
-          </div>
-
-          {/* Second Row: Min/Max Sq Ft, Days Old, Type */}
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-            <div className='space-y-2'>
-              <Label htmlFor='minSquareFootage'>Min Sq Ft</Label>
-              <Input
-                id='minSquareFootage'
-                name='minSquareFootage'
-                type='number'
-                placeholder='Any'
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='maxSquareFootage'>Max Sq Ft</Label>
-              <Input
-                id='maxSquareFootage'
-                name='maxSquareFootage'
-                type='number'
-                placeholder='Any'
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='daysOld'>Max Days Old</Label>
-              <Input
-                id='daysOld'
-                name='daysOld'
-                type='number'
-                defaultValue='365'
-                placeholder='365'
-              />
-            </div>
-
-            <div className='space-y-2'>
-              <Label htmlFor='type'>Type</Label>
-              <select
-                id='type'
-                name='type'
-                className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
-                defaultValue='SALE'
-              >
-                <option value='SALE'>Sales</option>
-                <option value='RENT'>Rentals</option>
-              </select>
-            </div>
-          </div>
-
-          <Button type='submit' disabled={isPending}>
-            {isPending ? (
-              <>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                Searching...
-              </>
-            ) : (
-              <>
-                <Search className='mr-2 h-4 w-4' />
-                Search Comparables
-              </>
-            )}
-          </Button>
-        </form>
-
-        {/* Results Table */}
-        {hasSearched && (
-          <>
-            <div className='flex items-center justify-between border-t pt-4'>
-              <div>
-                <h3 className='text-sm font-semibold'>
-                  {comparables.length} Comparables Found
-                </h3>
-                <p className='text-xs text-muted-foreground mt-1'>
-                  {comparables.filter((c) => c.included).length} included in
-                  analysis
-                </p>
+              <div className='space-y-2'>
+                <Label htmlFor='maxBaths'>Max Baths</Label>
+                <Input
+                  id='maxBaths'
+                  name='maxBaths'
+                  type='number'
+                  step='0.5'
+                  placeholder='Any'
+                />
               </div>
             </div>
 
-            {comparables.length === 0 ? (
-              <div className='text-center py-8 text-muted-foreground'>
-                No comparable properties found. Try adjusting your search
-                criteria.
+            {/* Second Row: Min/Max Sq Ft, Days Old, Type */}
+            <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='minSquareFootage'>Min Sq Ft</Label>
+                <Input
+                  id='minSquareFootage'
+                  name='minSquareFootage'
+                  type='number'
+                  placeholder='Any'
+                />
               </div>
-            ) : (
-              <div className='border rounded-lg overflow-hidden'>
-                <div className='overflow-x-auto'>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className='w-12'>Include</TableHead>
-                        <TableHead>Address</TableHead>
-                        <TableHead>Subdivision</TableHead>
-                        <TableHead className='text-center'>Beds</TableHead>
-                        <TableHead className='text-center'>Baths</TableHead>
-                        <TableHead className='text-center'>Garage</TableHead>
-                        <TableHead className='text-center'>Built</TableHead>
-                        <TableHead className='text-right'>Sq Ft</TableHead>
-                        <TableHead className='text-center'>Listed</TableHead>
-                        <TableHead className='text-center'>Sold</TableHead>
-                        <TableHead className='text-center'>
-                          Close Date
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {comparables.map((comp) => (
-                        <TableRow
-                          key={comp.id}
-                          className={`${
-                            !comp.included
-                              ? 'opacity-40 bg-muted/50'
-                              : 'hover:bg-muted/50'
-                          } transition-all`}
-                        >
-                          <TableCell>
-                            <Checkbox
-                              checked={comp.included}
-                              onCheckedChange={() =>
-                                handleToggleInclude(comp.id, comp.included)
-                              }
-                            />
-                          </TableCell>
-                          <TableCell
-                            className={`font-medium ${
-                              !comp.included ? 'line-through' : ''
-                            }`}
-                          >
-                            <div className='whitespace-nowrap'>
-                              {comp.address}
-                            </div>
-                          </TableCell>
-                          <TableCell
-                            className={!comp.included ? 'line-through' : ''}
-                          >
-                            {comp.subdivision || '—'}
-                          </TableCell>
-                          <TableCell
-                            className={`text-center ${
-                              !comp.included ? 'line-through' : ''
-                            }`}
-                          >
-                            {comp.bedrooms}
-                          </TableCell>
-                          <TableCell
-                            className={`text-center ${
-                              !comp.included ? 'line-through' : ''
-                            }`}
-                          >
-                            {parseFloat(comp.bathrooms)}
-                          </TableCell>
-                          <TableCell
-                            className={`text-center ${
-                              !comp.included ? 'line-through' : ''
-                            }`}
-                          >
-                            {comp.garageSpaces || '—'}
-                          </TableCell>
-                          <TableCell
-                            className={`text-center ${
-                              !comp.included ? 'line-through' : ''
-                            }`}
-                          >
-                            {comp.yearBuilt}
-                          </TableCell>
-                          <TableCell
-                            className={`text-right ${
-                              !comp.included ? 'line-through' : ''
-                            }`}
-                          >
-                            {comp.squareFootage.toLocaleString()}
-                          </TableCell>
-                          <TableCell
-                            className={`text-center font-semibold ${
-                              !comp.included ? 'line-through' : ''
-                            }`}
-                          >
-                            {formatCurrency(comp.listPrice)}
-                          </TableCell>
-                          <TableCell
-                            className={`text-center font-semibold ${
-                              !comp.included ? 'line-through' : ''
-                            }`}
-                          >
-                            {formatCurrency(comp.salePrice)}
-                          </TableCell>
-                          <TableCell
-                            className={`text-center font-semibold ${
-                              !comp.included ? 'line-through' : ''
-                            }`}
-                          >
-                            {comp.closeDate.toLocaleDateString()}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+
+              <div className='space-y-2'>
+                <Label htmlFor='maxSquareFootage'>Max Sq Ft</Label>
+                <Input
+                  id='maxSquareFootage'
+                  name='maxSquareFootage'
+                  type='number'
+                  placeholder='Any'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='daysOld'>Max Days Old</Label>
+                <Input
+                  id='daysOld'
+                  name='daysOld'
+                  type='number'
+                  defaultValue='365'
+                  placeholder='365'
+                />
+              </div>
+
+              <div className='space-y-2'>
+                <Label htmlFor='type'>Type</Label>
+                <select
+                  id='type'
+                  name='type'
+                  className='flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50'
+                  defaultValue='SALE'
+                >
+                  <option value='SALE'>Sales</option>
+                  <option value='RENT'>Rentals</option>
+                </select>
+              </div>
+            </div>
+
+            <Button type='submit' disabled={isPending}>
+              {isPending ? (
+                <>
+                  <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                  Searching...
+                </>
+              ) : (
+                <>
+                  <Search className='mr-2 h-4 w-4' />
+                  Search Comparables
+                </>
+              )}
+            </Button>
+          </form>
+
+          {/* Results Table */}
+          {hasSearched && (
+            <>
+              <div className='flex items-center justify-between border-t pt-4'>
+                <div>
+                  <h3 className='text-sm font-semibold'>
+                    {comparables.length} Comparables Found
+                  </h3>
+                  <p className='text-xs text-muted-foreground mt-1'>
+                    {comparables.filter((c) => c.included).length} included in
+                    analysis
+                  </p>
                 </div>
               </div>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+
+              {comparables.length === 0 ? (
+                <div className='text-center py-8 text-muted-foreground'>
+                  No comparable properties found. Try adjusting your search
+                  criteria.
+                </div>
+              ) : (
+                <div className='border rounded-lg overflow-hidden'>
+                  <div className='overflow-x-auto'>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className='w-12'>Include</TableHead>
+                          <TableHead>Address</TableHead>
+                          <TableHead>Subdivision</TableHead>
+                          <TableHead className='text-center'>Beds</TableHead>
+                          <TableHead className='text-center'>Baths</TableHead>
+                          <TableHead className='text-center'>Garage</TableHead>
+                          <TableHead className='text-center'>Built</TableHead>
+                          <TableHead className='text-right'>Sq Ft</TableHead>
+                          <TableHead className='text-center'>Listed</TableHead>
+                          <TableHead className='text-center'>Sold</TableHead>
+                          <TableHead className='text-center'>
+                            Close Date
+                          </TableHead>
+                          <TableHead className='w-12'></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {comparables.map((comp) => (
+                          <TableRow
+                            key={comp.id}
+                            className={`${
+                              !comp.included
+                                ? 'opacity-40 bg-muted/50'
+                                : 'hover:bg-muted/50'
+                            } transition-all`}
+                          >
+                            <TableCell>
+                              <Checkbox
+                                checked={comp.included}
+                                onCheckedChange={() =>
+                                  handleToggleInclude(comp.id, comp.included)
+                                }
+                              />
+                            </TableCell>
+                            <TableCell
+                              className={`font-medium ${
+                                !comp.included ? 'line-through' : ''
+                              }`}
+                            >
+                              <div className='whitespace-nowrap'>
+                                {comp.address}
+                              </div>
+                            </TableCell>
+                            <TableCell
+                              className={!comp.included ? 'line-through' : ''}
+                            >
+                              {comp.subdivision || '—'}
+                            </TableCell>
+                            <TableCell
+                              className={`text-center ${
+                                !comp.included ? 'line-through' : ''
+                              }`}
+                            >
+                              {comp.bedrooms}
+                            </TableCell>
+                            <TableCell
+                              className={`text-center ${
+                                !comp.included ? 'line-through' : ''
+                              }`}
+                            >
+                              {parseFloat(comp.bathrooms)}
+                            </TableCell>
+                            <TableCell
+                              className={`text-center ${
+                                !comp.included ? 'line-through' : ''
+                              }`}
+                            >
+                              {comp.garageSpaces || '—'}
+                            </TableCell>
+                            <TableCell
+                              className={`text-center ${
+                                !comp.included ? 'line-through' : ''
+                              }`}
+                            >
+                              {comp.yearBuilt}
+                            </TableCell>
+                            <TableCell
+                              className={`text-right ${
+                                !comp.included ? 'line-through' : ''
+                              }`}
+                            >
+                              {comp.squareFootage.toLocaleString()}
+                            </TableCell>
+                            <TableCell
+                              className={`text-center font-semibold ${
+                                !comp.included ? 'line-through' : ''
+                              }`}
+                            >
+                              {formatCurrency(comp.listPrice)}
+                            </TableCell>
+                            <TableCell
+                              className={`text-center font-semibold ${
+                                !comp.included ? 'line-through' : ''
+                              }`}
+                            >
+                              {formatCurrency(comp.salePrice)}
+                            </TableCell>
+                            <TableCell
+                              className={`text-center ${
+                                !comp.included ? 'line-through' : ''
+                              }`}
+                            >
+                              {new Date(comp.closeDate).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <Button
+                                variant='ghost'
+                                size='icon'
+                                onClick={() => handleViewDetails(comp)}
+                              >
+                                <Eye className='h-4 w-4' />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Detail View Modal */}
+      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
+        <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
+          {selectedComparable && (
+            <>
+              <DialogHeader>
+                <DialogTitle className='text-2xl'>
+                  {selectedComparable.address}
+                </DialogTitle>
+              </DialogHeader>
+
+              <div className='space-y-6'>
+                {/* Images */}
+                {selectedComparable.images &&
+                  selectedComparable.images.length > 0 && (
+                    <div className='grid grid-cols-2 gap-2'>
+                      {selectedComparable.images
+                        .slice(0, 4)
+                        .map((image, index) => (
+                          <div
+                            key={index}
+                            className='relative aspect-video overflow-hidden rounded-lg'
+                          >
+                            <Image
+                              src={image.url}
+                              alt={
+                                image.description ||
+                                `Property image ${index + 1}`
+                              }
+                              fill
+                              className='object-cover'
+                              sizes='(max-width: 768px) 50vw, 400px'
+                            />
+                          </div>
+                        ))}
+                    </div>
+                  )}
+
+                {/* Property Details Grid */}
+                <div className='grid grid-cols-2 md:grid-cols-4 gap-4'>
+                  <div>
+                    <div className='text-sm text-muted-foreground'>
+                      Bedrooms
+                    </div>
+                    <div className='text-lg font-semibold'>
+                      {selectedComparable.bedrooms}
+                    </div>
+                  </div>
+                  <div>
+                    <div className='text-sm text-muted-foreground'>
+                      Bathrooms
+                    </div>
+                    <div className='text-lg font-semibold'>
+                      {parseFloat(selectedComparable.bathrooms)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className='text-sm text-muted-foreground'>
+                      Square Feet
+                    </div>
+                    <div className='text-lg font-semibold'>
+                      {selectedComparable.squareFootage.toLocaleString()}
+                    </div>
+                  </div>
+                  <div>
+                    <div className='text-sm text-muted-foreground'>
+                      Year Built
+                    </div>
+                    <div className='text-lg font-semibold'>
+                      {selectedComparable.yearBuilt}
+                    </div>
+                  </div>
+                  {selectedComparable.garageSpaces && (
+                    <div>
+                      <div className='text-sm text-muted-foreground'>
+                        Garage
+                      </div>
+                      <div className='text-lg font-semibold'>
+                        {selectedComparable.garageSpaces} spaces
+                      </div>
+                    </div>
+                  )}
+                  <div>
+                    <div className='text-sm text-muted-foreground'>
+                      Days on Market
+                    </div>
+                    <div className='text-lg font-semibold'>
+                      {selectedComparable.daysOnMarket}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pricing Info */}
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-muted rounded-lg'>
+                  <div>
+                    <div className='text-sm text-muted-foreground'>
+                      List Price
+                    </div>
+                    <div className='text-2xl font-bold'>
+                      {formatCurrency(selectedComparable.listPrice)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className='text-sm text-muted-foreground'>
+                      Sale Price
+                    </div>
+                    <div className='text-2xl font-bold text-green-600'>
+                      {formatCurrency(selectedComparable.salePrice)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className='text-sm text-muted-foreground'>
+                      Close Date
+                    </div>
+                    <div className='text-2xl font-bold'>
+                      {new Date(
+                        selectedComparable.closeDate
+                      ).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Badge */}
+                <div className='flex items-center justify-between'>
+                  <Badge
+                    variant={
+                      selectedComparable.included ? 'default' : 'secondary'
+                    }
+                  >
+                    {selectedComparable.included
+                      ? 'Included in Analysis'
+                      : 'Excluded'}
+                  </Badge>
+                  <Button
+                    variant='outline'
+                    onClick={() => {
+                      handleToggleInclude(
+                        selectedComparable.id,
+                        selectedComparable.included
+                      );
+                      // Update the selected comparable for immediate UI feedback
+                      setSelectedComparable({
+                        ...selectedComparable,
+                        included: !selectedComparable.included,
+                      });
+                    }}
+                  >
+                    {selectedComparable.included
+                      ? 'Exclude from Analysis'
+                      : 'Include in Analysis'}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }

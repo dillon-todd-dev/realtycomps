@@ -275,6 +275,22 @@ export const comparablesTable = pgTable('comparables', {
     .notNull(),
 });
 
+export const comparableImagesTable = pgTable('comparable_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  url: text('url').notNull(),
+  description: text('description'),
+  order: integer('order').default(0), // For sorting images
+  comparableId: uuid('comparable_id')
+    .references(() => comparablesTable.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const usersRelations = relations(usersTable, ({ one, many }) => ({
   invitation: one(userInvitationsTable),
   properties: many(propertiesTable),
@@ -331,6 +347,16 @@ export const evaluationsRelations = relations(
   })
 );
 
+export const refinanceLoanParamsRelations = relations(
+  refinanceLoanParamsTable,
+  ({ one }) => ({
+    evaluation: one(evaluationsTable, {
+      fields: [refinanceLoanParamsTable.evaluationId],
+      references: [evaluationsTable.id],
+    }),
+  })
+);
+
 export const conventionalLoanParamsRelations = relations(
   conventionalLoanParamsTable,
   ({ one }) => ({
@@ -351,19 +377,23 @@ export const hardMoneyLoanParamsRelations = relations(
   })
 );
 
-export const refinanceLoanParamsRelations = relations(
-  refinanceLoanParamsTable,
-  ({ one }) => ({
+export const comparablesRelations = relations(
+  comparablesTable,
+  ({ one, many }) => ({
     evaluation: one(evaluationsTable, {
-      fields: [refinanceLoanParamsTable.evaluationId],
+      fields: [comparablesTable.evaluationId],
       references: [evaluationsTable.id],
     }),
+    images: many(comparableImagesTable),
   })
 );
 
-export const comparablesRelations = relations(comparablesTable, ({ one }) => ({
-  evaluation: one(evaluationsTable, {
-    fields: [comparablesTable.evaluationId],
-    references: [evaluationsTable.id],
-  }),
-}));
+export const comparableImagesRelations = relations(
+  comparableImagesTable,
+  ({ one }) => ({
+    comparable: one(comparablesTable, {
+      fields: [comparableImagesTable.comparableId],
+      references: [comparablesTable.id],
+    }),
+  })
+);

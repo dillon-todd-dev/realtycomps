@@ -1,10 +1,11 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import { comparablesTable } from '@/db/schema';
+import { comparableImagesTable, comparablesTable } from '@/db/schema';
 import { findSaleComparables } from '@/lib/bridge';
 import { eq, and, desc } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
+import { BridgeMedia } from './properties';
 
 export type SearchComparablesParams = {
   evaluationId: string;
@@ -33,29 +34,55 @@ export type SearchComparablesParams = {
 export async function searchSaleComparables(params: SearchComparablesParams) {
   try {
     const comparables = await findSaleComparables(params);
-    const saleComps = comparables.map((comp: any) => ({
-      evaluationId: params.evaluationId,
-      address: comp.UnparsedAddress,
-      subdivision: comp.SubdivisionName,
-      bedrooms: comp.BedroomsTotal,
-      bathrooms: comp.BathroomsTotalDecimal,
-      garageSpaces: comp.GarageSpaces,
-      yearBuilt: comp.YearBuilt,
-      squareFootage: comp.LivingArea,
-      listPrice: comp.ListPrice,
-      salePrice: comp.ClosePrice,
-      closeDate: new Date(comp.CloseDate),
-      daysOnMarket: comp.DaysOnMarket,
-      type: 'SALE',
-      included: true,
-    }));
 
     const result = await db.transaction(async (tx) => {
+      // Delete existing comparables and their images (cascade handles images)
       await tx
         .delete(comparablesTable)
         .where(eq(comparablesTable.evaluationId, params.evaluationId));
 
-      await tx.insert(comparablesTable).values(saleComps);
+      // Insert comparables one by one to get their IDs
+      const insertedComparables = [];
+
+      for (const comp of comparables) {
+        const [insertedComp] = await tx
+          .insert(comparablesTable)
+          .values({
+            evaluationId: params.evaluationId,
+            address: comp.UnparsedAddress,
+            subdivision: comp.SubdivisionName,
+            bedrooms: comp.BedroomsTotal,
+            bathrooms: comp.BathroomsTotalDecimal,
+            garageSpaces: comp.GarageSpaces,
+            yearBuilt: comp.YearBuilt,
+            squareFootage: comp.LivingArea,
+            listPrice: comp.ListPrice,
+            salePrice: comp.ClosePrice,
+            closeDate: new Date(comp.CloseDate),
+            daysOnMarket: comp.DaysOnMarket,
+            type: 'SALE',
+            included: true,
+          })
+          .returning({ id: comparablesTable.id });
+
+        insertedComparables.push(insertedComp);
+
+        // Insert images if they exist
+        if (comp.Media && Array.isArray(comp.Media)) {
+          const images = comp.Media.filter(
+            (media: any) => media.MediaCategory === 'Photo'
+          ).map((media: any) => ({
+            order: media.Order,
+            url: media.MediaURL,
+            description: media.ShortDescription,
+            comparableId: insertedComp.id,
+          }));
+
+          if (images.length > 0) {
+            await tx.insert(comparableImagesTable).values(images);
+          }
+        }
+      }
 
       return await getComparables(params.evaluationId);
     });
@@ -92,12 +119,18 @@ export async function toggleComparable(
  * Get all comparables for an evaluation
  */
 export async function getComparables(evaluationId: string) {
-  const comparables = await db.query.comparablesTable.findMany({
+  return await db.query.comparablesTable.findMany({
     where: eq(comparablesTable.evaluationId, evaluationId),
-    orderBy: (comparables, { desc }) => [desc(comparables.closeDate)],
+    with: {
+      images: {
+        orderBy: (images, { asc }) => [asc(images.order)],
+      },
+    },
+    orderBy: (comparables, { desc, asc }) => [
+      desc(comparables.included),
+      asc(comparables.address),
+    ],
   });
-
-  return comparables;
 }
 
 /**

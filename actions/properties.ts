@@ -7,7 +7,7 @@ import { PropertyWithImages, GetPropertiesResponse } from '@/lib/types';
 import { findProperty } from '@/lib/bridge';
 import { requireUser } from '@/lib/session';
 
-type BridgeMedia = {
+export type BridgeMedia = {
   Order: number;
   MediaKey: string;
   MediaURL: string;
