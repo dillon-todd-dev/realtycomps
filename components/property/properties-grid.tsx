@@ -169,7 +169,7 @@ export default function PropertiesGrid({
                               {page}
                             </PaginationLink>
                           </PaginationItem>
-                        )
+                        ),
                       )}
 
                       <PaginationItem>
