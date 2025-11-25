@@ -28,24 +28,5 @@ export default async function PropertiesPage({
     userId: user.id,
   });
 
-  return (
-    <>
-      <PageHeader
-        title='Properties'
-        description='Manage and view your property portfolio'
-        action={
-          <Button asChild>
-            <Link href='/dashboard/properties/create'>
-              <Plus className='h-4 w-4 mr-2' />
-              Add Property
-            </Link>
-          </Button>
-        }
-      />
-
-      <div className='p-6'>
-        <PropertiesGrid initialData={initialData} userId={user.id} />
-      </div>
-    </>
-  );
+  return <PropertiesGrid initialData={initialData} userId={user.id} />;
 }
