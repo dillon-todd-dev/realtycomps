@@ -25,26 +25,5 @@ export default async function EvaluationDetailPage({
     notFound();
   }
 
-  return (
-    <>
-      <PageHeader
-        title={'Investment Evaluation'}
-        description={`Analysis for ${
-          evaluation.property.address || 'property'
-        }`}
-        action={
-          <Button variant='outline' asChild>
-            <Link href={`/dashboard/properties/${evaluation.property.id}`}>
-              <ArrowLeft className='h-4 w-4 mr-2' />
-              Back to Property
-            </Link>
-          </Button>
-        }
-      />
-
-      <div className='p-6'>
-        <EvaluationDetailView evaluation={evaluation} />
-      </div>
-    </>
-  );
+  return <EvaluationDetailView evaluation={evaluation} />;
 }

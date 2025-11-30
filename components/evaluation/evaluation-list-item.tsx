@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EvaluationListItem } from '@/lib/types';
-import { ChevronRight } from 'lucide-react';
+import { Download } from 'lucide-react';
 import Link from 'next/link';
 
 interface EvaluationListItemProps {
@@ -15,13 +15,18 @@ export default function EvaluationListItemCard({
   evaluation,
   propertyId,
 }: EvaluationListItemProps) {
+  const handleExportClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   return (
     <Link
       href={`/dashboard/properties/${propertyId}/evaluations/${evaluation.id}`}
     >
       <div className='border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer'>
-        <div className='flex items-start justify-between'>
-          <div className='flex-1'>
+        <div className='flex items-start justify-between gap-3'>
+          <div className='flex-1 min-w-0'>
             <div className='flex items-center gap-2 mb-3'>
               {evaluation.strategyType && (
                 <Badge variant='outline' className='capitalize'>
@@ -48,7 +53,7 @@ export default function EvaluationListItemCard({
                 <div className='font-semibold'>
                   {evaluation.monthlyCashFlow
                     ? `$${parseFloat(
-                        evaluation.monthlyCashFlow
+                        evaluation.monthlyCashFlow,
                       ).toLocaleString()}`
                     : 'N/A'}
                 </div>
@@ -76,6 +81,17 @@ export default function EvaluationListItemCard({
               {new Date(evaluation.updatedAt).toLocaleDateString()}
             </div>
           </div>
+
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={handleExportClick}
+            className='shrink-0'
+            title='Export to PDF'
+          >
+            <Download className='h-4 w-4 md:mr-2' />
+            <span className='hidden md:inline'>Export PDF</span>
+          </Button>
         </div>
       </div>
     </Link>

@@ -66,14 +66,13 @@ export default function PropertiesGrid({
     fetchProperties();
   }, [fetchProperties]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch]);
 
   return (
     <>
-      <div className='flex h-14 items-center justify-between border-b bg-background px-6'>
+      <div className='flex h-14 items-center justify-between border-b bg-background px-6 sticky top-0 z-10'>
         <div className='flex flex-col justify-center'>
           <h1 className='text-lg font-semibold text-foreground'>Properties</h1>
           <p className='text-xs text-muted-foreground'>

@@ -26,32 +26,5 @@ export default async function PropertyDetailPage({
     notFound();
   }
 
-  return (
-    <>
-      <PageHeader
-        title='Property Details'
-        description={property.address || ''}
-        action={
-          <div className='flex gap-2'>
-            <Button variant='outline' asChild>
-              <Link href='/dashboard/properties'>
-                <ArrowLeft className='h-4 w-4 mr-2' />
-                Back to Properties
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href={`/dashboard/properties/${propertyId}/edit`}>
-                <Edit className='h-4 w-4 mr-2' />
-                Edit Property
-              </Link>
-            </Button>
-          </div>
-        }
-      />
-
-      <div className='p-6'>
-        <PropertyDetailView property={property} evaluations={evaluations} />
-      </div>
-    </>
-  );
+  return <PropertyDetailView property={property} evaluations={evaluations} />;
 }
