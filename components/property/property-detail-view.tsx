@@ -19,6 +19,9 @@ import {
   Ruler,
   Calculator,
   ArrowLeft,
+  X,
+  Trash,
+  TrashIcon,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
@@ -27,6 +30,7 @@ import { Button } from '../ui/button';
 import EvaluationListItemCard from '../evaluation/evaluation-list-item';
 import { createEvaluation } from '@/actions/evaluations';
 import Link from 'next/link';
+import { deleteProperty } from '@/actions/properties';
 
 interface PropertyDetailViewProps {
   property: PropertyWithImages;
@@ -80,12 +84,21 @@ export default function PropertyDetailView({
           </h1>
           <p className='text-xs text-muted-foreground'>{property.address}</p>
         </div>
-        <Button variant='outline' asChild>
-          <Link href='/dashboard/properties'>
-            <ArrowLeft className='h-4 w-4 mr-2' />
-            Back to Properties
-          </Link>
-        </Button>
+        <div className='flex items-center gap-3'>
+          <Button
+            variant='destructive'
+            onClick={() => deleteProperty(property.id)}
+          >
+            <Trash className='h-4 w-4 mr-1' />
+            Remove Property
+          </Button>
+          <Button variant='outline' asChild>
+            <Link href='/dashboard/properties'>
+              <ArrowLeft className='h-4 w-4 mr-1' />
+              Back to Properties
+            </Link>
+          </Button>
+        </div>
       </div>
       <div className='space-y-6 p-6'>
         {/* Image Carousel */}

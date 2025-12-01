@@ -5,6 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { useTransition } from 'react';
+import { updateConventionalLoanParams } from '@/actions/evaluations';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 type Evaluation = any; // Replace with your actual type
 
@@ -15,7 +19,28 @@ interface ConventionalFinancingFormProps {
 export default function ConventionalFinancingForm({
   evaluation,
 }: ConventionalFinancingFormProps) {
+  const [isPending, startTransition] = useTransition();
+
   const conventionalParams = evaluation.conventionalLoanParams;
+
+  async function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      try {
+        await updateConventionalLoanParams(evaluation.id, evaluation.userId, {
+          downPayment: formData.get('downPayment') as string,
+          loanTerm: Number(formData.get('loanTerm')),
+          interestRate: formData.get('interestRate') as string,
+          lenderFees: formData.get('lenderFees') as string,
+          mortgageInsurance: formData.get('mortgageInsurance') as string,
+          monthsOfTaxes: Number(formData.get('monthsOfTaxes')),
+        });
+        toast.success('Deal terms updated successfully');
+      } catch (error) {
+        console.error('Failed to update:', error);
+        toast.error('Failed to update deal terms');
+      }
+    });
+  }
 
   return (
     <div className='space-y-6'>
@@ -25,7 +50,7 @@ export default function ConventionalFinancingForm({
           <CardTitle>Conventional Loan Parameters</CardTitle>
         </CardHeader>
         <CardContent>
-          <form className='space-y-4'>
+          <form action={handleSubmit} className='space-y-4'>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='downPayment'>Down Payment (%)</Label>
@@ -88,84 +113,25 @@ export default function ConventionalFinancingForm({
             </div>
 
             <div className='flex justify-end'>
-              <Button type='submit'>Update Conventional Financing</Button>
+              <Button type='submit' disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Saving...
+                  </>
+                ) : (
+                  'Update Conventional Financing'
+                )}
+              </Button>
             </div>
           </form>
         </CardContent>
       </Card>
 
-      {/* Calculations Grid */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-        {/* Cash Out of Pocket */}
         <Card>
           <CardHeader>
-            <CardTitle>Cash Out Of Pocket</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell className='font-medium'>Down Payment</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>Closing Costs</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>Repairs</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-bold'>TOTAL</TableCell>
-                  <TableCell className='text-right font-bold'>$0</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Monthly Cash Flow */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Cash Flow</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell className='font-medium'>Rent</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>Note Payment</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>Property Tax</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>Insurance</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>HOA</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-bold'>TOTAL</TableCell>
-                  <TableCell className='text-right font-bold'>$0</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Returns */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Returns & Analysis</CardTitle>
+            <CardTitle>Gains And Returns</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -182,12 +148,90 @@ export default function ConventionalFinancingForm({
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>
-                    Cash on Cash ROI
+                    Return On Equity Capture
                   </TableCell>
+                  <TableCell className='text-right'>$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>
+                    Cash On Cash Return
+                  </TableCell>
+                  <TableCell className='text-right font-bold'>$0</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cash Out Of Pocket</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell className='font-medium'>Down Payment</TableCell>
+                  <TableCell className='text-right'>$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Closing Costs</TableCell>
+                  <TableCell className='text-right'>-$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>
+                    Prepaid Expenses
+                  </TableCell>
+                  <TableCell className='text-right'>-$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Repairs</TableCell>
+                  <TableCell className='text-right'>-$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-bold'>TOTAL</TableCell>
+                  <TableCell className='text-right font-bold'>$0</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cash Flow</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell className='font-medium'>Monthly Rent</TableCell>
+                  <TableCell className='text-right'>$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Note Payment</TableCell>
+                  <TableCell className='text-right'>$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Property Tax</TableCell>
                   <TableCell className='text-right'>0.00%</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Cap Rate</TableCell>
+                  <TableCell className='font-medium'>Property Ins.</TableCell>
+                  <TableCell className='text-right'>0.00%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Mortgage Ins.</TableCell>
+                  <TableCell className='text-right'>0.00%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>HOA</TableCell>
+                  <TableCell className='text-right'>0.00%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Misc. Monthly</TableCell>
+                  <TableCell className='text-right'>0.00%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>TOTAL</TableCell>
                   <TableCell className='text-right'>0.00%</TableCell>
                 </TableRow>
               </TableBody>

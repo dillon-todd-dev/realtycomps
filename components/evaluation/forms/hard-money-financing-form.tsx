@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
+import { useTransition } from 'react';
+import {
+  updateHardMoneyLoanParams,
+  updateRefinanceLoanParams,
+} from '@/actions/evaluations';
+import { toast } from 'sonner';
+import { Loader2 } from 'lucide-react';
 
 type Evaluation = any; // Replace with your actual type
 
@@ -16,8 +23,37 @@ interface HardMoneyFinancingFormProps {
 export default function HardMoneyFinancingForm({
   evaluation,
 }: HardMoneyFinancingFormProps) {
+  const [isPending, startTransition] = useTransition();
+
   const hardMoneyParams = evaluation.hardMoneyLoanParams;
   const refinanceParams = evaluation.refinanceLoanParams;
+
+  async function handleSubmit(formData: FormData) {
+    startTransition(async () => {
+      try {
+        await updateHardMoneyLoanParams(evaluation.id, evaluation.userId, {
+          loanToValue: formData.get('hardLoanToValue') as string,
+          lenderFees: formData.get('hardLenderFees') as string,
+          interestRate: formData.get('hardInterestRate') as string,
+          monthsToRefi: Number(formData.get('monthsToRefi')),
+          rollInLenderFees: Boolean(formData.get('rollInLenderFees')),
+          weeksUntilLeased: Number(formData.get('weeksUntilLeased')),
+        });
+        await updateRefinanceLoanParams(evaluation.id, evaluation.userId, {
+          loanToValue: formData.get('refiLoanToValue') as string,
+          loanTerm: Number(formData.get('refiLoanTerm')),
+          interestRate: formData.get('refiInterestRate') as string,
+          lenderFees: formData.get('refiLenderFees') as string,
+          mortgageInsurance: formData.get('refiMortgageInsurance') as string,
+          monthsOfTaxes: Number(formData.get('refiMonthsOfTaxes')),
+        });
+        toast.success('Deal terms updated successfully');
+      } catch (error) {
+        console.error('Failed to update:', error);
+        toast.error('Failed to update deal terms');
+      }
+    });
+  }
 
   return (
     <div className='space-y-6'>
@@ -161,88 +197,25 @@ export default function HardMoneyFinancingForm({
             </div>
 
             <div className='flex justify-end'>
-              <Button type='submit'>Update Hard Money Financing</Button>
+              <Button type='submit' disabled={isPending}>
+                {isPending ? (
+                  <>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Saving...
+                  </>
+                ) : (
+                  'Update Hard Money Financing'
+                )}
+              </Button>
             </div>
           </form>
         </CardContent>
       </Card>
 
-      {/* Calculations Grid */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-        {/* Cash Out of Pocket */}
         <Card>
           <CardHeader>
-            <CardTitle>Cash Out Of Pocket</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell className='font-medium'>
-                    Hard Cash to Close
-                  </TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>Repairs</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>
-                    Interest During Rehab
-                  </TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-bold'>TOTAL</TableCell>
-                  <TableCell className='text-right font-bold'>$0</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Monthly Cash Flow (After Refi) */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Cash Flow (After Refi)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableBody>
-                <TableRow>
-                  <TableCell className='font-medium'>Rent</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>Note Payment</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>Property Tax</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>Insurance</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>HOA</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-bold'>TOTAL</TableCell>
-                  <TableCell className='text-right font-bold'>$0</TableCell>
-                </TableRow>
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        {/* Returns */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Returns & Analysis</CardTitle>
+            <CardTitle>Gains And Returns</CardTitle>
           </CardHeader>
           <CardContent>
             <Table>
@@ -252,17 +225,99 @@ export default function HardMoneyFinancingForm({
                   <TableCell className='text-right'>$0</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Cash After Refi</TableCell>
+                  <TableCell className='font-medium'>
+                    Annual Cash Flow
+                  </TableCell>
                   <TableCell className='text-right'>$0</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>
-                    Cash on Cash ROI
+                    Return On Equity Capture
                   </TableCell>
+                  <TableCell className='text-right'>$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>
+                    Cash On Cash Return
+                  </TableCell>
+                  <TableCell className='text-right font-bold'>$0</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cash Out Of Pocket</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell className='font-medium'>
+                    Hard Cash To Close
+                  </TableCell>
+                  <TableCell className='text-right'>$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Closing Costs</TableCell>
+                  <TableCell className='text-right'>-$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>
+                    Prepaid Expenses
+                  </TableCell>
+                  <TableCell className='text-right'>-$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Repairs</TableCell>
+                  <TableCell className='text-right'>-$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-bold'>TOTAL</TableCell>
+                  <TableCell className='text-right font-bold'>$0</TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Cash Flow</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell className='font-medium'>Monthly Rent</TableCell>
+                  <TableCell className='text-right'>$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Note Payment</TableCell>
+                  <TableCell className='text-right'>$0</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Property Tax</TableCell>
                   <TableCell className='text-right'>0.00%</TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Cap Rate</TableCell>
+                  <TableCell className='font-medium'>Property Ins.</TableCell>
+                  <TableCell className='text-right'>0.00%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Mortgage Ins.</TableCell>
+                  <TableCell className='text-right'>0.00%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>HOA</TableCell>
+                  <TableCell className='text-right'>0.00%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Misc. Monthly</TableCell>
+                  <TableCell className='text-right'>0.00%</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>TOTAL</TableCell>
                   <TableCell className='text-right'>0.00%</TableCell>
                 </TableRow>
               </TableBody>
