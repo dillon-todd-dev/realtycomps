@@ -5,10 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { useTransition } from 'react';
+import { FormEvent, useMemo, useState, useTransition } from 'react';
 import { updateConventionalLoanParams } from '@/actions/evaluations';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { formatDollarAmount, monthlyLoanAmount } from '@/lib/utils';
 
 type Evaluation = any; // Replace with your actual type
 
@@ -19,20 +20,32 @@ interface ConventionalFinancingFormProps {
 export default function ConventionalFinancingForm({
   evaluation,
 }: ConventionalFinancingFormProps) {
+  const loanParams = evaluation.conventionalLoanParams;
+  const dealTerms = evaluation.dealTerms;
+
   const [isPending, startTransition] = useTransition();
+  const [formData, setFormData] = useState({
+    downPayment: loanParams.downPayment,
+    loanTerm: String(loanParams.loanTerm),
+    interestRate: loanParams.interestRate,
+    lenderFees: loanParams.lenderFees,
+    monthsOfTaxes: String(loanParams.monthsOfTaxes),
+    mortgageInsurance: loanParams.mortgageInsurance,
+  });
 
-  const conventionalParams = evaluation.conventionalLoanParams;
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
 
-  async function handleSubmit(formData: FormData) {
+    console.log(formData);
     startTransition(async () => {
       try {
         await updateConventionalLoanParams(evaluation.id, evaluation.userId, {
-          downPayment: formData.get('downPayment') as string,
-          loanTerm: Number(formData.get('loanTerm')),
-          interestRate: formData.get('interestRate') as string,
-          lenderFees: formData.get('lenderFees') as string,
-          mortgageInsurance: formData.get('mortgageInsurance') as string,
-          monthsOfTaxes: Number(formData.get('monthsOfTaxes')),
+          downPayment: formData.downPayment,
+          loanTerm: Number(formData.loanTerm),
+          interestRate: formData.interestRate,
+          lenderFees: formData.lenderFees,
+          mortgageInsurance: formData.monthsOfTaxes,
+          monthsOfTaxes: Number(formData.mortgageInsurance),
         });
         toast.success('Deal terms updated successfully');
       } catch (error) {
@@ -42,6 +55,87 @@ export default function ConventionalFinancingForm({
     });
   }
 
+  const downPayment: number = useMemo(() => {
+    const purchasePrice = Number(evaluation?.purchasePrice);
+    const downPaymentPercent = Number(evaluation?.downPayment) / 100;
+    return purchasePrice * downPaymentPercent;
+  }, [evaluation?.purchasePrice, loanParams.downPayment]);
+
+  const closingCosts: number = useMemo(() => {
+    const lenderFees = Number(evaluation?.lenderFees);
+    const survey = Number(evaluation?.survey);
+    const appraisal = Number(evaluation?.appraisal);
+    const inspection = Number(evaluation?.inspection);
+    return lenderFees + survey + appraisal + inspection;
+  }, [
+    loanParams?.lenderFees,
+    evaluation?.survey,
+    evaluation?.appraisal,
+    evaluation?.inspection,
+  ]);
+
+  const cashOutOfPocketTotal: number = useMemo(() => {
+    const repairs = Number(evaluation?.repairs);
+    return downPayment + closingCosts + repairs;
+  }, [downPayment, closingCosts, evaluation?.repairs]);
+
+  const notePayment: number = useMemo(() => {
+    const purchasePrice = Number(evaluation?.purchasePrice);
+    const downPaymentPercent = Number(evaluation?.downPayment) / 100;
+    const downPayment = purchasePrice * downPaymentPercent;
+    const loanAmount = purchasePrice - downPayment;
+    const monthlyInterestRate = Number(evaluation?.interestRate) / 100 / 12;
+    const loanTermMonths = Number(evaluation?.loanTerm) * 12;
+    return monthlyLoanAmount(loanTermMonths, monthlyInterestRate, loanAmount);
+  }, [
+    evaluation?.purchasePrice,
+    loanParams?.downPayment,
+    loanParams?.interestRate,
+    loanParams?.loanTerm,
+  ]);
+
+  const propertyTax: number = useMemo(() => {
+    const annualPropertyTax = Number(evaluation?.propertyTax);
+    return annualPropertyTax / 12;
+  }, [evaluation?.propertyTax]);
+
+  const propertyInsurance: number = useMemo(() => {
+    const annualInsurance = Number(evaluation?.insurance);
+    return annualInsurance / 12;
+  }, [evaluation?.insurance]);
+
+  const mortgageInsurance: number = useMemo(() => {
+    const annualInsurance = Number(evaluation?.refiMortgageInsurance);
+    return annualInsurance / 12;
+  }, [evaluation?.refiMortgageInsurance]);
+
+  const hoa: number = useMemo(() => {
+    const annualHoa = Number(evaluation?.hoa);
+    return annualHoa / 12;
+  }, [evaluation?.hoa]);
+
+  const cashflowTotal: number = useMemo(() => {
+    const rent = Number(evaluation?.rent);
+    const misc = Number(evaluation?.miscellaneous);
+    return (
+      rent -
+      notePayment -
+      propertyTax -
+      propertyInsurance -
+      hoa -
+      mortgageInsurance -
+      misc
+    );
+  }, [
+    evaluation?.rent,
+    propertyTax,
+    propertyInsurance,
+    mortgageInsurance,
+    hoa,
+    evaluation?.miscellaneous,
+    notePayment,
+  ]);
+
   return (
     <div className='space-y-6'>
       {/* Loan Parameters Form */}
@@ -50,53 +144,83 @@ export default function ConventionalFinancingForm({
           <CardTitle>Conventional Loan Parameters</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={handleSubmit} className='space-y-4'>
+          <form onSubmit={handleSubmit} className='space-y-4'>
             <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='downPayment'>Down Payment (%)</Label>
                 <Input
                   id='downPayment'
+                  name='downPayment'
                   type='number'
                   step='0.01'
-                  defaultValue={conventionalParams?.downPayment || '20'}
-                  placeholder='20'
+                  value={formData.downPayment}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      downPayment: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='loanTerm'>Loan Term (years)</Label>
                 <Input
                   id='loanTerm'
+                  name='loanTerm'
                   type='number'
-                  defaultValue={conventionalParams?.loanTerm || '30'}
-                  placeholder='30'
+                  value={formData.loanTerm}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      loanTerm: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='interestRate'>Interest Rate (%)</Label>
                 <Input
                   id='interestRate'
+                  name='interestRate'
                   type='number'
                   step='0.001'
-                  defaultValue={conventionalParams?.interestRate || '5.000'}
-                  placeholder='5.000'
+                  value={formData.interestRate}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      interestRate: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='lenderFees'>Lender & Title Fees</Label>
                 <Input
                   id='lenderFees'
+                  name='lenderFees'
                   type='number'
-                  defaultValue={conventionalParams?.lenderFees || '6000'}
-                  placeholder='6000'
+                  value={formData.lenderFees}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      lenderFees: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='monthsOfTaxes'># Months Tax & Insurance</Label>
                 <Input
                   id='monthsOfTaxes'
+                  name='monthsOfTaxes'
                   type='number'
-                  defaultValue={conventionalParams?.monthsOfTaxes || '0'}
-                  placeholder='0'
+                  value={formData.monthsOfTaxes}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      monthsOfTaxes: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -105,9 +229,15 @@ export default function ConventionalFinancingForm({
                 </Label>
                 <Input
                   id='mortgageInsurance'
+                  name='mortgageInsurance'
                   type='number'
-                  defaultValue={conventionalParams?.mortgageInsurance || '0'}
-                  placeholder='0'
+                  value={formData.mortgageInsurance}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      mortgageInsurance: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>
@@ -185,11 +315,15 @@ export default function ConventionalFinancingForm({
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Repairs</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(evaluation.repairs)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-bold'>TOTAL</TableCell>
-                  <TableCell className='text-right font-bold'>$0</TableCell>
+                  <TableCell className='text-right font-bold'>
+                    {formatDollarAmount(cashOutOfPocketTotal)}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -204,35 +338,51 @@ export default function ConventionalFinancingForm({
               <TableBody>
                 <TableRow>
                   <TableCell className='font-medium'>Monthly Rent</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(Number(evaluation?.rent))}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Note Payment</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(notePayment)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Property Tax</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(propertyTax)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Property Ins.</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(propertyInsurance)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Mortgage Ins.</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(mortgageInsurance)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>HOA</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(hoa)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Misc. Monthly</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(Number(evaluation.miscallaneous))}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>TOTAL</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(cashflowTotal)}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>

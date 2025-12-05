@@ -100,17 +100,15 @@ export async function createEvaluation(newEvaluation: NewEvaluation) {
 
   revalidatePath(`/dashboard/properties/${newEvaluation.propertyId}`);
   redirect(
-    `/dashboard/properties/${newEvaluation.propertyId}/evaluations/${result.id}`
+    `/dashboard/properties/${newEvaluation.propertyId}/evaluations/${result.id}`,
   );
-
-  return result;
 }
 
 export async function getEvaluation(evaluationId: string, userId: string) {
   const evaluation = await db.query.evaluationsTable.findFirst({
     where: and(
       eq(evaluationsTable.id, evaluationId),
-      eq(evaluationsTable.userId, userId)
+      eq(evaluationsTable.userId, userId),
     ),
     with: {
       property: {
@@ -134,7 +132,7 @@ export async function getEvaluation(evaluationId: string, userId: string) {
 
 export async function getEvaluationsByProperty(
   propertyId: string,
-  userId: string
+  userId: string,
 ) {
   try {
     const evaluations = await db
@@ -143,8 +141,8 @@ export async function getEvaluationsByProperty(
       .where(
         and(
           eq(evaluationsTable.propertyId, propertyId),
-          eq(evaluationsTable.userId, userId)
-        )
+          eq(evaluationsTable.userId, userId),
+        ),
       )
       .orderBy(desc(evaluationsTable.updatedAt));
 
@@ -175,7 +173,7 @@ export async function updateDealTerms(
     rent?: string;
     hoa?: string;
     propertyTax?: string;
-  }
+  },
 ) {
   try {
     const [updated] = await db
@@ -187,8 +185,8 @@ export async function updateDealTerms(
       .where(
         and(
           eq(evaluationsTable.id, evaluationId),
-          eq(evaluationsTable.userId, userId)
-        )
+          eq(evaluationsTable.userId, userId),
+        ),
       )
       .returning();
 
@@ -205,7 +203,7 @@ export async function updateDealTerms(
     if (evaluation) {
       revalidatePath(`/dashboard/properties/${evaluation.propertyId}`);
       revalidatePath(
-        `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`
+        `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`,
       );
     }
 
@@ -229,14 +227,14 @@ export async function updateConventionalLoanParams(
     lenderFees?: string;
     mortgageInsurance?: string;
     monthsOfTaxes?: number;
-  }
+  },
 ) {
   try {
     // Verify ownership
     const evaluation = await db.query.evaluationsTable.findFirst({
       where: and(
         eq(evaluationsTable.id, evaluationId),
-        eq(evaluationsTable.userId, userId)
+        eq(evaluationsTable.userId, userId),
       ),
       columns: { id: true, propertyId: true },
     });
@@ -271,7 +269,7 @@ export async function updateConventionalLoanParams(
     }
 
     revalidatePath(
-      `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`
+      `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`,
     );
 
     return updated;
@@ -294,14 +292,14 @@ export async function updateHardMoneyLoanParams(
     monthsToRefi?: number;
     rollInLenderFees?: boolean;
     weeksUntilLeased?: number;
-  }
+  },
 ) {
   try {
     // Verify ownership
     const evaluation = await db.query.evaluationsTable.findFirst({
       where: and(
         eq(evaluationsTable.id, evaluationId),
-        eq(evaluationsTable.userId, userId)
+        eq(evaluationsTable.userId, userId),
       ),
       columns: { id: true, propertyId: true },
     });
@@ -336,7 +334,7 @@ export async function updateHardMoneyLoanParams(
     }
 
     revalidatePath(
-      `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`
+      `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`,
     );
 
     return updated;
@@ -359,14 +357,14 @@ export async function updateRefinanceLoanParams(
     lenderFees?: string;
     monthsOfTaxes?: number;
     mortgageInsurance?: string;
-  }
+  },
 ) {
   try {
     // Verify ownership
     const evaluation = await db.query.evaluationsTable.findFirst({
       where: and(
         eq(evaluationsTable.id, evaluationId),
-        eq(evaluationsTable.userId, userId)
+        eq(evaluationsTable.userId, userId),
       ),
       columns: { id: true, propertyId: true },
     });
@@ -401,7 +399,7 @@ export async function updateRefinanceLoanParams(
     }
 
     revalidatePath(
-      `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`
+      `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`,
     );
 
     return updated;
@@ -420,7 +418,7 @@ export async function deleteEvaluation(evaluationId: string, userId: string) {
     const evaluation = await db.query.evaluationsTable.findFirst({
       where: and(
         eq(evaluationsTable.id, evaluationId),
-        eq(evaluationsTable.userId, userId)
+        eq(evaluationsTable.userId, userId),
       ),
       columns: { propertyId: true },
     });
@@ -435,8 +433,8 @@ export async function deleteEvaluation(evaluationId: string, userId: string) {
       .where(
         and(
           eq(evaluationsTable.id, evaluationId),
-          eq(evaluationsTable.userId, userId)
-        )
+          eq(evaluationsTable.userId, userId),
+        ),
       );
 
     revalidatePath(`/dashboard/properties/${evaluation.propertyId}`);
