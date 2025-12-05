@@ -34,7 +34,6 @@ export default function HardMoneyFinancingForm({
     hardLoanToValue: hardMoneyParams.loanToValue,
     hardLenderFees: hardMoneyParams.lenderFees,
     hardInterestRate: hardMoneyParams.interestRate,
-    monthsToRefi: String(hardMoneyParams.monthsToRefi),
     rollInLenderFees: hardMoneyParams.rollInLenderFees,
     weeksUntilLeased: String(hardMoneyParams.weeksUntilLeased),
     refiLoanToValue: refinanceParams.loanToValue,
@@ -42,7 +41,6 @@ export default function HardMoneyFinancingForm({
     refiInterestRate: refinanceParams.interestRate,
     refiLenderFees: refinanceParams.lenderFees,
     refiMortgageInsurance: refinanceParams.mortgageInsurance,
-    refiMonthsOfTaxes: String(refinanceParams.monthsOfTaxes),
   });
 
   async function handleSubmit(e: FormEvent) {
@@ -54,7 +52,6 @@ export default function HardMoneyFinancingForm({
           loanToValue: formData.hardLoanToValue,
           lenderFees: formData.hardLenderFees,
           interestRate: formData.hardInterestRate,
-          monthsToRefi: Number(formData.monthsToRefi),
           rollInLenderFees: Boolean(formData.rollInLenderFees),
           weeksUntilLeased: Number(formData.weeksUntilLeased),
         });
@@ -64,7 +61,6 @@ export default function HardMoneyFinancingForm({
           interestRate: formData.refiInterestRate,
           lenderFees: formData.refiLenderFees,
           mortgageInsurance: formData.refiMortgageInsurance,
-          monthsOfTaxes: Number(formData.refiMonthsOfTaxes),
         });
         toast.success('Deal terms updated successfully');
       } catch (error) {
@@ -75,11 +71,17 @@ export default function HardMoneyFinancingForm({
   }
 
   const hardCashToClose: number = useMemo(() => {
-    const appraisal = Number(evaluation?.appraisal);
-    const survey = Number(evaluation?.survey);
-    const inspection = Number(evaluation?.inspection);
-    return appraisal + survey + inspection;
-  }, [evaluation?.appraisal, evaluation?.survey, evaluation?.inspection]);
+    const ltv = Number(hardMoneyParams?.loanToValue);
+    const purchasePrice = Number(evaluation?.purchasePrice);
+    const cashToClose = ((100 - ltv) / 100) * purchasePrice;
+    return cashToClose;
+  }, [
+    evaluation?.appraisal,
+    evaluation?.survey,
+    evaluation?.inspection,
+    hardMoneyParams?.loanToValue,
+    evaluation?.purchasePrice,
+  ]);
 
   const propertyTax: number = useMemo(() => {
     const annualPropertyTax = Number(evaluation?.propertyTax);
@@ -102,17 +104,17 @@ export default function HardMoneyFinancingForm({
   }, [evaluation?.hoa]);
 
   const notePayment: number = useMemo(() => {
-    const purchasePrice = Number(evaluation?.purchasePrice);
-    const downPaymentPercent = Number(refinanceParams?.downPayment) / 100;
-    const downPayment = purchasePrice * downPaymentPercent;
-    const loanAmount = purchasePrice - downPayment;
+    const estimatedSalePrice = Number(evaluation?.estimatedSalePrice);
+    const downPaymentPercent = Number(refinanceParams?.loanToValue) / 100;
+    const downPayment = estimatedSalePrice * downPaymentPercent;
+    const loanAmount = estimatedSalePrice - downPayment;
     const monthlyInterestRate =
       Number(refinanceParams?.interestRate) / 100 / 12;
     const loanTermMonths = Number(refinanceParams?.loanTerm) * 12;
     return monthlyLoanAmount(loanTermMonths, monthlyInterestRate, loanAmount);
   }, [
-    evaluation?.purchasePrice,
-    refinanceParams?.downPayment,
+    evaluation?.estimatedSalePrice,
+    refinanceParams?.loanToValue,
     refinanceParams?.interestRate,
     refinanceParams?.loanTerm,
   ]);
@@ -131,6 +133,45 @@ export default function HardMoneyFinancingForm({
     hoa,
     evaluation?.miscellaneous,
   ]);
+
+  const hardClosingCosts: number = useMemo(() => {
+    const hardLenderFees = Number(hardMoneyParams?.lenderFees);
+    const refiLenderFees = Number(refinanceParams?.lenderFees);
+    const appraisal = Number(evaluation?.appraisal);
+    const survey = Number(evaluation?.survey);
+    const inspection = Number(evaluation?.inspection);
+    return hardLenderFees + refiLenderFees + appraisal + survey + inspection;
+  }, [
+    hardMoneyParams?.lenderFees,
+    refinanceParams?.lenderFees,
+    evaluation?.appraisal,
+    evaluation?.survey,
+    evaluation?.inspection,
+  ]);
+
+  const hardCashOutOfPocket: number = useMemo(() => {
+    return hardCashToClose + hardClosingCosts;
+  }, [hardCashToClose, hardClosingCosts]);
+
+  const equityCapture: number = useMemo(() => {
+    const purchasePrice = Number(evaluation?.purchasePrice);
+    const salePrice = Number(evaluation.estimatedSalePrice);
+    return salePrice - (purchasePrice + hardCashOutOfPocket);
+  }, [
+    hardCashOutOfPocket,
+    evaluation?.estimatedSalePrice,
+    evaluation?.purchasePrice,
+  ]);
+
+  const returnOnEquity: number = useMemo(() => {
+    const annualCashFlow = cashflowTotal * 12;
+    return (annualCashFlow / equityCapture) * 100;
+  }, [cashflowTotal, equityCapture]);
+
+  const cashOnCashReturn: number = useMemo(() => {
+    const annualCashFlow = cashflowTotal * 12;
+    return (annualCashFlow / hardCashOutOfPocket) * 100;
+  }, [cashflowTotal, hardCashOutOfPocket]);
 
   return (
     <div className='space-y-6'>
@@ -183,20 +224,6 @@ export default function HardMoneyFinancingForm({
                         setFormData((prev) => ({
                           ...prev,
                           hardInterestRate: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className='space-y-2'>
-                    <Label htmlFor='monthsToRefi'># Months to Refi</Label>
-                    <Input
-                      id='monthsToRefi'
-                      type='number'
-                      value={formData.monthsToRefi}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          monthsToRefi: e.target.value,
                         }))
                       }
                     />
@@ -293,22 +320,6 @@ export default function HardMoneyFinancingForm({
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='refiMonthsOfTaxes'>
-                      # Months Tax & Insurance
-                    </Label>
-                    <Input
-                      id='refiMonthsOfTaxes'
-                      type='number'
-                      value={formData.refiMonthsOfTaxes}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          refiMonthsOfTaxes: e.target.value,
-                        }))
-                      }
-                    />
-                  </div>
-                  <div className='space-y-2'>
                     <Label htmlFor='refiMortgageInsurance'>
                       Mortgage Insurance (Annual)
                     </Label>
@@ -354,25 +365,33 @@ export default function HardMoneyFinancingForm({
               <TableBody>
                 <TableRow>
                   <TableCell className='font-medium'>Equity Capture</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(equityCapture)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>
                     Annual Cash Flow
                   </TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(cashflowTotal * 12)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>
                     Return On Equity Capture
                   </TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
+                  <TableCell className='text-right'>
+                    {returnOnEquity.toFixed(1)}%
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>
                     Cash On Cash Return
                   </TableCell>
-                  <TableCell className='text-right font-bold'>$0</TableCell>
+                  <TableCell className='text-right font-bold'>
+                    {cashOnCashReturn.toFixed(1)}%
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
@@ -395,21 +414,25 @@ export default function HardMoneyFinancingForm({
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Closing Costs</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
-                </TableRow>
-                <TableRow>
-                  <TableCell className='font-medium'>
-                    Prepaid Expenses
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(hardClosingCosts)}
                   </TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Repairs</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(Number(evaluation?.repairs))}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className='font-medium'>Lender Reserves</TableCell>
                   <TableCell className='text-right'>-$0</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-bold'>TOTAL</TableCell>
-                  <TableCell className='text-right font-bold'>$0</TableCell>
+                  <TableCell className='text-right font-bold'>
+                    {formatDollarAmount(hardCashOutOfPocket)}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
