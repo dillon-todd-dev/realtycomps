@@ -21,7 +21,6 @@ export default function ConventionalFinancingForm({
   evaluation,
 }: ConventionalFinancingFormProps) {
   const loanParams = evaluation.conventionalLoanParams;
-  const dealTerms = evaluation.dealTerms;
 
   const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState({
@@ -36,7 +35,6 @@ export default function ConventionalFinancingForm({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
-    console.log(formData);
     startTransition(async () => {
       try {
         await updateConventionalLoanParams(evaluation.id, evaluation.userId, {
@@ -44,8 +42,8 @@ export default function ConventionalFinancingForm({
           loanTerm: Number(formData.loanTerm),
           interestRate: formData.interestRate,
           lenderFees: formData.lenderFees,
-          mortgageInsurance: formData.monthsOfTaxes,
-          monthsOfTaxes: Number(formData.mortgageInsurance),
+          mortgageInsurance: formData.mortgageInsurance,
+          monthsOfTaxes: Number(formData.monthsOfTaxes),
         });
         toast.success('Deal terms updated successfully');
       } catch (error) {
@@ -57,12 +55,12 @@ export default function ConventionalFinancingForm({
 
   const downPayment: number = useMemo(() => {
     const purchasePrice = Number(evaluation?.purchasePrice);
-    const downPaymentPercent = Number(evaluation?.downPayment) / 100;
+    const downPaymentPercent = Number(loanParams?.downPayment) / 100;
     return purchasePrice * downPaymentPercent;
   }, [evaluation?.purchasePrice, loanParams.downPayment]);
 
   const closingCosts: number = useMemo(() => {
-    const lenderFees = Number(evaluation?.lenderFees);
+    const lenderFees = Number(loanParams?.lenderFees);
     const survey = Number(evaluation?.survey);
     const appraisal = Number(evaluation?.appraisal);
     const inspection = Number(evaluation?.inspection);
@@ -74,18 +72,13 @@ export default function ConventionalFinancingForm({
     evaluation?.inspection,
   ]);
 
-  const cashOutOfPocketTotal: number = useMemo(() => {
-    const repairs = Number(evaluation?.repairs);
-    return downPayment + closingCosts + repairs;
-  }, [downPayment, closingCosts, evaluation?.repairs]);
-
   const notePayment: number = useMemo(() => {
     const purchasePrice = Number(evaluation?.purchasePrice);
-    const downPaymentPercent = Number(evaluation?.downPayment) / 100;
+    const downPaymentPercent = Number(loanParams?.downPayment) / 100;
     const downPayment = purchasePrice * downPaymentPercent;
     const loanAmount = purchasePrice - downPayment;
-    const monthlyInterestRate = Number(evaluation?.interestRate) / 100 / 12;
-    const loanTermMonths = Number(evaluation?.loanTerm) * 12;
+    const monthlyInterestRate = Number(loanParams?.interestRate) / 100 / 12;
+    const loanTermMonths = Number(loanParams?.loanTerm) * 12;
     return monthlyLoanAmount(loanTermMonths, monthlyInterestRate, loanAmount);
   }, [
     evaluation?.purchasePrice,
@@ -105,9 +98,19 @@ export default function ConventionalFinancingForm({
   }, [evaluation?.insurance]);
 
   const mortgageInsurance: number = useMemo(() => {
-    const annualInsurance = Number(evaluation?.refiMortgageInsurance);
+    const annualInsurance = Number(loanParams?.mortgageInsurance);
     return annualInsurance / 12;
-  }, [evaluation?.refiMortgageInsurance]);
+  }, [loanParams?.mortgageInsurance]);
+
+  const prepaids: number = useMemo(() => {
+    const months = Number(loanParams.monthsOfTaxes);
+    return (propertyTax + propertyInsurance) * months;
+  }, [propertyTax, propertyInsurance, loanParams.monthsOfTaxes]);
+
+  const cashOutOfPocketTotal: number = useMemo(() => {
+    const repairs = Number(evaluation?.repairs);
+    return downPayment + closingCosts + prepaids + repairs;
+  }, [downPayment, closingCosts, prepaids, evaluation?.repairs]);
 
   const hoa: number = useMemo(() => {
     const annualHoa = Number(evaluation?.hoa);
@@ -301,22 +304,28 @@ export default function ConventionalFinancingForm({
               <TableBody>
                 <TableRow>
                   <TableCell className='font-medium'>Down Payment</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(downPayment)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Closing Costs</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(closingCosts)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>
                     Prepaid Expenses
                   </TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(prepaids)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Repairs</TableCell>
                   <TableCell className='text-right'>
-                    -{formatDollarAmount(evaluation.repairs)}
+                    {formatDollarAmount(evaluation.repairs)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
@@ -375,7 +384,7 @@ export default function ConventionalFinancingForm({
                 <TableRow>
                   <TableCell className='font-medium'>Misc. Monthly</TableCell>
                   <TableCell className='text-right'>
-                    -{formatDollarAmount(Number(evaluation.miscallaneous))}
+                    -{formatDollarAmount(Number(evaluation.miscellaneous))}
                   </TableCell>
                 </TableRow>
                 <TableRow>

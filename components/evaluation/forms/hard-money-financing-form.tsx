@@ -6,13 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
-import { useTransition } from 'react';
+import { FormEvent, useMemo, useState, useTransition } from 'react';
 import {
   updateHardMoneyLoanParams,
   updateRefinanceLoanParams,
 } from '@/actions/evaluations';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import { formatDollarAmount, monthlyLoanAmount } from '@/lib/utils';
 
 type Evaluation = any; // Replace with your actual type
 
@@ -23,29 +24,47 @@ interface HardMoneyFinancingFormProps {
 export default function HardMoneyFinancingForm({
   evaluation,
 }: HardMoneyFinancingFormProps) {
-  const [isPending, startTransition] = useTransition();
-
   const hardMoneyParams = evaluation.hardMoneyLoanParams;
   const refinanceParams = evaluation.refinanceLoanParams;
 
-  async function handleSubmit(formData: FormData) {
+  console.log(evaluation);
+
+  const [isPending, startTransition] = useTransition();
+  const [formData, setFormData] = useState({
+    hardLoanToValue: hardMoneyParams.loanToValue,
+    hardLenderFees: hardMoneyParams.lenderFees,
+    hardInterestRate: hardMoneyParams.interestRate,
+    monthsToRefi: String(hardMoneyParams.monthsToRefi),
+    rollInLenderFees: hardMoneyParams.rollInLenderFees,
+    weeksUntilLeased: String(hardMoneyParams.weeksUntilLeased),
+    refiLoanToValue: refinanceParams.loanToValue,
+    refiLoanTerm: String(refinanceParams.loanTerm),
+    refiInterestRate: refinanceParams.interestRate,
+    refiLenderFees: refinanceParams.lenderFees,
+    refiMortgageInsurance: refinanceParams.mortgageInsurance,
+    refiMonthsOfTaxes: String(refinanceParams.monthsOfTaxes),
+  });
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+
     startTransition(async () => {
       try {
         await updateHardMoneyLoanParams(evaluation.id, evaluation.userId, {
-          loanToValue: formData.get('hardLoanToValue') as string,
-          lenderFees: formData.get('hardLenderFees') as string,
-          interestRate: formData.get('hardInterestRate') as string,
-          monthsToRefi: Number(formData.get('monthsToRefi')),
-          rollInLenderFees: Boolean(formData.get('rollInLenderFees')),
-          weeksUntilLeased: Number(formData.get('weeksUntilLeased')),
+          loanToValue: formData.hardLoanToValue,
+          lenderFees: formData.hardLenderFees,
+          interestRate: formData.hardInterestRate,
+          monthsToRefi: Number(formData.monthsToRefi),
+          rollInLenderFees: Boolean(formData.rollInLenderFees),
+          weeksUntilLeased: Number(formData.weeksUntilLeased),
         });
         await updateRefinanceLoanParams(evaluation.id, evaluation.userId, {
-          loanToValue: formData.get('refiLoanToValue') as string,
-          loanTerm: Number(formData.get('refiLoanTerm')),
-          interestRate: formData.get('refiInterestRate') as string,
-          lenderFees: formData.get('refiLenderFees') as string,
-          mortgageInsurance: formData.get('refiMortgageInsurance') as string,
-          monthsOfTaxes: Number(formData.get('refiMonthsOfTaxes')),
+          loanToValue: formData.refiLoanToValue,
+          loanTerm: Number(formData.refiLoanTerm),
+          interestRate: formData.refiInterestRate,
+          lenderFees: formData.refiLenderFees,
+          mortgageInsurance: formData.refiMortgageInsurance,
+          monthsOfTaxes: Number(formData.refiMonthsOfTaxes),
         });
         toast.success('Deal terms updated successfully');
       } catch (error) {
@@ -55,12 +74,70 @@ export default function HardMoneyFinancingForm({
     });
   }
 
+  const hardCashToClose: number = useMemo(() => {
+    const appraisal = Number(evaluation?.appraisal);
+    const survey = Number(evaluation?.survey);
+    const inspection = Number(evaluation?.inspection);
+    return appraisal + survey + inspection;
+  }, [evaluation?.appraisal, evaluation?.survey, evaluation?.inspection]);
+
+  const propertyTax: number = useMemo(() => {
+    const annualPropertyTax = Number(evaluation?.propertyTax);
+    return annualPropertyTax / 12;
+  }, [evaluation?.propertyTax]);
+
+  const propertyInsurance: number = useMemo(() => {
+    const annualInsurance = Number(evaluation?.insurance);
+    return annualInsurance / 12;
+  }, [evaluation?.insurance]);
+
+  const mortgageInsurance: number = useMemo(() => {
+    const annualInsurance = Number(refinanceParams?.mortgageInsurance);
+    return annualInsurance / 12;
+  }, [refinanceParams?.mortgageInsurance]);
+
+  const hoa: number = useMemo(() => {
+    const annualHoa = Number(evaluation?.hoa);
+    return annualHoa / 12;
+  }, [evaluation?.hoa]);
+
+  const notePayment: number = useMemo(() => {
+    const purchasePrice = Number(evaluation?.purchasePrice);
+    const downPaymentPercent = Number(refinanceParams?.downPayment) / 100;
+    const downPayment = purchasePrice * downPaymentPercent;
+    const loanAmount = purchasePrice - downPayment;
+    const monthlyInterestRate =
+      Number(refinanceParams?.interestRate) / 100 / 12;
+    const loanTermMonths = Number(refinanceParams?.loanTerm) * 12;
+    return monthlyLoanAmount(loanTermMonths, monthlyInterestRate, loanAmount);
+  }, [
+    evaluation?.purchasePrice,
+    refinanceParams?.downPayment,
+    refinanceParams?.interestRate,
+    refinanceParams?.loanTerm,
+  ]);
+
+  const cashflowTotal: number = useMemo(() => {
+    const rent = Number(evaluation?.rent);
+    const misc = Number(evaluation?.miscellaneous);
+    return (
+      rent - propertyTax - propertyInsurance - hoa - mortgageInsurance - misc
+    );
+  }, [
+    evaluation?.rent,
+    propertyTax,
+    propertyInsurance,
+    mortgageInsurance,
+    hoa,
+    evaluation?.miscellaneous,
+  ]);
+
   return (
     <div className='space-y-6'>
       {/* Loan Parameters Form */}
       <Card>
         <CardContent className='pt-6'>
-          <form className='space-y-6'>
+          <form onSubmit={handleSubmit} className='space-y-6'>
             <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
               {/* Hard Money Loan Section */}
               <div className='space-y-4'>
@@ -72,8 +149,13 @@ export default function HardMoneyFinancingForm({
                       id='hardLoanToValue'
                       type='number'
                       step='0.01'
-                      defaultValue={hardMoneyParams?.loanToValue || '70'}
-                      placeholder='70'
+                      value={formData.hardLoanToValue}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          hardLoanToValue: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -81,8 +163,13 @@ export default function HardMoneyFinancingForm({
                     <Input
                       id='hardLenderFees'
                       type='number'
-                      defaultValue={hardMoneyParams?.lenderFees || '10000'}
-                      placeholder='10000'
+                      value={formData.hardLenderFees}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          hardLenderFees: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -91,8 +178,13 @@ export default function HardMoneyFinancingForm({
                       id='hardInterestRate'
                       type='number'
                       step='0.001'
-                      defaultValue={hardMoneyParams?.interestRate || '14.000'}
-                      placeholder='14.000'
+                      value={formData.hardInterestRate}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          hardInterestRate: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -100,14 +192,19 @@ export default function HardMoneyFinancingForm({
                     <Input
                       id='monthsToRefi'
                       type='number'
-                      defaultValue={hardMoneyParams?.monthsToRefi || '3'}
-                      placeholder='3'
+                      value={formData.monthsToRefi}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          monthsToRefi: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className='flex items-center space-x-2'>
                     <Checkbox
                       id='rollInLenderFees'
-                      defaultChecked={hardMoneyParams?.rollInLenderFees ?? true}
+                      value={formData.rollInLenderFees}
                     />
                     <Label
                       htmlFor='rollInLenderFees'
@@ -121,8 +218,13 @@ export default function HardMoneyFinancingForm({
                     <Input
                       id='weeksUntilLeased'
                       type='number'
-                      defaultValue={hardMoneyParams?.weeksUntilLeased || '8'}
-                      placeholder='8'
+                      value={formData.weeksUntilLeased}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          weeksUntilLeased: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -138,8 +240,13 @@ export default function HardMoneyFinancingForm({
                       id='refiLoanToValue'
                       type='number'
                       step='0.01'
-                      defaultValue={refinanceParams?.loanToValue || '75'}
-                      placeholder='75'
+                      value={formData.refiLoanToValue}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          refiLoanToValue: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -147,8 +254,13 @@ export default function HardMoneyFinancingForm({
                     <Input
                       id='refiLoanTerm'
                       type='number'
-                      defaultValue={refinanceParams?.loanTerm || '30'}
-                      placeholder='30'
+                      value={formData.refiLoanTerm}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          refiLoanTerm: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -157,8 +269,13 @@ export default function HardMoneyFinancingForm({
                       id='refiInterestRate'
                       type='number'
                       step='0.001'
-                      defaultValue={refinanceParams?.interestRate || '5.000'}
-                      placeholder='5.000'
+                      value={formData.refiInterestRate}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          refiInterestRate: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -166,8 +283,13 @@ export default function HardMoneyFinancingForm({
                     <Input
                       id='refiLenderFees'
                       type='number'
-                      defaultValue={refinanceParams?.lenderFees || '5000'}
-                      placeholder='5000'
+                      value={formData.refiLenderFees}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          refiLenderFees: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -177,8 +299,13 @@ export default function HardMoneyFinancingForm({
                     <Input
                       id='refiMonthsOfTaxes'
                       type='number'
-                      defaultValue={refinanceParams?.monthsOfTaxes || '2'}
-                      placeholder='2'
+                      value={formData.refiMonthsOfTaxes}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          refiMonthsOfTaxes: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                   <div className='space-y-2'>
@@ -188,8 +315,13 @@ export default function HardMoneyFinancingForm({
                     <Input
                       id='refiMortgageInsurance'
                       type='number'
-                      defaultValue={refinanceParams?.mortgageInsurance || '0'}
-                      placeholder='0'
+                      value={formData.refiMortgageInsurance}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          refiMortgageInsurance: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>
@@ -257,7 +389,9 @@ export default function HardMoneyFinancingForm({
                   <TableCell className='font-medium'>
                     Hard Cash To Close
                   </TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(hardCashToClose)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Closing Costs</TableCell>
@@ -290,35 +424,51 @@ export default function HardMoneyFinancingForm({
               <TableBody>
                 <TableRow>
                   <TableCell className='font-medium'>Monthly Rent</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(evaluation.rent)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Note Payment</TableCell>
-                  <TableCell className='text-right'>$0</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(notePayment)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Property Tax</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(propertyTax)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Property Ins.</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(propertyInsurance)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Mortgage Ins.</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(mortgageInsurance)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>HOA</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(hoa)}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>Misc. Monthly</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    -{formatDollarAmount(Number(evaluation.miscellaneous))}
+                  </TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell className='font-medium'>TOTAL</TableCell>
-                  <TableCell className='text-right'>0.00%</TableCell>
+                  <TableCell className='text-right'>
+                    {formatDollarAmount(cashflowTotal)}
+                  </TableCell>
                 </TableRow>
               </TableBody>
             </Table>
