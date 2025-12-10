@@ -53,7 +53,7 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
             subdivision: comp.SubdivisionName,
             bedrooms: comp.BedroomsTotal,
             bathrooms: comp.BathroomsTotalDecimal,
-            garageSpaces: comp.GarageSpaces,
+            garageSpaces: comp.GarageSpaces ?? 0,
             yearBuilt: comp.YearBuilt,
             squareFootage: comp.LivingArea,
             listPrice: comp.ListPrice,
@@ -70,7 +70,7 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
         // Insert images if they exist
         if (comp.Media && Array.isArray(comp.Media)) {
           const images = comp.Media.filter(
-            (media: any) => media.MediaCategory === 'Photo'
+            (media: any) => media.MediaCategory === 'Photo',
           ).map((media: any) => ({
             order: media.Order,
             url: media.MediaURL,
@@ -99,7 +99,7 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
  */
 export async function toggleComparable(
   comparableId: string,
-  included: boolean
+  included: boolean,
 ) {
   await db
     .update(comparablesTable)

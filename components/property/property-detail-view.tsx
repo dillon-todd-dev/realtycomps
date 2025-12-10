@@ -295,27 +295,6 @@ export default function PropertyDetailView({
                 </div>
               )}
             </div>
-
-            {/* Additional Details */}
-            <div className='border-t pt-6'>
-              <h3 className='text-sm font-semibold text-muted-foreground mb-4'>
-                ADDITIONAL DETAILS
-              </h3>
-              <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-sm'>
-                <div>
-                  <div className='text-muted-foreground mb-1'>Property ID</div>
-                  <div className='font-mono'>{property.id}</div>
-                </div>
-                <div>
-                  <div className='text-muted-foreground mb-1'>Created</div>
-                  <div>{new Date(property.createdAt).toLocaleDateString()}</div>
-                </div>
-                <div>
-                  <div className='text-muted-foreground mb-1'>Last Updated</div>
-                  <div>{new Date(property.updatedAt).toLocaleDateString()}</div>
-                </div>
-              </div>
-            </div>
           </CardContent>
         </Card>
 

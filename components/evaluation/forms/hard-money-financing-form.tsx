@@ -72,15 +72,16 @@ export default function HardMoneyFinancingForm({
 
   const hardCashToClose: number = useMemo(() => {
     const ltv = Number(hardMoneyParams?.loanToValue);
+    const arv = Number(evaluation?.estimatedSalePrice);
+    const maxLoanAmount = (ltv / 100) * arv;
     const purchasePrice = Number(evaluation?.purchasePrice);
-    const cashToClose = ((100 - ltv) / 100) * purchasePrice;
-    return cashToClose;
+    const repairs = Number(evaluation?.repairs);
+    return Math.abs(purchasePrice - (maxLoanAmount - repairs));
   }, [
-    evaluation?.appraisal,
-    evaluation?.survey,
-    evaluation?.inspection,
     hardMoneyParams?.loanToValue,
+    evaluation?.estimatedSalePrice,
     evaluation?.purchasePrice,
+    evaluation?.repairs,
   ]);
 
   const propertyTax: number = useMemo(() => {

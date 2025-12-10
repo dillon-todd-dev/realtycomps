@@ -37,9 +37,7 @@ export default function EvaluationListItemCard({
 
             <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-sm'>
               <div>
-                <div className='text-muted-foreground mb-1'>
-                  Cash on Cash ROI
-                </div>
+                <div className='text-muted-foreground mb-1'>Equity Capture</div>
                 <div className='font-semibold'>
                   {evaluation.cashOnCashROI
                     ? `${parseFloat(evaluation.cashOnCashROI).toFixed(2)}%`
@@ -48,7 +46,7 @@ export default function EvaluationListItemCard({
               </div>
               <div>
                 <div className='text-muted-foreground mb-1'>
-                  Monthly Cash Flow
+                  Annual Cash Flow
                 </div>
                 <div className='font-semibold'>
                   {evaluation.monthlyCashFlow
@@ -59,7 +57,9 @@ export default function EvaluationListItemCard({
                 </div>
               </div>
               <div>
-                <div className='text-muted-foreground mb-1'>Cap Rate</div>
+                <div className='text-muted-foreground mb-1'>
+                  Return On Capital Gain
+                </div>
                 <div className='font-semibold'>
                   {evaluation.capRate
                     ? `${parseFloat(evaluation.capRate).toFixed(2)}%`
@@ -67,7 +67,9 @@ export default function EvaluationListItemCard({
                 </div>
               </div>
               <div>
-                <div className='text-muted-foreground mb-1'>Total ROI</div>
+                <div className='text-muted-foreground mb-1'>
+                  Cash On Cash Return
+                </div>
                 <div className='font-semibold'>
                   {evaluation.totalROI
                     ? `${parseFloat(evaluation.totalROI).toFixed(2)}%`
