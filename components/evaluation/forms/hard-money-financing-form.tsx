@@ -108,9 +108,8 @@ export default function HardMoneyFinancingForm({
 
   const notePayment: number = useMemo(() => {
     const estimatedSalePrice = Number(evaluation?.estimatedSalePrice);
-    const downPaymentPercent = Number(refinanceParams?.loanToValue) / 100;
-    const downPayment = estimatedSalePrice * downPaymentPercent;
-    const loanAmount = estimatedSalePrice - downPayment;
+    const loanToValue = Number(refinanceParams?.loanToValue) / 100;
+    const loanAmount = estimatedSalePrice * loanToValue;
     const monthlyInterestRate =
       Number(refinanceParams?.interestRate) / 100 / 12;
     const loanTermMonths = Number(refinanceParams?.loanTerm) * 12;
@@ -126,7 +125,13 @@ export default function HardMoneyFinancingForm({
     const rent = Number(evaluation?.rent);
     const misc = Number(evaluation?.miscellaneous);
     return (
-      rent - propertyTax - propertyInsurance - hoa - mortgageInsurance - misc
+      rent -
+      notePayment -
+      propertyTax -
+      propertyInsurance -
+      hoa -
+      mortgageInsurance -
+      misc
     );
   }, [
     evaluation?.rent,
@@ -134,6 +139,7 @@ export default function HardMoneyFinancingForm({
     propertyInsurance,
     mortgageInsurance,
     hoa,
+    notePayment,
     evaluation?.miscellaneous,
   ]);
 
@@ -356,7 +362,7 @@ export default function HardMoneyFinancingForm({
         </CardContent>
       </Card>
 
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+      <div className='grid grid-cols-1 xl:grid-cols-3 gap-2'>
         <Card>
           <CardHeader>
             <CardTitle>Gains And Returns</CardTitle>
@@ -365,32 +371,34 @@ export default function HardMoneyFinancingForm({
             <Table>
               <TableBody>
                 <TableRow>
-                  <TableCell className='font-medium'>Equity Capture</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>
+                    Equity Capture
+                  </TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     {formatDollarAmount(equityCapture)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>
+                  <TableCell className='font-medium text-sm'>
                     Annual Cash Flow
                   </TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     {formatDollarAmount(cashflowTotal * 12)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>
+                  <TableCell className='font-medium text-sm'>
                     Return On Equity Capture
                   </TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     {returnOnEquity.toFixed(1)}%
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>
+                  <TableCell className='font-medium text-sm'>
                     Cash On Cash Return
                   </TableCell>
-                  <TableCell className='text-right font-bold'>
+                  <TableCell className='text-right font-bold whitespace-nowrap text-sm'>
                     {cashOnCashReturn.toFixed(1)}%
                   </TableCell>
                 </TableRow>
@@ -406,32 +414,38 @@ export default function HardMoneyFinancingForm({
             <Table>
               <TableBody>
                 <TableRow>
-                  <TableCell className='font-medium'>
+                  <TableCell className='font-medium text-sm'>
                     Hard Cash To Close
                   </TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     {formatDollarAmount(hardCashToClose)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Closing Costs</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>
+                    Closing Costs
+                  </TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     {formatDollarAmount(hardClosingCosts)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Repairs</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>Repairs</TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     {formatDollarAmount(Number(evaluation?.repairs))}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Lender Reserves</TableCell>
-                  <TableCell className='text-right'>-$0</TableCell>
+                  <TableCell className='font-medium text-sm'>
+                    Lender Reserves
+                  </TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
+                    -$0
+                  </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-bold'>TOTAL</TableCell>
-                  <TableCell className='text-right font-bold'>
+                  <TableCell className='font-bold text-sm'>TOTAL</TableCell>
+                  <TableCell className='text-right font-bold whitespace-nowrap text-sm'>
                     {formatDollarAmount(hardCashOutOfPocket)}
                   </TableCell>
                 </TableRow>
@@ -447,50 +461,62 @@ export default function HardMoneyFinancingForm({
             <Table>
               <TableBody>
                 <TableRow>
-                  <TableCell className='font-medium'>Monthly Rent</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>
+                    Monthly Rent
+                  </TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     {formatDollarAmount(evaluation.rent)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Note Payment</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>
+                    Note Payment
+                  </TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     -{formatDollarAmount(notePayment)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Property Tax</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>
+                    Property Tax
+                  </TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     -{formatDollarAmount(propertyTax)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Property Ins.</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>
+                    Property Ins.
+                  </TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     -{formatDollarAmount(propertyInsurance)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Mortgage Ins.</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>
+                    Mortgage Ins.
+                  </TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     -{formatDollarAmount(mortgageInsurance)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>HOA</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>HOA</TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     -{formatDollarAmount(hoa)}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>Misc. Monthly</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>
+                    Misc. Monthly
+                  </TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     -{formatDollarAmount(Number(evaluation.miscellaneous))}
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium'>TOTAL</TableCell>
-                  <TableCell className='text-right'>
+                  <TableCell className='font-medium text-sm'>TOTAL</TableCell>
+                  <TableCell className='text-right whitespace-nowrap text-sm'>
                     {formatDollarAmount(cashflowTotal)}
                   </TableCell>
                 </TableRow>

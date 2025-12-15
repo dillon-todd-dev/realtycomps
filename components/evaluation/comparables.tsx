@@ -18,6 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
 import { Search, Loader2, Eye } from 'lucide-react';
 import { useState, useTransition } from 'react';
@@ -96,44 +103,24 @@ export default function Comparables({
   ) {
     const newState = !currentState;
 
-    // Optimistic update with reordering
-    setComparables((prev) => {
-      // Update the included status
-      const updated = prev.map((comp) =>
+    // Optimistic update without reordering
+    setComparables((prev) =>
+      prev.map((comp) =>
         comp.id === comparableId ? { ...comp, included: newState } : comp,
-      );
-
-      // Sort: included first (true = -1), excluded at bottom (false = 1)
-      return updated.sort((a, b) => {
-        if (a.included === b.included) return 0;
-        return a.included ? -1 : 1;
-      });
-    });
+      ),
+    );
 
     try {
       await toggleComparable(comparableId, newState);
 
-      setComparables((prev) => {
-        return [...prev].sort((a, b) => {
-          if (a.included === b.included) return 0;
-          return a.included ? -1 : 1;
-        });
-      });
-
       toast.success(newState ? 'Comparable included' : 'Comparable excluded');
     } catch (error) {
       // Revert on error
-      setComparables((prev) => {
-        const reverted = prev.map((comp) =>
+      setComparables((prev) =>
+        prev.map((comp) =>
           comp.id === comparableId ? { ...comp, included: currentState } : comp,
-        );
-
-        // Re-sort after reverting
-        return reverted.sort((a, b) => {
-          if (a.included === b.included) return 0;
-          return a.included ? -1 : 1;
-        });
-      });
+        ),
+      );
       toast.error('Failed to update comparable');
     }
   }
@@ -445,39 +432,42 @@ export default function Comparables({
 
       {/* Detail View Modal */}
       <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
-        <DialogContent className='max-w-4xl max-h-[90vh] overflow-y-auto'>
+        <DialogContent className='max-w-5xl max-h-[95vh] overflow-y-auto'>
           {selectedComparable && (
             <>
               <DialogHeader>
-                <DialogTitle className='text-2xl'>
+                <DialogTitle className='text-2xl pr-8'>
                   {selectedComparable.address}
                 </DialogTitle>
               </DialogHeader>
 
-              <div className='space-y-6'>
-                {/* Images */}
+              <div className='space-y-6 overflow-hidden'>
+                {/* Images Carousel */}
                 {selectedComparable.images &&
                   selectedComparable.images.length > 0 && (
-                    <div className='grid grid-cols-2 gap-2'>
-                      {selectedComparable.images
-                        .slice(0, 4)
-                        .map((image, index) => (
-                          <div
-                            key={index}
-                            className='relative aspect-video overflow-hidden rounded-lg'
-                          >
-                            <Image
-                              src={image.url}
-                              alt={
-                                image.description ||
-                                `Property image ${index + 1}`
-                              }
-                              fill
-                              className='object-cover'
-                              sizes='(max-width: 768px) 50vw, 400px'
-                            />
-                          </div>
-                        ))}
+                    <div className='w-full'>
+                      <Carousel className='w-full'>
+                        <CarouselContent>
+                          {selectedComparable.images.map((image, index) => (
+                            <CarouselItem key={index}>
+                              <div className='relative aspect-video overflow-hidden rounded-lg bg-muted'>
+                                <Image
+                                  src={image.url}
+                                  alt={
+                                    image.description ||
+                                    `Property image ${index + 1}`
+                                  }
+                                  fill
+                                  className='object-cover'
+                                  sizes='(max-width: 768px) 100vw, 1000px'
+                                />
+                              </div>
+                            </CarouselItem>
+                          ))}
+                        </CarouselContent>
+                        <CarouselPrevious className='left-0' />
+                        <CarouselNext className='right-0' />
+                      </Carousel>
                     </div>
                   )}
 

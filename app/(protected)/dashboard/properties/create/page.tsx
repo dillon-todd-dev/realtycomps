@@ -1,4 +1,4 @@
-import { requireAdmin } from '@/lib/session';
+import { requireUser } from '@/lib/session';
 import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -6,7 +6,7 @@ import Link from 'next/link';
 import CreatePropertyForm from '@/components/property/create-property-form';
 
 export default async function AddPropertyPage() {
-  await requireAdmin();
+  await requireUser();
 
   return (
     <>

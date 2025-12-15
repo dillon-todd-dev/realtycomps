@@ -84,6 +84,7 @@ export default function EvaluationDetailView({
     e.preventDefault();
     e.stopPropagation();
     // Implement PDF export functionality here
+    window.print();
   };
 
   return (

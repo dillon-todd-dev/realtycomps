@@ -117,7 +117,11 @@ export async function getEvaluation(evaluationId: string, userId: string) {
       },
       hardMoneyLoanParams: true,
       refinanceLoanParams: true,
-      comparables: true,
+      comparables: {
+        with: {
+          images: true,
+        },
+      },
     },
   });
 
