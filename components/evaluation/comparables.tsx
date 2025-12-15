@@ -61,39 +61,33 @@ export default function Comparables({
   const [comparables, setComparables] =
     useState<Comparable[]>(initialComparables);
   const [isPending, startTransition] = useTransition();
-  const [hasSearched, setHasSearched] = useState(initialComparables.length > 0);
   const [selectedComparable, setSelectedComparable] =
     useState<Comparable | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   async function handleSearch(formData: FormData) {
-    startTransition(async () => {
-      try {
-        const results = await searchSaleComparables({
-          evaluationId,
-          propertyId,
-          address: propertyAddress,
-          maxRadius: Number(formData.get('maxRadius')),
-          minBeds: Number(formData.get('minBeds')) || undefined,
-          maxBeds: Number(formData.get('maxBeds')) || undefined,
-          minBaths: Number(formData.get('minBaths')) || undefined,
-          maxBaths: Number(formData.get('maxBaths')) || undefined,
-          minSquareFootage:
-            Number(formData.get('minSquareFootage')) || undefined,
-          maxSquareFootage:
-            Number(formData.get('maxSquareFootage')) || undefined,
-          daysOld: Number(formData.get('daysOld')) || 365,
-          type: formData.get('type') as 'SALE' | 'RENT',
-        });
+    try {
+      const results = await searchSaleComparables({
+        evaluationId,
+        propertyId,
+        address: propertyAddress,
+        maxRadius: Number(formData.get('maxRadius')),
+        minBeds: Number(formData.get('minBeds')) || undefined,
+        maxBeds: Number(formData.get('maxBeds')) || undefined,
+        minBaths: Number(formData.get('minBaths')) || undefined,
+        maxBaths: Number(formData.get('maxBaths')) || undefined,
+        minSquareFootage: Number(formData.get('minSquareFootage')) || undefined,
+        maxSquareFootage: Number(formData.get('maxSquareFootage')) || undefined,
+        daysOld: Number(formData.get('daysOld')) || 365,
+        type: formData.get('type') as 'SALE' | 'RENT',
+      });
 
-        setComparables(results);
-        setHasSearched(true);
-        toast.success(`Found ${results.length} comparable properties`);
-      } catch (error) {
-        console.error('Failed to search comparables:', error);
-        toast.error('Failed to search for comparables');
-      }
-    });
+      setComparables(results);
+      toast.success(`Found ${results.length} comparable properties`);
+    } catch (error) {
+      console.error('Failed to search comparables:', error);
+      toast.error('Failed to search for comparables');
+    }
   }
 
   async function handleToggleInclude(
@@ -164,7 +158,15 @@ export default function Comparables({
         </CardHeader>
         <CardContent className='space-y-6'>
           {/* Search Form */}
-          <form action={handleSearch} className='space-y-4'>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              startTransition(
+                async () => await handleSearch(new FormData(e.currentTarget)),
+              );
+            }}
+            className='space-y-4'
+          >
             {/* First Row: Radius, Min/Max Beds, Min/Max Baths */}
             <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4'>
               <div className='space-y-2'>
@@ -285,8 +287,8 @@ export default function Comparables({
             </Button>
           </form>
 
-          {/* Results Table */}
-          {hasSearched && (
+          {/* Results Table - Show after any search or if initial data exists */}
+          {comparables.length > 0 && (
             <>
               <div className='flex items-center justify-between border-t pt-4'>
                 <div>
@@ -300,137 +302,142 @@ export default function Comparables({
                 </div>
               </div>
 
-              {comparables.length === 0 ? (
-                <div className='text-center py-8 text-muted-foreground'>
-                  No comparable properties found. Try adjusting your search
-                  criteria.
-                </div>
-              ) : (
-                <div className='border rounded-lg overflow-hidden'>
-                  <div className='overflow-x-auto'>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead className='w-12'>Include</TableHead>
-                          <TableHead>Address</TableHead>
-                          <TableHead>Subdivision</TableHead>
-                          <TableHead className='text-center'>Beds</TableHead>
-                          <TableHead className='text-center'>Baths</TableHead>
-                          <TableHead className='text-center'>Garage</TableHead>
-                          <TableHead className='text-center'>Built</TableHead>
-                          <TableHead className='text-right'>Sq Ft</TableHead>
-                          <TableHead className='text-center'>Listed</TableHead>
-                          <TableHead className='text-center'>Sold</TableHead>
-                          <TableHead className='text-center'>
-                            Close Date
-                          </TableHead>
-                          <TableHead className='w-12'></TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {comparables.map((comp) => (
-                          <TableRow
-                            key={comp.id}
-                            className={`${
-                              !comp.included
-                                ? 'opacity-40 bg-muted/50'
-                                : 'hover:bg-muted/50'
-                            } transition-all`}
+              <div className='border rounded-lg overflow-hidden'>
+                <div className='overflow-x-auto'>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className='w-12'>Include</TableHead>
+                        <TableHead className='w-[180px]'>Address</TableHead>
+                        <TableHead className='hidden xl:table-cell'>
+                          Subdivision
+                        </TableHead>
+                        <TableHead className='text-center w-16'>Beds</TableHead>
+                        <TableHead className='text-center w-16'>
+                          Baths
+                        </TableHead>
+                        <TableHead className='hidden lg:table-cell text-center w-20'>
+                          Garage
+                        </TableHead>
+                        <TableHead className='hidden lg:table-cell text-center w-20'>
+                          Built
+                        </TableHead>
+                        <TableHead className='text-right w-24'>Sq Ft</TableHead>
+                        <TableHead className='text-center w-28'>
+                          Listed
+                        </TableHead>
+                        <TableHead className='text-center w-28'>Sold</TableHead>
+                        <TableHead className='hidden md:table-cell text-center w-28'>
+                          Close Date
+                        </TableHead>
+                        <TableHead className='w-12'></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {comparables.map((comp) => (
+                        <TableRow
+                          key={comp.id}
+                          className={`${
+                            !comp.included
+                              ? 'opacity-40 bg-muted/50'
+                              : 'hover:bg-muted/50'
+                          } transition-all`}
+                        >
+                          <TableCell>
+                            <Checkbox
+                              checked={comp.included}
+                              onCheckedChange={() =>
+                                handleToggleInclude(comp.id, comp.included)
+                              }
+                            />
+                          </TableCell>
+                          <TableCell
+                            className={`font-medium ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
                           >
-                            <TableCell>
-                              <Checkbox
-                                checked={comp.included}
-                                onCheckedChange={() =>
-                                  handleToggleInclude(comp.id, comp.included)
-                                }
-                              />
-                            </TableCell>
-                            <TableCell
-                              className={`font-medium ${
-                                !comp.included ? 'line-through' : ''
-                              }`}
+                            <div className='whitespace-normal break-words'>
+                              {comp.address}
+                            </div>
+                          </TableCell>
+                          <TableCell
+                            className={`hidden xl:table-cell ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
+                          >
+                            {comp.subdivision || '—'}
+                          </TableCell>
+                          <TableCell
+                            className={`text-center ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
+                          >
+                            {comp.bedrooms}
+                          </TableCell>
+                          <TableCell
+                            className={`text-center ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
+                          >
+                            {parseFloat(comp.bathrooms)}
+                          </TableCell>
+                          <TableCell
+                            className={`hidden lg:table-cell text-center ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
+                          >
+                            {comp.garageSpaces || '—'}
+                          </TableCell>
+                          <TableCell
+                            className={`hidden lg:table-cell text-center ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
+                          >
+                            {comp.yearBuilt}
+                          </TableCell>
+                          <TableCell
+                            className={`text-right ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
+                          >
+                            {comp.squareFootage.toLocaleString()}
+                          </TableCell>
+                          <TableCell
+                            className={`text-center font-semibold ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
+                          >
+                            {formatCurrency(comp.listPrice)}
+                          </TableCell>
+                          <TableCell
+                            className={`text-center font-semibold ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
+                          >
+                            {formatCurrency(comp.salePrice)}
+                          </TableCell>
+                          <TableCell
+                            className={`hidden md:table-cell text-center ${
+                              !comp.included ? 'line-through' : ''
+                            }`}
+                          >
+                            {new Date(comp.closeDate).toLocaleDateString()}
+                          </TableCell>
+                          <TableCell>
+                            <Button
+                              variant='ghost'
+                              size='icon'
+                              onClick={() => handleViewDetails(comp)}
                             >
-                              <div className='whitespace-nowrap'>
-                                {comp.address}
-                              </div>
-                            </TableCell>
-                            <TableCell
-                              className={!comp.included ? 'line-through' : ''}
-                            >
-                              {comp.subdivision || '—'}
-                            </TableCell>
-                            <TableCell
-                              className={`text-center ${
-                                !comp.included ? 'line-through' : ''
-                              }`}
-                            >
-                              {comp.bedrooms}
-                            </TableCell>
-                            <TableCell
-                              className={`text-center ${
-                                !comp.included ? 'line-through' : ''
-                              }`}
-                            >
-                              {parseFloat(comp.bathrooms)}
-                            </TableCell>
-                            <TableCell
-                              className={`text-center ${
-                                !comp.included ? 'line-through' : ''
-                              }`}
-                            >
-                              {comp.garageSpaces || '—'}
-                            </TableCell>
-                            <TableCell
-                              className={`text-center ${
-                                !comp.included ? 'line-through' : ''
-                              }`}
-                            >
-                              {comp.yearBuilt}
-                            </TableCell>
-                            <TableCell
-                              className={`text-right ${
-                                !comp.included ? 'line-through' : ''
-                              }`}
-                            >
-                              {comp.squareFootage.toLocaleString()}
-                            </TableCell>
-                            <TableCell
-                              className={`text-center font-semibold ${
-                                !comp.included ? 'line-through' : ''
-                              }`}
-                            >
-                              {formatCurrency(comp.listPrice)}
-                            </TableCell>
-                            <TableCell
-                              className={`text-center font-semibold ${
-                                !comp.included ? 'line-through' : ''
-                              }`}
-                            >
-                              {formatCurrency(comp.salePrice)}
-                            </TableCell>
-                            <TableCell
-                              className={`text-center ${
-                                !comp.included ? 'line-through' : ''
-                              }`}
-                            >
-                              {new Date(comp.closeDate).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              <Button
-                                variant='ghost'
-                                size='icon'
-                                onClick={() => handleViewDetails(comp)}
-                              >
-                                <Eye className='h-4 w-4' />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
+                              <Eye className='h-4 w-4' />
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </div>
-              )}
+              </div>
             </>
           )}
         </CardContent>
