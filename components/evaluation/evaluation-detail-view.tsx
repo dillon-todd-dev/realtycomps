@@ -146,6 +146,7 @@ export default function EvaluationDetailView({
 
         <Comparables
           evaluationId={evaluation.id}
+          propertyId={evaluation.propertyId}
           initialComparables={evaluation.comparables || []}
           propertyAddress={evaluation.property.address}
         />

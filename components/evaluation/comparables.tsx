@@ -1,7 +1,6 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -25,6 +24,7 @@ import { useState, useTransition } from 'react';
 import { searchSaleComparables, toggleComparable } from '@/actions/comparables';
 import { toast } from 'sonner';
 import Image from 'next/image';
+import { SelectInput } from '../select-input';
 
 type Comparable = {
   id: string;
@@ -47,12 +47,14 @@ type Comparable = {
 
 interface ComparablesProps {
   evaluationId: string;
+  propertyId: string;
   propertyAddress: string;
   initialComparables?: Comparable[];
 }
 
 export default function Comparables({
   evaluationId,
+  propertyId,
   initialComparables = [],
   propertyAddress,
 }: ComparablesProps) {
@@ -69,6 +71,7 @@ export default function Comparables({
       try {
         const results = await searchSaleComparables({
           evaluationId,
+          propertyId,
           address: propertyAddress,
           maxRadius: Number(formData.get('maxRadius')),
           minBeds: Number(formData.get('minBeds')) || undefined,
@@ -95,7 +98,7 @@ export default function Comparables({
 
   async function handleToggleInclude(
     comparableId: string,
-    currentState: boolean
+    currentState: boolean,
   ) {
     const newState = !currentState;
 
@@ -103,7 +106,7 @@ export default function Comparables({
     setComparables((prev) => {
       // Update the included status
       const updated = prev.map((comp) =>
-        comp.id === comparableId ? { ...comp, included: newState } : comp
+        comp.id === comparableId ? { ...comp, included: newState } : comp,
       );
 
       // Sort: included first (true = -1), excluded at bottom (false = 1)
@@ -128,7 +131,7 @@ export default function Comparables({
       // Revert on error
       setComparables((prev) => {
         const reverted = prev.map((comp) =>
-          comp.id === comparableId ? { ...comp, included: currentState } : comp
+          comp.id === comparableId ? { ...comp, included: currentState } : comp,
         );
 
         // Re-sort after reverting
@@ -166,7 +169,7 @@ export default function Comparables({
             <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='maxRadius'>Max Radius (miles)</Label>
-                <Input
+                <SelectInput
                   id='maxRadius'
                   name='maxRadius'
                   type='number'
@@ -179,7 +182,7 @@ export default function Comparables({
 
               <div className='space-y-2'>
                 <Label htmlFor='minBeds'>Min Beds</Label>
-                <Input
+                <SelectInput
                   id='minBeds'
                   name='minBeds'
                   type='number'
@@ -189,7 +192,7 @@ export default function Comparables({
 
               <div className='space-y-2'>
                 <Label htmlFor='maxBeds'>Max Beds</Label>
-                <Input
+                <SelectInput
                   id='maxBeds'
                   name='maxBeds'
                   type='number'
@@ -199,7 +202,7 @@ export default function Comparables({
 
               <div className='space-y-2'>
                 <Label htmlFor='minBaths'>Min Baths</Label>
-                <Input
+                <SelectInput
                   id='minBaths'
                   name='minBaths'
                   type='number'
@@ -210,7 +213,7 @@ export default function Comparables({
 
               <div className='space-y-2'>
                 <Label htmlFor='maxBaths'>Max Baths</Label>
-                <Input
+                <SelectInput
                   id='maxBaths'
                   name='maxBaths'
                   type='number'
@@ -224,7 +227,7 @@ export default function Comparables({
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='minSquareFootage'>Min Sq Ft</Label>
-                <Input
+                <SelectInput
                   id='minSquareFootage'
                   name='minSquareFootage'
                   type='number'
@@ -234,7 +237,7 @@ export default function Comparables({
 
               <div className='space-y-2'>
                 <Label htmlFor='maxSquareFootage'>Max Sq Ft</Label>
-                <Input
+                <SelectInput
                   id='maxSquareFootage'
                   name='maxSquareFootage'
                   type='number'
@@ -244,7 +247,7 @@ export default function Comparables({
 
               <div className='space-y-2'>
                 <Label htmlFor='daysOld'>Max Days Old</Label>
-                <Input
+                <SelectInput
                   id='daysOld'
                   name='daysOld'
                   type='number'
@@ -549,7 +552,7 @@ export default function Comparables({
                     </div>
                     <div className='text-2xl font-bold'>
                       {new Date(
-                        selectedComparable.closeDate
+                        selectedComparable.closeDate,
                       ).toLocaleDateString()}
                     </div>
                   </div>
@@ -571,7 +574,7 @@ export default function Comparables({
                     onClick={() => {
                       handleToggleInclude(
                         selectedComparable.id,
-                        selectedComparable.included
+                        selectedComparable.included,
                       );
                       // Update the selected comparable for immediate UI feedback
                       setSelectedComparable({

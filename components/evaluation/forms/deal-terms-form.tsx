@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { updateDealTerms } from '@/actions/evaluations';
-import { useTransition } from 'react';
+import React, { useState, useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DollarInput } from '@/components/dollar-input';
@@ -16,25 +16,42 @@ interface DealTermsFormProps {
 }
 
 export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
+  const [formData, setFormData] = useState({
+    purchasePrice: evaluation.purchasePrice,
+    estimatedSalePrice: evaluation.estimatedSalePrice,
+    hardAppraisedPrice: evaluation.hardAppraisedPrice,
+    rent: evaluation.rent,
+    repairs: evaluation.repairs,
+    insurance: evaluation.insurance,
+    propertyTax: evaluation.propertyTax,
+    hoa: evaluation.hoa,
+    sellerContribution: evaluation.sellerContribution,
+    survey: evaluation.survey,
+    inspection: evaluation.inspection,
+    appraisal: evaluation.appraisal,
+    miscellaneous: evaluation.miscellaneous,
+  });
   const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(formData: FormData) {
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
     startTransition(async () => {
       try {
         await updateDealTerms(evaluation.id, evaluation.userId, {
-          purchasePrice: formData.get('purchasePrice') as string,
-          estimatedSalePrice: formData.get('estimatedSalePrice') as string,
-          hardAppraisedPrice: formData.get('hardAppraisedPrice') as string,
-          rent: formData.get('rent') as string,
-          repairs: formData.get('repairs') as string,
-          insurance: formData.get('insurance') as string,
-          propertyTax: formData.get('propertyTax') as string,
-          hoa: formData.get('hoa') as string,
-          sellerContribution: formData.get('sellerContribution') as string,
-          survey: formData.get('survey') as string,
-          inspection: formData.get('inspection') as string,
-          appraisal: formData.get('appraisal') as string,
-          miscellaneous: formData.get('miscellaneous') as string,
+          purchasePrice: formData.purchasePrice,
+          estimatedSalePrice: formData.estimatedSalePrice,
+          hardAppraisedPrice: formData.hardAppraisedPrice,
+          rent: formData.rent,
+          repairs: formData.repairs,
+          insurance: formData.insurance,
+          propertyTax: formData.propertyTax,
+          hoa: formData.hoa,
+          sellerContribution: formData.sellerContribution,
+          survey: formData.survey,
+          inspection: formData.inspection,
+          appraisal: formData.appraisal,
+          miscellaneous: formData.miscellaneous,
         });
         toast.success('Deal terms updated successfully');
       } catch (error) {
@@ -50,7 +67,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
         <CardTitle>Deal Terms, Expenses & Revenue</CardTitle>
       </CardHeader>
       <CardContent>
-        <form action={handleSubmit} className='space-y-6'>
+        <form onSubmit={handleSubmit} className='space-y-6'>
           {/* Pricing Section */}
           <div>
             <h3 className='text-sm font-semibold text-muted-foreground mb-3'>
@@ -62,8 +79,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='purchasePrice'
                   name='purchasePrice'
-                  defaultValue={evaluation.purchasePrice || ''}
+                  value={formData.purchasePrice}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      purchasePrice: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -71,8 +94,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='estimatedSalePrice'
                   name='estimatedSalePrice'
-                  defaultValue={evaluation.estimatedSalePrice || ''}
+                  value={formData.estimatedSalePrice}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      estimatedSalePrice: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -80,8 +109,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='hardAppraisedPrice'
                   name='hardAppraisedPrice'
-                  defaultValue={evaluation.hardAppraisedPrice || ''}
+                  value={formData.hardAppraisedPrice}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      hardAppraisedPrice: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -89,8 +124,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='sellerContribution'
                   name='sellerContribution'
-                  defaultValue={evaluation.sellerContribution || ''}
+                  value={formData.sellerContribution}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      sellerContribution: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>
@@ -107,8 +148,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='rent'
                   name='rent'
-                  defaultValue={evaluation.rent || ''}
+                  value={formData.rent}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      rent: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -116,8 +163,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='propertyTax'
                   name='propertyTax'
-                  defaultValue={evaluation.propertyTax || ''}
+                  value={formData.propertyTax}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      propertyTax: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -125,8 +178,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='insurance'
                   name='insurance'
-                  defaultValue={evaluation.insurance || ''}
+                  value={formData.insurance}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      insurance: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -134,8 +193,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='hoa'
                   name='hoa'
-                  defaultValue={evaluation.hoa || ''}
+                  value={formData.hoa}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      hoa: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -143,8 +208,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='miscellaneous'
                   name='miscellaneous'
-                  defaultValue={evaluation.miscellaneous || ''}
+                  value={formData.miscellaneous}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      miscellaneous: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>
@@ -161,8 +232,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='repairs'
                   name='repairs'
-                  defaultValue={evaluation.repairs || ''}
+                  value={formData.repairs}
                   placeholder='0.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      repairs: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -170,8 +247,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='survey'
                   name='survey'
-                  defaultValue={evaluation.survey || '400'}
+                  value={formData.survey}
                   placeholder='400.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      survey: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -179,8 +262,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='inspection'
                   name='inspection'
-                  defaultValue={evaluation.inspection || '400'}
+                  value={formData.inspection}
                   placeholder='400.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      inspection: e.target.value,
+                    }))
+                  }
                 />
               </div>
               <div className='space-y-2'>
@@ -188,8 +277,14 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='appraisal'
                   name='appraisal'
-                  defaultValue={evaluation.appraisal || '400'}
+                  value={formData.appraisal}
                   placeholder='400.00'
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      appraisal: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>

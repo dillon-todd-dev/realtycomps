@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 
 function DollarInput({ className, ...props }: React.ComponentProps<'input'>) {
   const [displayValue, setDisplayValue] = React.useState('');
+  const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Format number with commas
   const formatWithCommas = (value: string): string => {
@@ -48,6 +49,10 @@ function DollarInput({ className, ...props }: React.ComponentProps<'input'>) {
     props.onChange?.(syntheticEvent);
   };
 
+  const handleClick = () => {
+    inputRef.current?.select();
+  };
+
   React.useEffect(() => {
     if (props.value !== undefined) {
       setDisplayValue(formatWithCommas(String(props.value)));
@@ -60,6 +65,7 @@ function DollarInput({ className, ...props }: React.ComponentProps<'input'>) {
         $
       </span>
       <input
+        ref={inputRef}
         type='text'
         inputMode='decimal'
         data-slot='input'
@@ -71,6 +77,7 @@ function DollarInput({ className, ...props }: React.ComponentProps<'input'>) {
         )}
         {...props}
         onChange={handleChange}
+        onClick={handleClick}
         value={displayValue}
       />
     </div>

@@ -14,6 +14,8 @@ import {
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
 import { formatDollarAmount, monthlyLoanAmount } from '@/lib/utils';
+import { DollarInput } from '@/components/dollar-input';
+import { SelectInput } from '@/components/select-input';
 
 type Evaluation = any; // Replace with your actual type
 
@@ -187,7 +189,7 @@ export default function HardMoneyFinancingForm({
                 <div className='space-y-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='hardLoanToValue'>Loan to Value (%)</Label>
-                    <Input
+                    <SelectInput
                       id='hardLoanToValue'
                       type='number'
                       step='0.01'
@@ -202,9 +204,8 @@ export default function HardMoneyFinancingForm({
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='hardLenderFees'>Lender & Title Fees</Label>
-                    <Input
+                    <DollarInput
                       id='hardLenderFees'
-                      type='number'
                       value={formData.hardLenderFees}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -216,7 +217,7 @@ export default function HardMoneyFinancingForm({
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='hardInterestRate'>Interest Rate (%)</Label>
-                    <Input
+                    <SelectInput
                       id='hardInterestRate'
                       type='number'
                       step='0.001'
@@ -243,7 +244,7 @@ export default function HardMoneyFinancingForm({
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='weeksUntilLeased'>Weeks Until Leased</Label>
-                    <Input
+                    <SelectInput
                       id='weeksUntilLeased'
                       type='number'
                       value={formData.weeksUntilLeased}
@@ -264,7 +265,7 @@ export default function HardMoneyFinancingForm({
                 <div className='space-y-4'>
                   <div className='space-y-2'>
                     <Label htmlFor='refiLoanToValue'>Loan to Value (%)</Label>
-                    <Input
+                    <SelectInput
                       id='refiLoanToValue'
                       type='number'
                       step='0.01'
@@ -279,7 +280,7 @@ export default function HardMoneyFinancingForm({
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='refiLoanTerm'>Loan Term (years)</Label>
-                    <Input
+                    <SelectInput
                       id='refiLoanTerm'
                       type='number'
                       value={formData.refiLoanTerm}
@@ -293,7 +294,7 @@ export default function HardMoneyFinancingForm({
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='refiInterestRate'>Interest Rate (%)</Label>
-                    <Input
+                    <SelectInput
                       id='refiInterestRate'
                       type='number'
                       step='0.001'
@@ -308,9 +309,8 @@ export default function HardMoneyFinancingForm({
                   </div>
                   <div className='space-y-2'>
                     <Label htmlFor='refiLenderFees'>Lender & Title Fees</Label>
-                    <Input
+                    <DollarInput
                       id='refiLenderFees'
-                      type='number'
                       value={formData.refiLenderFees}
                       onChange={(e) =>
                         setFormData((prev) => ({
@@ -324,7 +324,7 @@ export default function HardMoneyFinancingForm({
                     <Label htmlFor='refiMortgageInsurance'>
                       Mortgage Insurance (Annual)
                     </Label>
-                    <Input
+                    <DollarInput
                       id='refiMortgageInsurance'
                       type='number'
                       value={formData.refiMortgageInsurance}

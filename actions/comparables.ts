@@ -9,6 +9,7 @@ import { BridgeMedia } from './properties';
 
 export type SearchComparablesParams = {
   evaluationId: string;
+  propertyId: string;
   address: string;
   maxRadius: number;
   minBeds?: number;
@@ -84,7 +85,11 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
         }
       }
 
-      return await getComparables(params.evaluationId);
+      const comps = await getComparables(params.evaluationId);
+      revalidatePath(
+        `/properties/${params.propertyId}/evaluation/${params.evaluationId}`,
+      );
+      return comps;
     });
 
     return result;
