@@ -1,11 +1,8 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
 import DealTermsForm from '@/components/evaluation/forms/deal-terms-form';
-import ConventionalFinancingForm from '@/components/evaluation/forms/conventional-financing-form';
 import HardMoneyFinancingForm from '@/components/evaluation/forms/hard-money-financing-form';
 import Comparables from '@/components/evaluation/comparables';
 import { Button } from '../ui/button';
@@ -83,11 +80,6 @@ interface EvaluationDetailViewProps {
 export default function EvaluationDetailView({
   evaluation,
 }: EvaluationDetailViewProps) {
-  // Default to the stored strategy type, or conventional if not set
-  const [selectedFinancing, setSelectedFinancing] = useState<
-    'conventional' | 'hard_money'
-  >(evaluation.strategyType || 'conventional');
-
   const handleExportClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -170,29 +162,7 @@ export default function EvaluationDetailView({
             </p>
           </CardHeader>
           <CardContent>
-            <Tabs
-              value={selectedFinancing}
-              onValueChange={(value) =>
-                setSelectedFinancing(value as 'conventional' | 'hard_money')
-              }
-            >
-              <TabsList className='grid w-full grid-cols-2'>
-                <TabsTrigger value='conventional'>
-                  Conventional Financing
-                </TabsTrigger>
-                <TabsTrigger value='hard_money'>
-                  Hard Money & Refinance
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value='conventional' className='mt-6'>
-                <ConventionalFinancingForm evaluation={evaluation} />
-              </TabsContent>
-
-              <TabsContent value='hard_money' className='mt-6'>
-                <HardMoneyFinancingForm evaluation={evaluation} />
-              </TabsContent>
-            </Tabs>
+            <HardMoneyFinancingForm evaluation={evaluation} />
           </CardContent>
         </Card>
       </div>

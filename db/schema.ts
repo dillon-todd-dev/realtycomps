@@ -102,7 +102,7 @@ export const evaluationsTable = pgTable('evaluations', {
     scale: 2,
   }).default('0'),
   purchasePrice: decimal('purchase_price', { precision: 12, scale: 2 }).default(
-    '0'
+    '0',
   ),
   hardAppraisedPrice: decimal('hard_appraised_price', {
     precision: 12,
@@ -120,14 +120,14 @@ export const evaluationsTable = pgTable('evaluations', {
   inspection: decimal('inspection', { precision: 12, scale: 2 }).default('400'),
   appraisal: decimal('appraisal', { precision: 12, scale: 2 }).default('400'),
   miscellaneous: decimal('miscellaneous', { precision: 12, scale: 2 }).default(
-    '0'
+    '0',
   ),
 
   // Income
   rent: decimal('rent', { precision: 12, scale: 2 }).default('0'),
   hoa: decimal('hoa', { precision: 12, scale: 2 }).default('0'),
   propertyTax: decimal('property_tax', { precision: 12, scale: 2 }).default(
-    '0'
+    '0',
   ),
 
   // calculated metrics
@@ -150,38 +150,6 @@ export const evaluationsTable = pgTable('evaluations', {
     .notNull(),
 });
 
-// Separate table for conventional loan parameters
-export const conventionalLoanParamsTable = pgTable('conventional_loan_params', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  evaluationId: uuid('evaluation_id')
-    .references(() => evaluationsTable.id, { onDelete: 'cascade' })
-    .notNull()
-    .unique(),
-
-  downPayment: decimal('down_payment', { precision: 5, scale: 2 }).default(
-    '20'
-  ),
-  loanTerm: integer('loan_term').default(30),
-  interestRate: decimal('interest_rate', { precision: 5, scale: 3 }).default(
-    '5.000'
-  ),
-  lenderFees: decimal('lender_fees', { precision: 12, scale: 2 }).default(
-    '6000'
-  ),
-  mortgageInsurance: decimal('mortgage_insurance', {
-    precision: 12,
-    scale: 2,
-  }).default('0'),
-  monthsOfTaxes: integer('months_of_taxes').default(0),
-
-  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
-
 // Separate table for hard money loan parameters
 export const hardMoneyLoanParamsTable = pgTable('hard_money_loan_params', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -191,13 +159,13 @@ export const hardMoneyLoanParamsTable = pgTable('hard_money_loan_params', {
     .unique(),
 
   loanToValue: decimal('loan_to_value', { precision: 5, scale: 2 }).default(
-    '70'
+    '70',
   ),
   lenderFees: decimal('lender_fees', { precision: 12, scale: 2 }).default(
-    '10000'
+    '10000',
   ),
   interestRate: decimal('interest_rate', { precision: 5, scale: 3 }).default(
-    '14.000'
+    '14.000',
   ),
   monthsToRefi: integer('months_to_refi').default(3),
   rollInLenderFees: boolean('roll_in_lender_fees').default(true),
@@ -224,14 +192,14 @@ export const refinanceLoanParamsTable = pgTable('refinance_loan_params', {
     .unique(),
 
   loanToValue: decimal('loan_to_value', { precision: 5, scale: 2 }).default(
-    '75'
+    '75',
   ),
   loanTerm: integer('loan_term').default(30),
   interestRate: decimal('interest_rate', { precision: 5, scale: 3 }).default(
-    '5.000'
+    '5.000',
   ),
   lenderFees: decimal('lender_fees', { precision: 12, scale: 2 }).default(
-    '5000'
+    '5000',
   ),
   monthsOfTaxes: integer('months_of_taxes').default(2),
   mortgageInsurance: decimal('mortgage_insurance', {
@@ -303,7 +271,7 @@ export const userInvitationsRelations = relations(
       fields: [userInvitationsTable.userId],
       references: [usersTable.id],
     }),
-  })
+  }),
 );
 
 export const propertiesRelations = relations(
@@ -315,7 +283,7 @@ export const propertiesRelations = relations(
     }),
     images: many(propertyImagesTable),
     evaluations: many(evaluationsTable),
-  })
+  }),
 );
 
 export const propertyImagesRelations = relations(
@@ -325,7 +293,7 @@ export const propertyImagesRelations = relations(
       fields: [propertyImagesTable.propertyId],
       references: [propertiesTable.id],
     }),
-  })
+  }),
 );
 
 // Update evaluations relations
@@ -340,11 +308,10 @@ export const evaluationsRelations = relations(
       fields: [evaluationsTable.userId],
       references: [usersTable.id],
     }),
-    conventionalLoanParams: one(conventionalLoanParamsTable),
     hardMoneyLoanParams: one(hardMoneyLoanParamsTable),
     refinanceLoanParams: one(refinanceLoanParamsTable),
     comparables: many(comparablesTable),
-  })
+  }),
 );
 
 export const refinanceLoanParamsRelations = relations(
@@ -354,17 +321,7 @@ export const refinanceLoanParamsRelations = relations(
       fields: [refinanceLoanParamsTable.evaluationId],
       references: [evaluationsTable.id],
     }),
-  })
-);
-
-export const conventionalLoanParamsRelations = relations(
-  conventionalLoanParamsTable,
-  ({ one }) => ({
-    evaluation: one(evaluationsTable, {
-      fields: [conventionalLoanParamsTable.evaluationId],
-      references: [evaluationsTable.id],
-    }),
-  })
+  }),
 );
 
 export const hardMoneyLoanParamsRelations = relations(
@@ -374,7 +331,7 @@ export const hardMoneyLoanParamsRelations = relations(
       fields: [hardMoneyLoanParamsTable.evaluationId],
       references: [evaluationsTable.id],
     }),
-  })
+  }),
 );
 
 export const comparablesRelations = relations(
@@ -385,7 +342,7 @@ export const comparablesRelations = relations(
       references: [evaluationsTable.id],
     }),
     images: many(comparableImagesTable),
-  })
+  }),
 );
 
 export const comparableImagesRelations = relations(
@@ -395,5 +352,5 @@ export const comparableImagesRelations = relations(
       fields: [comparableImagesTable.comparableId],
       references: [comparablesTable.id],
     }),
-  })
+  }),
 );

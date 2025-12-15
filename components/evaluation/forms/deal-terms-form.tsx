@@ -1,13 +1,13 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { updateDealTerms } from '@/actions/evaluations';
 import { useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { DollarInput } from '@/components/dollar-input';
 
 type Evaluation = any; // Replace with your actual type
 
@@ -59,44 +59,36 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='purchasePrice'>Purchase Price</Label>
-                <Input
+                <DollarInput
                   id='purchasePrice'
                   name='purchasePrice'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.purchasePrice || ''}
                   placeholder='0.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='estimatedSalePrice'>Estimated Sale Price</Label>
-                <Input
+                <DollarInput
                   id='estimatedSalePrice'
                   name='estimatedSalePrice'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.estimatedSalePrice || ''}
                   placeholder='0.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='hardAppraisedPrice'>Hard Appraised Price</Label>
-                <Input
+                <DollarInput
                   id='hardAppraisedPrice'
                   name='hardAppraisedPrice'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.hardAppraisedPrice || ''}
                   placeholder='0.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='sellerContribution'>Seller Contribution</Label>
-                <Input
+                <DollarInput
                   id='sellerContribution'
                   name='sellerContribution'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.sellerContribution || ''}
                   placeholder='0.00'
                 />
@@ -112,55 +104,45 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='rent'>Monthly Rent</Label>
-                <Input
+                <DollarInput
                   id='rent'
                   name='rent'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.rent || ''}
                   placeholder='0.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='propertyTax'>Property Tax (Annual)</Label>
-                <Input
+                <DollarInput
                   id='propertyTax'
                   name='propertyTax'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.propertyTax || ''}
                   placeholder='0.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='insurance'>Insurance (Annual)</Label>
-                <Input
+                <DollarInput
                   id='insurance'
                   name='insurance'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.insurance || ''}
                   placeholder='0.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='hoa'>HOA (Annual)</Label>
-                <Input
+                <DollarInput
                   id='hoa'
                   name='hoa'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.hoa || ''}
                   placeholder='0.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='miscellaneous'>Miscellaneous (Monthly)</Label>
-                <Input
+                <DollarInput
                   id='miscellaneous'
                   name='miscellaneous'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.miscellaneous || ''}
                   placeholder='0.00'
                 />
@@ -176,44 +158,36 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
             <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
               <div className='space-y-2'>
                 <Label htmlFor='repairs'>Repairs & Make-Ready</Label>
-                <Input
+                <DollarInput
                   id='repairs'
                   name='repairs'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.repairs || ''}
                   placeholder='0.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='survey'>Survey</Label>
-                <Input
+                <DollarInput
                   id='survey'
                   name='survey'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.survey || '400'}
                   placeholder='400.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='inspection'>Inspection</Label>
-                <Input
+                <DollarInput
                   id='inspection'
                   name='inspection'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.inspection || '400'}
                   placeholder='400.00'
                 />
               </div>
               <div className='space-y-2'>
                 <Label htmlFor='appraisal'>Appraisal</Label>
-                <Input
+                <DollarInput
                   id='appraisal'
                   name='appraisal'
-                  type='number'
-                  step='0.01'
                   defaultValue={evaluation.appraisal || '400'}
                   placeholder='400.00'
                 />

@@ -2,7 +2,6 @@
 
 import { db } from '@/db/drizzle';
 import {
-  conventionalLoanParamsTable,
   evaluationsTable,
   hardMoneyLoanParamsTable,
   refinanceLoanParamsTable,
@@ -83,10 +82,6 @@ export async function createEvaluation(newEvaluation: NewEvaluation) {
       .values(newEvaluation)
       .returning();
 
-    await tx
-      .insert(conventionalLoanParamsTable)
-      .values({ evaluationId: evaluation.id });
-
     await tx.insert(hardMoneyLoanParamsTable).values({
       evaluationId: evaluation.id,
     });
@@ -120,7 +115,6 @@ export async function getEvaluation(evaluationId: string, userId: string) {
           postalCode: true,
         },
       },
-      conventionalLoanParams: true,
       hardMoneyLoanParams: true,
       refinanceLoanParams: true,
       comparables: true,
@@ -211,71 +205,6 @@ export async function updateDealTerms(
   } catch (error) {
     console.error('Error updating deal terms:', error);
     throw new Error('Failed to update deal terms');
-  }
-}
-
-/**
- * Update conventional loan parameters
- */
-export async function updateConventionalLoanParams(
-  evaluationId: string,
-  userId: string,
-  data: {
-    downPayment?: string;
-    loanTerm?: number;
-    interestRate?: string;
-    lenderFees?: string;
-    mortgageInsurance?: string;
-    monthsOfTaxes?: number;
-  },
-) {
-  try {
-    // Verify ownership
-    const evaluation = await db.query.evaluationsTable.findFirst({
-      where: and(
-        eq(evaluationsTable.id, evaluationId),
-        eq(evaluationsTable.userId, userId),
-      ),
-      columns: { id: true, propertyId: true },
-    });
-
-    if (!evaluation) {
-      throw new Error('Evaluation not found or unauthorized');
-    }
-
-    // Update or create conventional loan params
-    const existing = await db.query.conventionalLoanParamsTable.findFirst({
-      where: eq(conventionalLoanParamsTable.evaluationId, evaluationId),
-    });
-
-    let updated;
-    if (existing) {
-      [updated] = await db
-        .update(conventionalLoanParamsTable)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
-        .where(eq(conventionalLoanParamsTable.evaluationId, evaluationId))
-        .returning();
-    } else {
-      [updated] = await db
-        .insert(conventionalLoanParamsTable)
-        .values({
-          evaluationId,
-          ...data,
-        })
-        .returning();
-    }
-
-    revalidatePath(
-      `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`,
-    );
-
-    return updated;
-  } catch (error) {
-    console.error('Error updating conventional loan params:', error);
-    throw new Error('Failed to update conventional loan parameters');
   }
 }
 
