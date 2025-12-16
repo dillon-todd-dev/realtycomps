@@ -1,10 +1,12 @@
 'use client';
 
+import { deleteEvaluation } from '@/actions/evaluations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { EvaluationListItem } from '@/lib/types';
-import { Download } from 'lucide-react';
+import { Trash } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 interface EvaluationListItemProps {
   evaluation: EvaluationListItem;
@@ -15,9 +17,17 @@ export default function EvaluationListItemCard({
   evaluation,
   propertyId,
 }: EvaluationListItemProps) {
-  const handleExportClick = (e: React.MouseEvent) => {
+  const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    try {
+      await deleteEvaluation(evaluation.id, evaluation.userId);
+      toast.success('Evaluation deleted');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to delete evaluation');
+    }
   };
 
   return (
@@ -87,12 +97,12 @@ export default function EvaluationListItemCard({
           <Button
             variant='outline'
             size='sm'
-            onClick={handleExportClick}
+            onClick={handleDelete}
             className='shrink-0'
-            title='Export to PDF'
+            title='Delete evaluation'
           >
-            <Download className='h-4 w-4 md:mr-2' />
-            <span className='hidden md:inline'>Export PDF</span>
+            <Trash className='h-4 w-4 md:mr-2' />
+            <span className='hidden md:inline'>Delete</span>
           </Button>
         </div>
       </div>

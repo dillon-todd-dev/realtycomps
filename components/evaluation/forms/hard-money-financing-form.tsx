@@ -157,7 +157,6 @@ export default function HardMoneyFinancingForm({
     evaluation?.inspection,
   ]);
 
-  // TODO: add phase 1 rehab start costs to hard cash out of pocket
   const hardCashOutOfPocket: number = useMemo(() => {
     const firstPhaseCosts = Number(hardMoneyParams?.firstPhaseCosts);
     return hardCashToClose + hardClosingCosts + firstPhaseCosts;

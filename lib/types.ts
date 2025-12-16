@@ -73,6 +73,7 @@ export type Address = {
 
 export type EvaluationListItem = {
   id: string;
+  userId: string;
   strategyType?: 'conventional' | 'hard_money' | null;
   cashOnCashROI?: string | null;
   monthlyCashFlow?: string | null;
