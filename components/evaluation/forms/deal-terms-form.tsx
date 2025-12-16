@@ -19,7 +19,6 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
   const [formData, setFormData] = useState({
     purchasePrice: evaluation.purchasePrice,
     estimatedSalePrice: evaluation.estimatedSalePrice,
-    hardAppraisedPrice: evaluation.hardAppraisedPrice,
     rent: evaluation.rent,
     repairs: evaluation.repairs,
     insurance: evaluation.insurance,
@@ -41,7 +40,6 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
         await updateDealTerms(evaluation.id, evaluation.userId, {
           purchasePrice: formData.purchasePrice,
           estimatedSalePrice: formData.estimatedSalePrice,
-          hardAppraisedPrice: formData.hardAppraisedPrice,
           rent: formData.rent,
           repairs: formData.repairs,
           insurance: formData.insurance,
@@ -90,7 +88,9 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 />
               </div>
               <div className='space-y-2'>
-                <Label htmlFor='estimatedSalePrice'>Estimated Sale Price</Label>
+                <Label htmlFor='estimatedSalePrice'>
+                  Estimated Sale Price - ARV
+                </Label>
                 <DollarInput
                   id='estimatedSalePrice'
                   name='estimatedSalePrice'
@@ -100,21 +100,6 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                     setFormData((prev) => ({
                       ...prev,
                       estimatedSalePrice: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className='space-y-2'>
-                <Label htmlFor='hardAppraisedPrice'>Hard Appraised Price</Label>
-                <DollarInput
-                  id='hardAppraisedPrice'
-                  name='hardAppraisedPrice'
-                  value={formData.hardAppraisedPrice}
-                  placeholder='0.00'
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      hardAppraisedPrice: e.target.value,
                     }))
                   }
                 />

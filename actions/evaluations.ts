@@ -160,7 +160,6 @@ export async function updateDealTerms(
     name?: string;
     estimatedSalePrice?: string;
     purchasePrice?: string;
-    hardAppraisedPrice?: string;
     sellerContribution?: string;
     repairs?: string;
     insurance?: string;
@@ -222,9 +221,7 @@ export async function updateHardMoneyLoanParams(
     loanToValue?: string;
     lenderFees?: string;
     interestRate?: string;
-    monthsToRefi?: number;
-    rollInLenderFees?: boolean;
-    weeksUntilLeased?: number;
+    firstPhaseCosts?: string;
   },
 ) {
   try {
@@ -288,7 +285,6 @@ export async function updateRefinanceLoanParams(
     loanTerm?: number;
     interestRate?: string;
     lenderFees?: string;
-    monthsOfTaxes?: number;
     mortgageInsurance?: string;
   },
 ) {

@@ -104,10 +104,6 @@ export const evaluationsTable = pgTable('evaluations', {
   purchasePrice: decimal('purchase_price', { precision: 12, scale: 2 }).default(
     '0',
   ),
-  hardAppraisedPrice: decimal('hard_appraised_price', {
-    precision: 12,
-    scale: 2,
-  }).default('0'),
 
   // Costs
   sellerContribution: decimal('seller_contribution', {
@@ -167,14 +163,10 @@ export const hardMoneyLoanParamsTable = pgTable('hard_money_loan_params', {
   interestRate: decimal('interest_rate', { precision: 5, scale: 3 }).default(
     '14.000',
   ),
-  monthsToRefi: integer('months_to_refi').default(3),
-  rollInLenderFees: boolean('roll_in_lender_fees').default(true),
-  weeksUntilLeased: integer('weeks_until_leased').default(8),
-  maxRefiCashback: decimal('max_refi_cashback', {
+  firstPhaseCosts: decimal('first_phase_costs', {
     precision: 12,
     scale: 2,
-  }).default('2000'),
-
+  }).default('0'),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -201,7 +193,6 @@ export const refinanceLoanParamsTable = pgTable('refinance_loan_params', {
   lenderFees: decimal('lender_fees', { precision: 12, scale: 2 }).default(
     '5000',
   ),
-  monthsOfTaxes: integer('months_of_taxes').default(2),
   mortgageInsurance: decimal('mortgage_insurance', {
     precision: 12,
     scale: 2,

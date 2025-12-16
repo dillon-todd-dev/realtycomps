@@ -37,7 +37,7 @@ export default function HardMoneyFinancingForm({
     hardLenderFees: hardMoneyParams.lenderFees,
     hardInterestRate: hardMoneyParams.interestRate,
     rollInLenderFees: hardMoneyParams.rollInLenderFees,
-    weeksUntilLeased: String(hardMoneyParams.weeksUntilLeased),
+    firstPhaseCosts: hardMoneyParams.firstPhaseCosts,
     refiLoanToValue: refinanceParams.loanToValue,
     refiLoanTerm: String(refinanceParams.loanTerm),
     refiInterestRate: refinanceParams.interestRate,
@@ -54,8 +54,7 @@ export default function HardMoneyFinancingForm({
           loanToValue: formData.hardLoanToValue,
           lenderFees: formData.hardLenderFees,
           interestRate: formData.hardInterestRate,
-          rollInLenderFees: Boolean(formData.rollInLenderFees),
-          weeksUntilLeased: Number(formData.weeksUntilLeased),
+          firstPhaseCosts: formData.firstPhaseCosts,
         });
         await updateRefinanceLoanParams(evaluation.id, evaluation.userId, {
           loanToValue: formData.refiLoanToValue,
@@ -64,7 +63,7 @@ export default function HardMoneyFinancingForm({
           lenderFees: formData.refiLenderFees,
           mortgageInsurance: formData.refiMortgageInsurance,
         });
-        toast.success('Deal terms updated successfully');
+        toast.success('Hard money terms updated successfully');
       } catch (error) {
         console.error('Failed to update:', error);
         toast.error('Failed to update deal terms');
@@ -78,7 +77,7 @@ export default function HardMoneyFinancingForm({
     const maxLoanAmount = (ltv / 100) * arv;
     const purchasePrice = Number(evaluation?.purchasePrice);
     const repairs = Number(evaluation?.repairs);
-    return Math.abs(purchasePrice - (maxLoanAmount - repairs));
+    return purchasePrice + repairs - maxLoanAmount;
   }, [
     hardMoneyParams?.loanToValue,
     evaluation?.estimatedSalePrice,
@@ -158,18 +157,25 @@ export default function HardMoneyFinancingForm({
     evaluation?.inspection,
   ]);
 
+  // TODO: add phase 1 rehab start costs to hard cash out of pocket
   const hardCashOutOfPocket: number = useMemo(() => {
-    return hardCashToClose + hardClosingCosts;
-  }, [hardCashToClose, hardClosingCosts]);
+    const firstPhaseCosts = Number(hardMoneyParams?.firstPhaseCosts);
+    return hardCashToClose + hardClosingCosts + firstPhaseCosts;
+  }, [hardCashToClose, hardClosingCosts, hardMoneyParams?.firstPhaseCosts]);
 
   const equityCapture: number = useMemo(() => {
     const purchasePrice = Number(evaluation?.purchasePrice);
-    const salePrice = Number(evaluation.estimatedSalePrice);
-    return salePrice - (purchasePrice + hardCashOutOfPocket);
+    const arv = Number(evaluation.estimatedSalePrice);
+    const rehab = Number(evaluation?.repairs);
+    const hardLender = Number(hardMoneyParams?.lenderFees);
+    const refiLender = Number(refinanceParams?.lenderFees);
+    return arv - (purchasePrice + rehab + hardLender + refiLender);
   }, [
-    hardCashOutOfPocket,
     evaluation?.estimatedSalePrice,
     evaluation?.purchasePrice,
+    evaluation?.repairs,
+    hardMoneyParams?.lenderFees,
+    refinanceParams?.lenderFees,
   ]);
 
   const returnOnEquity: number = useMemo(() => {
@@ -236,28 +242,17 @@ export default function HardMoneyFinancingForm({
                       }
                     />
                   </div>
-                  <div className='flex items-center space-x-2'>
-                    <Checkbox
-                      id='rollInLenderFees'
-                      value={formData.rollInLenderFees}
-                    />
-                    <Label
-                      htmlFor='rollInLenderFees'
-                      className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
-                    >
-                      Roll in Lender Fees?
-                    </Label>
-                  </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='weeksUntilLeased'>Weeks Until Leased</Label>
-                    <SelectInput
-                      id='weeksUntilLeased'
-                      type='number'
-                      value={formData.weeksUntilLeased}
+                    <Label htmlFor='firstPhaseCosts'>
+                      Phase 1 Rehab Start Costs
+                    </Label>
+                    <DollarInput
+                      id='firstPhaseCosts'
+                      value={formData.firstPhaseCosts}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          weeksUntilLeased: e.target.value,
+                          firstPhaseCosts: e.target.value,
                         }))
                       }
                     />
@@ -314,7 +309,7 @@ export default function HardMoneyFinancingForm({
                     />
                   </div>
                   <div className='space-y-2'>
-                    <Label htmlFor='refiLenderFees'>Lender & Title Fees</Label>
+                    <Label htmlFor='refiLenderFees'>Refi Lender Fees</Label>
                     <DollarInput
                       id='refiLenderFees'
                       value={formData.refiLenderFees}
@@ -430,17 +425,13 @@ export default function HardMoneyFinancingForm({
                   </TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell className='font-medium text-sm'>Repairs</TableCell>
-                  <TableCell className='text-right whitespace-nowrap text-sm'>
-                    {formatDollarAmount(Number(evaluation?.repairs))}
-                  </TableCell>
-                </TableRow>
-                <TableRow>
                   <TableCell className='font-medium text-sm'>
-                    Lender Reserves
+                    Phase 1 Rehab Start Costs
                   </TableCell>
                   <TableCell className='text-right whitespace-nowrap text-sm'>
-                    -$0
+                    {formatDollarAmount(
+                      Number(hardMoneyParams?.firstPhaseCosts),
+                    )}
                   </TableCell>
                 </TableRow>
                 <TableRow>
