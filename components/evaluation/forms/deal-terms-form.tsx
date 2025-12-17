@@ -3,7 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { updateDealTerms } from '@/actions/evaluations';
+import { recalculateMetrics, updateDealTerms } from '@/actions/evaluations';
 import React, { useState, useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -50,6 +50,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
           appraisal: formData.appraisal,
           miscellaneous: formData.miscellaneous,
         });
+        await recalculateMetrics(evaluation.id, evaluation.userId);
         toast.success('Deal terms updated successfully');
       } catch (error) {
         console.error('Failed to update:', error);

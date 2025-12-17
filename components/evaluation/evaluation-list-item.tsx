@@ -3,13 +3,14 @@
 import { deleteEvaluation } from '@/actions/evaluations';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { EvaluationListItem } from '@/lib/types';
+import { Evaluation } from '@/lib/types';
+import { formatDollarAmount } from '@/lib/utils';
 import { Trash } from 'lucide-react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 
 interface EvaluationListItemProps {
-  evaluation: EvaluationListItem;
+  evaluation: Evaluation;
   propertyId: string;
 }
 
@@ -37,20 +38,12 @@ export default function EvaluationListItemCard({
       <div className='border rounded-lg p-4 hover:bg-muted/50 transition-colors cursor-pointer'>
         <div className='flex items-start justify-between gap-3'>
           <div className='flex-1 min-w-0'>
-            <div className='flex items-center gap-2 mb-3'>
-              {evaluation.strategyType && (
-                <Badge variant='outline' className='capitalize'>
-                  {evaluation.strategyType.replace('_', ' ')}
-                </Badge>
-              )}
-            </div>
-
             <div className='grid grid-cols-2 md:grid-cols-4 gap-4 text-sm'>
               <div>
                 <div className='text-muted-foreground mb-1'>Equity Capture</div>
                 <div className='font-semibold'>
-                  {evaluation.cashOnCashROI
-                    ? `${parseFloat(evaluation.cashOnCashROI).toFixed(2)}%`
+                  {evaluation.equityCapture
+                    ? formatDollarAmount(Number(evaluation.equityCapture))
                     : 'N/A'}
                 </div>
               </div>
@@ -59,20 +52,20 @@ export default function EvaluationListItemCard({
                   Annual Cash Flow
                 </div>
                 <div className='font-semibold'>
-                  {evaluation.monthlyCashFlow
-                    ? `$${parseFloat(
-                        evaluation.monthlyCashFlow,
-                      ).toLocaleString()}`
+                  {evaluation.annualCashFlow
+                    ? formatDollarAmount(Number(evaluation.annualCashFlow))
                     : 'N/A'}
                 </div>
               </div>
               <div>
                 <div className='text-muted-foreground mb-1'>
-                  Return On Capital Gain
+                  Return On Equity Capture
                 </div>
                 <div className='font-semibold'>
-                  {evaluation.capRate
-                    ? `${parseFloat(evaluation.capRate).toFixed(2)}%`
+                  {evaluation.returnOnEquityCapture
+                    ? `${parseFloat(evaluation.returnOnEquityCapture).toFixed(
+                        2,
+                      )}%`
                     : 'N/A'}
                 </div>
               </div>
@@ -81,8 +74,8 @@ export default function EvaluationListItemCard({
                   Cash On Cash Return
                 </div>
                 <div className='font-semibold'>
-                  {evaluation.totalROI
-                    ? `${parseFloat(evaluation.totalROI).toFixed(2)}%`
+                  {evaluation.cashOnCashReturn
+                    ? `${parseFloat(evaluation.cashOnCashReturn).toFixed(2)}%`
                     : 'N/A'}
                 </div>
               </div>

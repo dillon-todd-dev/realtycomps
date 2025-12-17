@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
-import { EvaluationListItem, PropertyWithImages } from '@/lib/types';
+import { Evaluation, PropertyWithImages } from '@/lib/types';
 import { Button } from '../ui/button';
 import EvaluationListItemCard from '../evaluation/evaluation-list-item';
 import { createEvaluation } from '@/actions/evaluations';
@@ -32,7 +32,7 @@ import { deleteProperty } from '@/actions/properties';
 
 interface PropertyDetailViewProps {
   property: PropertyWithImages;
-  evaluations?: EvaluationListItem[];
+  evaluations?: Evaluation[];
 }
 
 export default function PropertyDetailView({

@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { FormEvent, useMemo, useState, useTransition } from 'react';
 import {
+  recalculateMetrics,
   updateHardMoneyLoanParams,
   updateRefinanceLoanParams,
 } from '@/actions/evaluations';
@@ -56,6 +57,7 @@ export default function HardMoneyFinancingForm({
           lenderFees: formData.refiLenderFees,
           mortgageInsurance: formData.refiMortgageInsurance,
         });
+        await recalculateMetrics(evaluation.id, evaluation.userId);
         toast.success('Hard money terms updated successfully');
       } catch (error) {
         console.error('Failed to update:', error);

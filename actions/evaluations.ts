@@ -3,23 +3,22 @@
 import { db } from '@/db/drizzle';
 import { evaluationsTable } from '@/db/schema';
 import { EvaluationWithRelations, NewEvaluation } from '@/lib/types';
+import { monthlyLoanAmount } from '@/lib/utils';
 import { and, desc, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function createEvaluation(newEvaluation: NewEvaluation) {
-  const result = await db.transaction(async (tx) => {
-    const [evaluation] = await tx
-      .insert(evaluationsTable)
-      .values(newEvaluation)
-      .returning();
+  const [evaluation] = await db
+    .insert(evaluationsTable)
+    .values(newEvaluation)
+    .returning();
 
-    return evaluation;
-  });
+  await recalculateMetrics(evaluation.id, newEvaluation.userId);
 
   revalidatePath(`/dashboard/properties/${newEvaluation.propertyId}`);
   redirect(
-    `/dashboard/properties/${newEvaluation.propertyId}/evaluations/${result.id}`,
+    `/dashboard/properties/${newEvaluation.propertyId}/evaluations/${evaluation.id}`,
   );
 }
 
@@ -214,6 +213,83 @@ export async function updateRefinanceLoanParams(
   } catch (error) {
     console.error('Error updating refinance loan params:', error);
     throw new Error('Failed to update refinance loan parameters');
+  }
+}
+
+export async function recalculateMetrics(evaluationId: string, userId: string) {
+  try {
+    const evaluation = await db.query.evaluationsTable.findFirst({
+      where: and(
+        eq(evaluationsTable.id, evaluationId),
+        eq(evaluationsTable.userId, userId),
+      ),
+    });
+
+    if (!evaluation) {
+      throw new Error('Evaluation not found or unauthorized');
+    }
+
+    const tax = Number(evaluation.propertyTax) / 12;
+    const insurance = Number(evaluation.insurance) / 12;
+    const hoa = Number(evaluation.hoa) / 12;
+    const pmi = Number(evaluation.refiMortgageInsurance) / 12;
+    const arv = Number(evaluation.estimatedSalePrice);
+    const rent = Number(evaluation.rent);
+    const misc = Number(evaluation.miscellaneous);
+    const hardLtv = Number(evaluation.hardLoanToValue) / 100;
+    const refiLtv = Number(evaluation.refiLoanToValue) / 100;
+    const refiInterestRate = Number(evaluation.refiInterestRate) / 100 / 12;
+    const refiLoanTerm = Number(evaluation.refiLoanTerm) * 12;
+    const hardLenderFees = Number(evaluation.hardLenderFees);
+    const refiLenderFees = Number(evaluation.refiLenderFees);
+    const repairs = Number(evaluation.repairs);
+    const purchasePrice = Number(evaluation.purchasePrice);
+    const appraisal = Number(evaluation.appraisal);
+    const survey = Number(evaluation.survey);
+    const inspection = Number(evaluation.inspection);
+    const firstPhaseCosts = Number(evaluation.hardFirstPhaseCosts);
+
+    // Calculate metrics
+
+    const refiLoanAmount = arv * refiLtv;
+    const notePayment = monthlyLoanAmount(
+      refiLoanTerm,
+      refiInterestRate,
+      refiLoanAmount,
+    );
+    const monthlyCashFlow =
+      rent - notePayment - tax - insurance - hoa - pmi - misc;
+    const annualCashFlow = monthlyCashFlow * 12;
+
+    const equityCapture =
+      arv - (purchasePrice + repairs + hardLenderFees + refiLenderFees);
+
+    const returnOnEquity = (annualCashFlow / equityCapture) * 100;
+
+    const hardCashToClose = purchasePrice + repairs - hardLtv * arv;
+    const hardClosingCosts =
+      hardLenderFees + refiLenderFees + appraisal + survey + inspection;
+    const hardCashOutOfPocket =
+      hardCashToClose + hardClosingCosts + firstPhaseCosts;
+    const cashOnCashReturn = (annualCashFlow / hardCashOutOfPocket) * 100;
+
+    await db
+      .update(evaluationsTable)
+      .set({
+        equityCapture: String(equityCapture),
+        annualCashFlow: String(annualCashFlow),
+        returnOnEquityCapture: String(returnOnEquity),
+        cashOnCashReturn: String(cashOnCashReturn),
+      })
+      .where(
+        and(
+          eq(evaluationsTable.id, evaluationId),
+          eq(evaluationsTable.userId, userId),
+        ),
+      );
+  } catch (err) {
+    console.error('Error recalculating metrics:', err);
+    throw new Error('Failed to recalculate metrics');
   }
 }
 

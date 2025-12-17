@@ -164,16 +164,13 @@ export const evaluationsTable = pgTable('evaluations', {
   }).default('0'),
 
   // calculated metrics
-  cashOnCashROI: decimal('cash_on_cash_roi', { precision: 5, scale: 2 }),
-  totalROI: decimal('total_roi', { precision: 5, scale: 2 }),
-  capRate: decimal('cap_rate', { precision: 5, scale: 2 }),
-  monthlyCashFlow: decimal('monthly_cash_flow', { precision: 12, scale: 2 }),
   annualCashFlow: decimal('annual_cash_flow', { precision: 12, scale: 2 }),
-  totalCashOutOfPocket: decimal('total_cash_out_of_pocket', {
+  equityCapture: decimal('equity_capture', { precision: 12, scale: 2 }),
+  returnOnEquityCapture: decimal('return_on_equity_capture', {
     precision: 12,
     scale: 2,
   }),
-  equityCapture: decimal('equity_capture', { precision: 12, scale: 2 }),
+  cashOnCashReturn: decimal('cash_on_cash_return', { precision: 12, scale: 2 }),
 
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
     .defaultNow()
