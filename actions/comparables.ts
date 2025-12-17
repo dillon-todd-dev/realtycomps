@@ -85,9 +85,21 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
         }
       }
 
-      const comps = await getComparables(params.evaluationId);
+      const comps = await tx.query.comparablesTable.findMany({
+        where: eq(comparablesTable.evaluationId, params.evaluationId),
+        with: {
+          images: {
+            orderBy: (images, { asc }) => [asc(images.order)],
+          },
+        },
+        orderBy: (comparables, { desc, asc }) => [
+          desc(comparables.included),
+          asc(comparables.address),
+        ],
+      });
+
       revalidatePath(
-        `/properties/${params.propertyId}/evaluation/${params.evaluationId}`,
+        `/dashboard/properties/${params.propertyId}/evaluation/${params.evaluationId}`,
       );
       return comps;
     });
@@ -118,24 +130,6 @@ export async function toggleComparable(
   // Note: You'll need to get the evaluation/property IDs if you want to revalidate specific paths
 
   return { success: true };
-}
-
-/**
- * Get all comparables for an evaluation
- */
-export async function getComparables(evaluationId: string) {
-  return await db.query.comparablesTable.findMany({
-    where: eq(comparablesTable.evaluationId, evaluationId),
-    with: {
-      images: {
-        orderBy: (images, { asc }) => [asc(images.order)],
-      },
-    },
-    orderBy: (comparables, { desc, asc }) => [
-      desc(comparables.included),
-      asc(comparables.address),
-    ],
-  });
 }
 
 /**

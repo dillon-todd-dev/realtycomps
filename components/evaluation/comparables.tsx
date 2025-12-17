@@ -32,7 +32,7 @@ import { searchSaleComparables, toggleComparable } from '@/actions/comparables';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { SelectInput } from '../select-input';
-import { Comparable, ComparableWithImages } from '@/lib/types';
+import { ComparableWithImages } from '@/lib/types';
 
 interface ComparablesProps {
   evaluationId: string;
