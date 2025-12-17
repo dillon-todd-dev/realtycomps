@@ -303,7 +303,7 @@ export default function PropertyDetailView({
               <div>
                 <CardTitle>Investment Evaluations</CardTitle>
                 <p className='text-sm text-muted-foreground mt-1'>
-                  Analyze this property's investment potential
+                  Analyze this property&apos;s investment potential
                 </p>
               </div>
               <Button
@@ -329,7 +329,7 @@ export default function PropertyDetailView({
                 </h3>
                 <p className='text-sm text-muted-foreground mb-4'>
                   Create your first investment evaluation to analyze this
-                  property's potential ROI, cash flow, and profitability.
+                  property&apos;s potential ROI, cash flow, and profitability.
                 </p>
               </div>
             ) : (

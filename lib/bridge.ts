@@ -22,9 +22,9 @@ export async function findProperty(address: string) {
 }
 
 export async function findSaleComparables(
-  searchComparables: SearchComparablesParams
+  searchComparables: SearchComparablesParams,
 ) {
-  const query: any = {
+  const query: Record<string, unknown> = {
     access_token: ENV.BRIDGE_ACCESS_TOKEN,
     near: searchComparables.address,
     radius: searchComparables.maxRadius,

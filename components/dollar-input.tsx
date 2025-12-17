@@ -7,22 +7,27 @@ function DollarInput({ className, ...props }: React.ComponentProps<'input'>) {
   const inputRef = React.useRef<HTMLInputElement>(null);
 
   // Format number with commas
-  const formatWithCommas = (value: string): string => {
-    // Remove all non-digit characters except decimal point
-    const cleaned = value.replace(/[^\d.]/g, '');
+  const formatWithCommas = React.useCallback(
+    (value: string): string => {
+      // Remove all non-digit characters except decimal point
+      const cleaned = value.replace(/[^\d.]/g, '');
 
-    // Prevent multiple decimal points
-    const parts = cleaned.split('.');
-    if (parts.length > 2) {
-      return displayValue; // Return previous valid value
-    }
+      // Prevent multiple decimal points
+      const parts = cleaned.split('.');
+      if (parts.length > 2) {
+        return displayValue; // Return previous valid value
+      }
 
-    // Add commas to integer part
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      // Add commas to integer part
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-    // Rejoin with decimal (limit to 2 decimal places)
-    return parts.length > 1 ? `${parts[0]}.${parts[1].slice(0, 2)}` : parts[0];
-  };
+      // Rejoin with decimal (limit to 2 decimal places)
+      return parts.length > 1
+        ? `${parts[0]}.${parts[1].slice(0, 2)}`
+        : parts[0];
+    },
+    [displayValue],
+  );
 
   // Remove commas to get raw number
   const removeCommas = (value: string): string => {
@@ -57,7 +62,7 @@ function DollarInput({ className, ...props }: React.ComponentProps<'input'>) {
     if (props.value !== undefined) {
       setDisplayValue(formatWithCommas(String(props.value)));
     }
-  }, [props.value]);
+  }, [props.value, formatWithCommas]);
 
   return (
     <div className='relative'>

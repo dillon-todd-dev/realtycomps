@@ -1,7 +1,6 @@
 'use client';
 
 import { deleteEvaluation } from '@/actions/evaluations';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Evaluation } from '@/lib/types';
 import { formatDollarAmount } from '@/lib/utils';

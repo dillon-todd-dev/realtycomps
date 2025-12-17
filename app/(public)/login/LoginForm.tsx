@@ -4,7 +4,7 @@ import { login } from '@/actions/auth';
 import { SubmitButton } from '@/components/submit-button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { redirect, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useActionState, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -19,7 +19,7 @@ export default function LoginForm() {
     } else if (state?.message) {
       toast.error(state.message);
     }
-  }, [state]);
+  }, [state, router]);
 
   return (
     <form action={formAction} className='flex flex-col gap-y-4'>

@@ -2,7 +2,7 @@ import { requireUser } from '@/lib/session';
 import PageHeader from '@/components/page-header';
 
 export default async function DashboardHomePage() {
-  const user = await requireUser();
+  await requireUser();
 
   return (
     <>

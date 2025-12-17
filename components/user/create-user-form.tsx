@@ -13,7 +13,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useRouter } from 'next/navigation';
 
@@ -21,7 +20,7 @@ export default function CreateUserForm() {
   const router = useRouter();
   const [state, action, isLoading] = useActionState(
     createUserByAdmin,
-    undefined
+    undefined,
   );
 
   useEffect(() => {
@@ -31,7 +30,7 @@ export default function CreateUserForm() {
     } else if (state?.error) {
       toast.error(state.error);
     }
-  }, [state]);
+  }, [state, router]);
 
   return (
     <div className='w-full max-w-4xl'>

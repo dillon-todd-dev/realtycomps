@@ -1,10 +1,6 @@
 import { getProperties } from '@/actions/properties';
 import { requireUser } from '@/lib/session';
-import PageHeader from '@/components/page-header';
 import PropertiesGrid from '@/components/property/properties-grid';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import Link from 'next/link';
 
 interface PropertiesPageProps {
   searchParams: {

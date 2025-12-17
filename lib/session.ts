@@ -99,6 +99,7 @@ export const verifySession = cache(async (): Promise<SessionPayload> => {
 
     return session;
   } catch (err) {
+    console.error('Invalid session:', err);
     redirect('/login');
   }
 });

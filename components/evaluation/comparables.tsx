@@ -97,6 +97,7 @@ export default function Comparables({
 
       toast.success(newState ? 'Comparable included' : 'Comparable excluded');
     } catch (error) {
+      console.error('Failed to update comparable:', error);
       // Revert on error
       setComparables((prev) =>
         prev.map((comp) =>

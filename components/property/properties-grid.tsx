@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Search, Home, Plus } from 'lucide-react';
+import { Loader2, Home, Plus } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -57,6 +57,7 @@ export default function PropertiesGrid({
         setTotalCount(result.totalCount);
         setPageCount(result.pageCount);
       } catch (error) {
+        console.error(error);
         toast.error('Failed to fetch properties');
       }
     });

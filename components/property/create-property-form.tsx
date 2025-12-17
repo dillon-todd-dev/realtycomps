@@ -13,7 +13,7 @@ export default function CreatePropertyForm() {
   const router = useRouter();
   const [state, action, isLoading] = useActionState(
     createPropertyAction,
-    undefined
+    undefined,
   );
 
   useEffect(() => {
@@ -23,7 +23,7 @@ export default function CreatePropertyForm() {
     } else if (state?.error) {
       toast.error(state.error);
     }
-  }, [state]);
+  }, [state, router]);
 
   return (
     <div className='w-full max-w-4xl'>

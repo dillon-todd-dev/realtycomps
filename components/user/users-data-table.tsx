@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/pagination';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Search, ChevronUp, ChevronDown, Plus } from 'lucide-react';
+import { Loader2, ChevronUp, ChevronDown, Plus } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -55,10 +55,8 @@ export default function UsersDataTable({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<
-    'all' | 'ROLE_USER' | 'ROLE_ADMIN'
-  >('all');
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [roleFilter] = useState<'all' | 'ROLE_USER' | 'ROLE_ADMIN'>('all');
+  const [statusFilter] = useState('all');
   const [sortBy, setSortBy] = useState<'name' | 'email' | 'createdAt'>(
     'createdAt',
   );
@@ -85,6 +83,7 @@ export default function UsersDataTable({
         setTotalCount(result.totalCount);
         setPageCount(result.pageCount);
       } catch (error) {
+        console.error('Failed to fetch users:', error);
         toast.error('Failed to fetch users');
       }
     });
@@ -96,6 +95,7 @@ export default function UsersDataTable({
     statusFilter,
     sortBy,
     sortOrder,
+    userId,
   ]);
 
   useEffect(() => {
@@ -117,6 +117,7 @@ export default function UsersDataTable({
       toast.success(`User ${isActive ? 'activated' : 'deactivated'}`);
       fetchUsers();
     } catch (error) {
+      console.error('Failed to update user status:', error);
       toast.error('Failed to update user status');
     }
   };
