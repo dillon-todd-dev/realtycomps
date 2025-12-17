@@ -1,10 +1,8 @@
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableRow } from '@/components/ui/table';
 import { FormEvent, useMemo, useState, useTransition } from 'react';
 import {
@@ -16,33 +14,28 @@ import { Loader2 } from 'lucide-react';
 import { formatDollarAmount, monthlyLoanAmount } from '@/lib/utils';
 import { DollarInput } from '@/components/dollar-input';
 import { SelectInput } from '@/components/select-input';
-
-type Evaluation = any; // Replace with your actual type
+import { EvaluationWithRelations } from '@/lib/types';
 
 interface HardMoneyFinancingFormProps {
-  evaluation: Evaluation;
+  evaluation: EvaluationWithRelations;
 }
 
 export default function HardMoneyFinancingForm({
   evaluation,
 }: HardMoneyFinancingFormProps) {
-  const hardMoneyParams = evaluation.hardMoneyLoanParams;
-  const refinanceParams = evaluation.refinanceLoanParams;
-
   console.log(evaluation);
 
   const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState({
-    hardLoanToValue: hardMoneyParams.loanToValue,
-    hardLenderFees: hardMoneyParams.lenderFees,
-    hardInterestRate: hardMoneyParams.interestRate,
-    rollInLenderFees: hardMoneyParams.rollInLenderFees,
-    firstPhaseCosts: hardMoneyParams.firstPhaseCosts,
-    refiLoanToValue: refinanceParams.loanToValue,
-    refiLoanTerm: String(refinanceParams.loanTerm),
-    refiInterestRate: refinanceParams.interestRate,
-    refiLenderFees: refinanceParams.lenderFees,
-    refiMortgageInsurance: refinanceParams.mortgageInsurance,
+    hardLoanToValue: evaluation.hardLoanToValue,
+    hardLenderFees: evaluation.hardLenderFees,
+    hardInterestRate: evaluation.hardInterestRate,
+    hardFirstPhaseCosts: evaluation.hardFirstPhaseCosts,
+    refiLoanToValue: evaluation.refiLoanToValue,
+    refiLoanTerm: String(evaluation.refiLoanTerm),
+    refiInterestRate: evaluation.refiInterestRate,
+    refiLenderFees: evaluation.refiLenderFees,
+    refiMortgageInsurance: evaluation.refiMortgageInsurance,
   });
 
   async function handleSubmit(e: FormEvent) {
@@ -54,7 +47,7 @@ export default function HardMoneyFinancingForm({
           loanToValue: formData.hardLoanToValue,
           lenderFees: formData.hardLenderFees,
           interestRate: formData.hardInterestRate,
-          firstPhaseCosts: formData.firstPhaseCosts,
+          firstPhaseCosts: formData.hardFirstPhaseCosts,
         });
         await updateRefinanceLoanParams(evaluation.id, evaluation.userId, {
           loanToValue: formData.refiLoanToValue,
@@ -72,14 +65,14 @@ export default function HardMoneyFinancingForm({
   }
 
   const hardCashToClose: number = useMemo(() => {
-    const ltv = Number(hardMoneyParams?.loanToValue);
+    const ltv = Number(evaluation?.hardLoanToValue);
     const arv = Number(evaluation?.estimatedSalePrice);
     const maxLoanAmount = (ltv / 100) * arv;
     const purchasePrice = Number(evaluation?.purchasePrice);
     const repairs = Number(evaluation?.repairs);
     return purchasePrice + repairs - maxLoanAmount;
   }, [
-    hardMoneyParams?.loanToValue,
+    evaluation?.hardLoanToValue,
     evaluation?.estimatedSalePrice,
     evaluation?.purchasePrice,
     evaluation?.repairs,
@@ -96,9 +89,9 @@ export default function HardMoneyFinancingForm({
   }, [evaluation?.insurance]);
 
   const mortgageInsurance: number = useMemo(() => {
-    const annualInsurance = Number(refinanceParams?.mortgageInsurance);
+    const annualInsurance = Number(evaluation?.refiMortgageInsurance);
     return annualInsurance / 12;
-  }, [refinanceParams?.mortgageInsurance]);
+  }, [evaluation?.refiMortgageInsurance]);
 
   const hoa: number = useMemo(() => {
     const annualHoa = Number(evaluation?.hoa);
@@ -107,17 +100,16 @@ export default function HardMoneyFinancingForm({
 
   const notePayment: number = useMemo(() => {
     const estimatedSalePrice = Number(evaluation?.estimatedSalePrice);
-    const loanToValue = Number(refinanceParams?.loanToValue) / 100;
+    const loanToValue = Number(evaluation?.refiLoanToValue) / 100;
     const loanAmount = estimatedSalePrice * loanToValue;
-    const monthlyInterestRate =
-      Number(refinanceParams?.interestRate) / 100 / 12;
-    const loanTermMonths = Number(refinanceParams?.loanTerm) * 12;
+    const monthlyInterestRate = Number(evaluation?.refiInterestRate) / 100 / 12;
+    const loanTermMonths = Number(evaluation?.refiLoanTerm) * 12;
     return monthlyLoanAmount(loanTermMonths, monthlyInterestRate, loanAmount);
   }, [
     evaluation?.estimatedSalePrice,
-    refinanceParams?.loanToValue,
-    refinanceParams?.interestRate,
-    refinanceParams?.loanTerm,
+    evaluation?.refiLoanToValue,
+    evaluation?.refiInterestRate,
+    evaluation?.refiLoanTerm,
   ]);
 
   const cashflowTotal: number = useMemo(() => {
@@ -143,38 +135,38 @@ export default function HardMoneyFinancingForm({
   ]);
 
   const hardClosingCosts: number = useMemo(() => {
-    const hardLenderFees = Number(hardMoneyParams?.lenderFees);
-    const refiLenderFees = Number(refinanceParams?.lenderFees);
+    const hardLenderFees = Number(evaluation?.hardLenderFees);
+    const refiLenderFees = Number(evaluation?.refiLenderFees);
     const appraisal = Number(evaluation?.appraisal);
     const survey = Number(evaluation?.survey);
     const inspection = Number(evaluation?.inspection);
     return hardLenderFees + refiLenderFees + appraisal + survey + inspection;
   }, [
-    hardMoneyParams?.lenderFees,
-    refinanceParams?.lenderFees,
+    evaluation?.hardLenderFees,
+    evaluation?.refiLenderFees,
     evaluation?.appraisal,
     evaluation?.survey,
     evaluation?.inspection,
   ]);
 
   const hardCashOutOfPocket: number = useMemo(() => {
-    const firstPhaseCosts = Number(hardMoneyParams?.firstPhaseCosts);
+    const firstPhaseCosts = Number(evaluation?.hardFirstPhaseCosts);
     return hardCashToClose + hardClosingCosts + firstPhaseCosts;
-  }, [hardCashToClose, hardClosingCosts, hardMoneyParams?.firstPhaseCosts]);
+  }, [hardCashToClose, hardClosingCosts, evaluation?.hardFirstPhaseCosts]);
 
   const equityCapture: number = useMemo(() => {
     const purchasePrice = Number(evaluation?.purchasePrice);
     const arv = Number(evaluation.estimatedSalePrice);
     const rehab = Number(evaluation?.repairs);
-    const hardLender = Number(hardMoneyParams?.lenderFees);
-    const refiLender = Number(refinanceParams?.lenderFees);
+    const hardLender = Number(evaluation?.hardLenderFees);
+    const refiLender = Number(evaluation?.refiLenderFees);
     return arv - (purchasePrice + rehab + hardLender + refiLender);
   }, [
     evaluation?.estimatedSalePrice,
     evaluation?.purchasePrice,
     evaluation?.repairs,
-    hardMoneyParams?.lenderFees,
-    refinanceParams?.lenderFees,
+    evaluation?.hardLenderFees,
+    evaluation?.refiLenderFees,
   ]);
 
   const returnOnEquity: number = useMemo(() => {
@@ -203,8 +195,7 @@ export default function HardMoneyFinancingForm({
                     <SelectInput
                       id='hardLoanToValue'
                       type='number'
-                      step='0.01'
-                      value={formData.hardLoanToValue}
+                      value={formData.hardLoanToValue ?? '70'}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -217,7 +208,7 @@ export default function HardMoneyFinancingForm({
                     <Label htmlFor='hardLenderFees'>Lender & Title Fees</Label>
                     <DollarInput
                       id='hardLenderFees'
-                      value={formData.hardLenderFees}
+                      value={formData.hardLenderFees ?? '5000'}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -232,7 +223,7 @@ export default function HardMoneyFinancingForm({
                       id='hardInterestRate'
                       type='number'
                       step='0.001'
-                      value={formData.hardInterestRate}
+                      value={formData.hardInterestRate ?? '11'}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -246,12 +237,12 @@ export default function HardMoneyFinancingForm({
                       Phase 1 Rehab Start Costs
                     </Label>
                     <DollarInput
-                      id='firstPhaseCosts'
-                      value={formData.firstPhaseCosts}
+                      id='hardFirstPhaseCosts'
+                      value={formData.hardFirstPhaseCosts ?? '0'}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
-                          firstPhaseCosts: e.target.value,
+                          hardFirstPhaseCosts: e.target.value,
                         }))
                       }
                     />
@@ -269,7 +260,7 @@ export default function HardMoneyFinancingForm({
                       id='refiLoanToValue'
                       type='number'
                       step='0.01'
-                      value={formData.refiLoanToValue}
+                      value={formData.refiLoanToValue ?? '70'}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -298,7 +289,7 @@ export default function HardMoneyFinancingForm({
                       id='refiInterestRate'
                       type='number'
                       step='0.001'
-                      value={formData.refiInterestRate}
+                      value={formData.refiInterestRate ?? '7'}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -311,7 +302,7 @@ export default function HardMoneyFinancingForm({
                     <Label htmlFor='refiLenderFees'>Refi Lender Fees</Label>
                     <DollarInput
                       id='refiLenderFees'
-                      value={formData.refiLenderFees}
+                      value={formData.refiLenderFees ?? '5000'}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -327,7 +318,7 @@ export default function HardMoneyFinancingForm({
                     <DollarInput
                       id='refiMortgageInsurance'
                       type='number'
-                      value={formData.refiMortgageInsurance}
+                      value={formData.refiMortgageInsurance ?? '0'}
                       onChange={(e) =>
                         setFormData((prev) => ({
                           ...prev,
@@ -429,7 +420,7 @@ export default function HardMoneyFinancingForm({
                   </TableCell>
                   <TableCell className='text-right whitespace-nowrap text-sm'>
                     {formatDollarAmount(
-                      Number(hardMoneyParams?.firstPhaseCosts),
+                      Number(evaluation?.hardFirstPhaseCosts),
                     )}
                   </TableCell>
                 </TableRow>
@@ -455,7 +446,7 @@ export default function HardMoneyFinancingForm({
                     Monthly Rent
                   </TableCell>
                   <TableCell className='text-right whitespace-nowrap text-sm'>
-                    {formatDollarAmount(evaluation.rent)}
+                    {formatDollarAmount(Number(evaluation.rent ?? 0))}
                   </TableCell>
                 </TableRow>
                 <TableRow>

@@ -1,79 +1,11 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import {
-  evaluationsTable,
-  hardMoneyLoanParamsTable,
-  refinanceLoanParamsTable,
-} from '@/db/schema';
-import { NewEvaluation } from '@/lib/types';
+import { evaluationsTable } from '@/db/schema';
+import { EvaluationWithRelations, NewEvaluation } from '@/lib/types';
 import { and, desc, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
-
-export type EvaluationWithRelations = {
-  id: string;
-  propertyId: string;
-  userId: string;
-  name: string | null;
-
-  // Core fields
-  estimatedSalePrice: string | null;
-  purchasePrice: string | null;
-  hardAppraisedPrice: string | null;
-  sellerContribution: string | null;
-  repairs: string | null;
-  insurance: string | null;
-  survey: string | null;
-  inspection: string | null;
-  appraisal: string | null;
-  miscellaneous: string | null;
-  rent: string | null;
-  hoa: string | null;
-  propertyTax: string | null;
-
-  createdAt: Date;
-  updatedAt: Date;
-
-  // Related data
-  property: {
-    id: string;
-    address: string | null;
-    city: string | null;
-    state: string | null;
-    postalCode: string | null;
-  };
-
-  conventionalLoanParams?: {
-    id: string;
-    downPayment: string | null;
-    loanTerm: number | null;
-    interestRate: string | null;
-    lenderFees: string | null;
-    mortgageInsurance: string | null;
-    monthsOfTaxes: number | null;
-  } | null;
-
-  hardMoneyLoanParams?: {
-    id: string;
-    loanToValue: string | null;
-    lenderFees: string | null;
-    interestRate: string | null;
-    monthsToRefi: number | null;
-    rollInLenderFees: boolean | null;
-    weeksUntilLeased: number | null;
-  } | null;
-
-  refinanceLoanParams?: {
-    id: string;
-    loanToValue: string | null;
-    loanTerm: number | null;
-    interestRate: string | null;
-    lenderFees: string | null;
-    monthsOfTaxes: number | null;
-    mortgageInsurance: string | null;
-  } | null;
-};
 
 export async function createEvaluation(newEvaluation: NewEvaluation) {
   const result = await db.transaction(async (tx) => {
@@ -81,14 +13,6 @@ export async function createEvaluation(newEvaluation: NewEvaluation) {
       .insert(evaluationsTable)
       .values(newEvaluation)
       .returning();
-
-    await tx.insert(hardMoneyLoanParamsTable).values({
-      evaluationId: evaluation.id,
-    });
-
-    await tx
-      .insert(refinanceLoanParamsTable)
-      .values({ evaluationId: evaluation.id });
 
     return evaluation;
   });
@@ -99,7 +23,10 @@ export async function createEvaluation(newEvaluation: NewEvaluation) {
   );
 }
 
-export async function getEvaluation(evaluationId: string, userId: string) {
+export async function getEvaluation(
+  evaluationId: string,
+  userId: string,
+): Promise<EvaluationWithRelations | null> {
   const evaluation = await db.query.evaluationsTable.findFirst({
     where: and(
       eq(evaluationsTable.id, evaluationId),
@@ -115,8 +42,6 @@ export async function getEvaluation(evaluationId: string, userId: string) {
           postalCode: true,
         },
       },
-      hardMoneyLoanParams: true,
-      refinanceLoanParams: true,
       comparables: {
         with: {
           images: true,
@@ -157,19 +82,18 @@ export async function updateDealTerms(
   evaluationId: string,
   userId: string,
   data: {
-    name?: string;
-    estimatedSalePrice?: string;
-    purchasePrice?: string;
-    sellerContribution?: string;
-    repairs?: string;
-    insurance?: string;
-    survey?: string;
-    inspection?: string;
-    appraisal?: string;
-    miscellaneous?: string;
-    rent?: string;
-    hoa?: string;
-    propertyTax?: string;
+    estimatedSalePrice: string | null;
+    purchasePrice: string | null;
+    sellerContribution: string | null;
+    repairs: string | null;
+    insurance: string | null;
+    survey: string | null;
+    inspection: string | null;
+    appraisal: string | null;
+    miscellaneous: string | null;
+    rent: string | null;
+    hoa: string | null;
+    propertyTax: string | null;
   },
 ) {
   try {
@@ -218,56 +142,33 @@ export async function updateHardMoneyLoanParams(
   evaluationId: string,
   userId: string,
   data: {
-    loanToValue?: string;
-    lenderFees?: string;
-    interestRate?: string;
-    firstPhaseCosts?: string;
+    loanToValue: string | null;
+    lenderFees: string | null;
+    interestRate: string | null;
+    firstPhaseCosts: string | null;
   },
 ) {
   try {
-    // Verify ownership
-    const evaluation = await db.query.evaluationsTable.findFirst({
-      where: and(
-        eq(evaluationsTable.id, evaluationId),
-        eq(evaluationsTable.userId, userId),
-      ),
-      columns: { id: true, propertyId: true },
-    });
-
-    if (!evaluation) {
-      throw new Error('Evaluation not found or unauthorized');
-    }
-
-    // Update or create hard money loan params
-    const existing = await db.query.hardMoneyLoanParamsTable.findFirst({
-      where: eq(hardMoneyLoanParamsTable.evaluationId, evaluationId),
-    });
-
-    let updated;
-    if (existing) {
-      [updated] = await db
-        .update(hardMoneyLoanParamsTable)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
-        .where(eq(hardMoneyLoanParamsTable.evaluationId, evaluationId))
-        .returning();
-    } else {
-      [updated] = await db
-        .insert(hardMoneyLoanParamsTable)
-        .values({
-          evaluationId,
-          ...data,
-        })
-        .returning();
-    }
+    const [propertyId] = await db
+      .update(evaluationsTable)
+      .set({
+        hardLoanToValue: data.loanToValue,
+        hardLenderFees: data.lenderFees,
+        hardInterestRate: data.interestRate,
+        hardFirstPhaseCosts: data.firstPhaseCosts,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(evaluationsTable.id, evaluationId),
+          eq(evaluationsTable.userId, userId),
+        ),
+      )
+      .returning({ propertyId: evaluationsTable.propertyId });
 
     revalidatePath(
-      `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`,
+      `/dashboard/properties/${propertyId}/evaluations/${evaluationId}`,
     );
-
-    return updated;
   } catch (error) {
     console.error('Error updating hard money loan params:', error);
     throw new Error('Failed to update hard money loan parameters');
@@ -281,57 +182,35 @@ export async function updateRefinanceLoanParams(
   evaluationId: string,
   userId: string,
   data: {
-    loanToValue?: string;
-    loanTerm?: number;
-    interestRate?: string;
-    lenderFees?: string;
-    mortgageInsurance?: string;
+    loanToValue: string | null;
+    loanTerm: number | null;
+    interestRate: string | null;
+    lenderFees: string | null;
+    mortgageInsurance: string | null;
   },
 ) {
   try {
-    // Verify ownership
-    const evaluation = await db.query.evaluationsTable.findFirst({
-      where: and(
-        eq(evaluationsTable.id, evaluationId),
-        eq(evaluationsTable.userId, userId),
-      ),
-      columns: { id: true, propertyId: true },
-    });
-
-    if (!evaluation) {
-      throw new Error('Evaluation not found or unauthorized');
-    }
-
-    // Update or create refinance loan params
-    const existing = await db.query.refinanceLoanParamsTable.findFirst({
-      where: eq(refinanceLoanParamsTable.evaluationId, evaluationId),
-    });
-
-    let updated;
-    if (existing) {
-      [updated] = await db
-        .update(refinanceLoanParamsTable)
-        .set({
-          ...data,
-          updatedAt: new Date(),
-        })
-        .where(eq(refinanceLoanParamsTable.evaluationId, evaluationId))
-        .returning();
-    } else {
-      [updated] = await db
-        .insert(refinanceLoanParamsTable)
-        .values({
-          evaluationId,
-          ...data,
-        })
-        .returning();
-    }
+    const [propertyId] = await db
+      .update(evaluationsTable)
+      .set({
+        refiLoanToValue: data.loanToValue,
+        refiLoanTerm: data.loanTerm,
+        refiInterestRate: data.interestRate,
+        refiLenderFees: data.lenderFees,
+        refiMortgageInsurance: data.mortgageInsurance,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(evaluationsTable.id, evaluationId),
+          eq(evaluationsTable.userId, userId),
+        ),
+      )
+      .returning({ propertyId: evaluationsTable.propertyId });
 
     revalidatePath(
-      `/dashboard/properties/${evaluation.propertyId}/evaluations/${evaluationId}`,
+      `/dashboard/properties/${propertyId}/evaluations/${evaluationId}`,
     );
-
-    return updated;
   } catch (error) {
     console.error('Error updating refinance loan params:', error);
     throw new Error('Failed to update refinance loan parameters');

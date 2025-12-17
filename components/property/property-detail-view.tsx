@@ -19,9 +19,7 @@ import {
   Ruler,
   Calculator,
   ArrowLeft,
-  X,
   Trash,
-  TrashIcon,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';

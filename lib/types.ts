@@ -7,6 +7,8 @@ import {
   propertiesTable,
   propertyImagesTable,
   evaluationsTable,
+  comparablesTable,
+  comparableImagesTable,
 } from '@/db/schema';
 
 // Extract types from tables
@@ -24,6 +26,12 @@ export type NewPropertyImage = InferInsertModel<typeof propertyImagesTable>;
 
 export type Evaluation = InferSelectModel<typeof evaluationsTable>;
 export type NewEvaluation = InferInsertModel<typeof evaluationsTable>;
+
+export type Comparable = InferSelectModel<typeof comparablesTable>;
+export type ComparableImage = InferSelectModel<typeof comparableImagesTable>;
+export type ComparableWithImages = Comparable & {
+  images: ComparableImage[];
+};
 
 // You can also create custom types by extending the base types
 export type PropertyWithImages = Property & {
@@ -81,4 +89,9 @@ export type EvaluationListItem = {
   totalROI?: string | null;
   createdAt: Date;
   updatedAt: Date;
+};
+
+export type EvaluationWithRelations = Evaluation & {
+  property: Pick<Property, 'id' | 'address' | 'city' | 'state' | 'postalCode'>;
+  comparables: ComparableWithImages[];
 };

@@ -32,31 +32,13 @@ import { searchSaleComparables, toggleComparable } from '@/actions/comparables';
 import { toast } from 'sonner';
 import Image from 'next/image';
 import { SelectInput } from '../select-input';
-
-type Comparable = {
-  id: string;
-  evaluationId: string;
-  address: string;
-  subdivision: string;
-  bedrooms: number;
-  bathrooms: string;
-  garageSpaces: number;
-  yearBuilt: number;
-  squareFootage: number;
-  listPrice: string;
-  salePrice: string;
-  closeDate: Date;
-  daysOnMarket: number;
-  type: 'SALE' | 'RENT';
-  included: boolean;
-  images?: Array<{ url: string; description?: string }>;
-};
+import { Comparable, ComparableWithImages } from '@/lib/types';
 
 interface ComparablesProps {
   evaluationId: string;
   propertyId: string;
-  propertyAddress: string;
-  initialComparables?: Comparable[];
+  propertyAddress: string | null;
+  initialComparables?: ComparableWithImages[];
 }
 
 export default function Comparables({
@@ -66,10 +48,10 @@ export default function Comparables({
   propertyAddress,
 }: ComparablesProps) {
   const [comparables, setComparables] =
-    useState<Comparable[]>(initialComparables);
+    useState<ComparableWithImages[]>(initialComparables);
   const [isPending, startTransition] = useTransition();
   const [selectedComparable, setSelectedComparable] =
-    useState<Comparable | null>(null);
+    useState<ComparableWithImages | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
 
   async function handleSearch(formData: FormData) {
@@ -77,7 +59,7 @@ export default function Comparables({
       const results = await searchSaleComparables({
         evaluationId,
         propertyId,
-        address: propertyAddress,
+        address: propertyAddress || '',
         maxRadius: Number(formData.get('maxRadius')),
         minBeds: Number(formData.get('minBeds')) || undefined,
         maxBeds: Number(formData.get('maxBeds')) || undefined,
@@ -125,7 +107,7 @@ export default function Comparables({
     }
   }
 
-  function handleViewDetails(comparable: Comparable) {
+  function handleViewDetails(comparable: ComparableWithImages) {
     setSelectedComparable(comparable);
     setDetailModalOpen(true);
   }

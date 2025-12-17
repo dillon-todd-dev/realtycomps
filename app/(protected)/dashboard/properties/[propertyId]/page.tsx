@@ -1,10 +1,6 @@
 import { getProperty } from '@/actions/properties';
 import { requireUser } from '@/lib/session';
-import PageHeader from '@/components/page-header';
 import PropertyDetailView from '@/components/property/property-detail-view';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Edit } from 'lucide-react';
-import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getEvaluationsByProperty } from '@/actions/evaluations';
 

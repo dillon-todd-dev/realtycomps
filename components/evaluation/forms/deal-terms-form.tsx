@@ -8,11 +8,10 @@ import React, { useState, useTransition } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { DollarInput } from '@/components/dollar-input';
-
-type Evaluation = any; // Replace with your actual type
+import { EvaluationWithRelations } from '@/lib/types';
 
 interface DealTermsFormProps {
-  evaluation: Evaluation;
+  evaluation: EvaluationWithRelations;
 }
 
 export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
@@ -77,7 +76,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='purchasePrice'
                   name='purchasePrice'
-                  value={formData.purchasePrice}
+                  value={formData.purchasePrice ?? ''}
                   placeholder='0.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -94,7 +93,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='estimatedSalePrice'
                   name='estimatedSalePrice'
-                  value={formData.estimatedSalePrice}
+                  value={formData.estimatedSalePrice ?? ''}
                   placeholder='0.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -109,7 +108,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='sellerContribution'
                   name='sellerContribution'
-                  value={formData.sellerContribution}
+                  value={formData.sellerContribution ?? ''}
                   placeholder='0.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -133,7 +132,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='rent'
                   name='rent'
-                  value={formData.rent}
+                  value={formData.rent ?? ''}
                   placeholder='0.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -148,7 +147,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='propertyTax'
                   name='propertyTax'
-                  value={formData.propertyTax}
+                  value={formData.propertyTax ?? ''}
                   placeholder='0.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -163,7 +162,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='insurance'
                   name='insurance'
-                  value={formData.insurance}
+                  value={formData.insurance ?? ''}
                   placeholder='0.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -178,7 +177,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='hoa'
                   name='hoa'
-                  value={formData.hoa}
+                  value={formData.hoa ?? ''}
                   placeholder='0.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -193,7 +192,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='miscellaneous'
                   name='miscellaneous'
-                  value={formData.miscellaneous}
+                  value={formData.miscellaneous ?? ''}
                   placeholder='0.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -217,7 +216,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='repairs'
                   name='repairs'
-                  value={formData.repairs}
+                  value={formData.repairs ?? ''}
                   placeholder='0.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -232,7 +231,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='survey'
                   name='survey'
-                  value={formData.survey}
+                  value={formData.survey ?? ''}
                   placeholder='400.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -247,7 +246,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='inspection'
                   name='inspection'
-                  value={formData.inspection}
+                  value={formData.inspection ?? ''}
                   placeholder='400.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
@@ -262,7 +261,7 @@ export default function DealTermsForm({ evaluation }: DealTermsFormProps) {
                 <DollarInput
                   id='appraisal'
                   name='appraisal'
-                  value={formData.appraisal}
+                  value={formData.appraisal ?? ''}
                   placeholder='400.00'
                   onChange={(e) =>
                     setFormData((prev) => ({
