@@ -11,6 +11,8 @@ export async function findProperty(address: string) {
       params: {
         access_token: ENV.BRIDGE_ACCESS_TOKEN,
         $filter: `tolower(UnparsedAddress) eq '${address.toLowerCase()}'`,
+        $orderby: 'BridgeModificationTimestamp desc',
+        $top: 1,
       },
     });
 
@@ -57,14 +59,10 @@ export async function findSaleComparables(
     query['LivingArea.lte'] = searchComparables.maxSquareFootage;
   }
 
-  console.log('COMPARABLES QUERY:', query);
-
   try {
     const response = await axios.get(`${ENV.BRIDGE_BASE_URL}/listings`, {
       params: query,
     });
-
-    console.log('COMPARABLES SIZE:', response.data.total);
 
     return response.data.bundle;
   } catch (err) {

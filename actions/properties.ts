@@ -69,8 +69,10 @@ export async function getProperties({
           .from(propertyImagesTable)
           .where(
             or(
-              ...propertyIds.map((id) => eq(propertyImagesTable.propertyId, id))
-            )
+              ...propertyIds.map((id) =>
+                eq(propertyImagesTable.propertyId, id),
+              ),
+            ),
           )
           .orderBy(asc(propertyImagesTable.order))
       : [];
@@ -87,7 +89,7 @@ export async function getProperties({
     (property) => ({
       ...property,
       images: imagesByPropertyId[property.id] || [],
-    })
+    }),
   );
 
   const pageCount = Math.ceil(totalCount / pageSize);
@@ -102,7 +104,7 @@ export async function getProperties({
 
 export async function getProperty(
   propertyId: string,
-  userId?: string
+  userId?: string,
 ): Promise<PropertyWithImages | null> {
   const whereConditions = [eq(propertiesTable.id, propertyId)];
 
@@ -172,7 +174,7 @@ export async function getProperty(
 
 export async function createPropertyAction(
   prevState: unknown,
-  formData: FormData
+  formData: FormData,
 ) {
   const user = await requireUser();
 
@@ -189,12 +191,17 @@ export async function createPropertyAction(
       return { success: false, error: 'Property not found' };
     }
 
+    let propertyAddress = `${mlsProperty.StreetNumber} ${mlsProperty.StreetName} ${mlsProperty.StreetSuffix}`;
+    if (mlsProperty.UnitNumber) {
+      propertyAddress += ` ${mlsProperty.UnitNumber}`;
+    }
+
     await db.transaction(async (tx) => {
       const [{ id: propertyId }] = await tx
         .insert(propertiesTable)
         .values({
           userId: user.id,
-          address: `${mlsProperty.StreetNumber} ${mlsProperty.StreetName} ${mlsProperty.StreetSuffix}`,
+          address: propertyAddress,
           city: mlsProperty.City,
           state: mlsProperty.StateOrProvince,
           postalCode: mlsProperty.PostalCode,
@@ -213,7 +220,7 @@ export async function createPropertyAction(
         .returning({ id: propertiesTable.id });
 
       const images = mlsProperty.Media.filter(
-        (media: BridgeMedia) => media.MediaCategory === 'Photo'
+        (media: BridgeMedia) => media.MediaCategory === 'Photo',
       ).map((media: BridgeMedia) => ({
         order: media.Order,
         url: media.MediaURL,
