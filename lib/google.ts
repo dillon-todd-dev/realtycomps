@@ -1,162 +1,101 @@
+'use server';
+
 import axios from 'axios';
-import { ENV } from '@/lib/env';
+import { ENV } from './env';
 
-type PlacePrediction = {
-  place: string;
-  placeId: string;
-  text: {
-    text: string;
-    matches: {
-      offset: number;
-    }[];
-  };
-};
-
-type AutocompleteSuggestions = {
-  suggestions: {
-    placePrediction: PlacePrediction;
-  }[];
-};
-
-type AutocompleteResponse = {
-  value: string;
-  label: string;
-};
-
-type AddressComponent = {
-  longText: string;
-  shortText: string;
-  types: string[];
-  languageCode: string;
-};
-
-type PlaceDetails = {
-  addressComponents: AddressComponent[];
-};
-
-type PlaceDetailsResponse = {
-  street: string;
-  city: string;
-  state: string;
-  postalCode: string;
-};
-
-type StreetViewImageResponse = string;
-
-export const getAutocompleteSuggestions = async (
-  searchInput: string
-): Promise<AutocompleteResponse[] | null> => {
-  const url = 'https://places.googleapis.com/v1/places:autocomplete';
-  const primaryTypes = [
-    'street_address',
-    'subpremise',
-    'route',
-    'street_number',
-    'landmark',
+interface AutocompleteResponse {
+  suggestions: [
+    {
+      placePrediction: {
+        placeId: string;
+        place: string;
+        text: {
+          text: string;
+        };
+      };
+    },
   ];
+}
 
-  console.warn('autocomplete url', url);
-  console.warn('autocomplete input', searchInput);
-
+export async function autocomplete(input: string) {
   try {
-    const { data }: { data: AutocompleteSuggestions } = await axios.post(
-      url,
+    const response = await axios.post<AutocompleteResponse>(
+      'https://places.googleapis.com/v1/places:autocomplete',
       {
-        input: searchInput,
-        includedPrimaryTypes: primaryTypes,
-        includedRegionCodes: ['us'],
+        input,
       },
       {
         headers: {
           'Content-Type': 'application/json',
-          'X-Goog-Api-Key': ENV.NEXT_PUBLIC_GOOGLE_API_KEY,
+          'X-Goog-Api-Key': ENV.GOOGLE_API_KEY,
         },
-      }
-    );
-    if (data.suggestions.length === 0) return null;
-
-    return data.suggestions.map((suggestion) => {
-      return {
-        value: suggestion.placePrediction.placeId,
-        label: suggestion.placePrediction.text.text,
-      };
-    });
-  } catch (error) {
-    if (axios.isAxiosError(error)) {
-      console.error('Axios error details:');
-      console.error('Message:', error.message);
-      console.error('Status Code:', error.response?.status);
-      console.error('Response Data:', error.response?.data);
-      console.error('Request Config:', error.config);
-    } else {
-      console.error('Failed to get autocomplete suggestions:', error);
-    }
-    return null;
-  }
-};
-
-export const getPlaceDetails = async (
-  placeId: string
-): Promise<PlaceDetailsResponse | null> => {
-  const url = `https://places.googleapis.com/v1/places/${placeId}`;
-
-  try {
-    const { data }: { data: PlaceDetails } = await axios.get(url, {
-      headers: {
-        'X-Goog-Api-Key': ENV.NEXT_PUBLIC_GOOGLE_API_KEY,
-        'X-Goog-FieldMask': 'addressComponents,photos',
-        'Content-Type': 'application/json',
       },
+    );
+
+    return response.data.suggestions.map((suggestion) => ({
+      value: suggestion.placePrediction?.placeId ?? '',
+      label: suggestion.placePrediction?.text?.text ?? '',
+    }));
+  } catch (err) {
+    console.error('Error fetching autocomplete places from Google', err);
+    return [];
+  }
+}
+
+export async function getPlaceDetails(placeId: string) {
+  try {
+    const response = await axios.get(
+      `https://places.googleapis.com/v1/places/${placeId}`,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': ENV.GOOGLE_API_KEY,
+          'X-Goog-FieldMask': '*',
+        },
+      },
+    );
+    console.log('PLACE DETAILS:', response.data.addressComponents);
+    const { addressComponents } = response.data;
+
+    let streetNumber = '';
+    let street = '';
+    let unitNumber: string | undefined;
+    let city = '';
+    let state = '';
+    let postalCode = '';
+
+    addressComponents.forEach((comp: any) => {
+      const types: string[] = comp.types;
+      if (types.includes('street_number')) {
+        streetNumber = comp.longText;
+      } else if (types.includes('route')) {
+        street = comp.longText;
+      } else if (types.includes('subpremise')) {
+        unitNumber = comp.longText;
+      } else if (types.includes('locality')) {
+        city = comp.longText;
+      } else if (types.includes('administrative_area_level_1')) {
+        state = comp.shortName;
+      } else if (types.includes('postal_code')) {
+        postalCode = comp.longText;
+      }
     });
 
-    const findAddressPart = (str: string) => {
-      const addressPart = data.addressComponents.find(
-        (addressComponent: AddressComponent) => {
-          if (addressComponent.types.includes(str)) {
-            return addressComponent;
-          }
-        }
-      );
-
-      return addressPart?.longText ?? '';
-    };
-
-    const streetNumber = findAddressPart('street_number');
-    const streetName = findAddressPart('route');
-    const city = findAddressPart('locality');
-    const state = findAddressPart('administrative_area_level_1');
-    const postalCode = findAddressPart('postal_code');
+    let address = `${streetNumber} ${street}`;
+    if (unitNumber) {
+      address += ` ${unitNumber}`;
+    }
 
     return {
-      street: `${streetNumber} ${streetName}`,
+      address,
       city,
       state,
       postalCode,
     };
-  } catch (error) {
-    console.error('Failed to get place details:', error);
-    return null;
+  } catch (err) {
+    console.error('Error fetching place details from Google', err);
+    throw err;
   }
-};
+}
 
-export const getStreetViewImage = async (
-  address: string
-): Promise<StreetViewImageResponse | null> => {
-  const encodedAddress = encodeURIComponent(address);
-  const url = `https://maps.googleapis.com/maps/api/streetview?location=${encodedAddress}&size=600x600&key=${ENV.NEXT_PUBLIC_GOOGLE_API_KEY}`;
-
-  try {
-    const { data }: { data: string } = await axios.get(url, {
-      headers: {
-        'X-Goog-Api-Key': ENV.NEXT_PUBLIC_GOOGLE_API_KEY,
-      },
-    });
-
-    console.log(typeof data);
-
-    return data;
-  } catch (error) {
-    console.error('Failed to get street view image:', error);
-    return null;
-  }
-};
+autocomplete('17375 Merigold');

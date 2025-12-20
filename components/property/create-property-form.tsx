@@ -1,6 +1,6 @@
 'use client';
 
-import { useActionState, useEffect } from 'react';
+import { useActionState, useEffect, useState } from 'react';
 import { SubmitButton } from '@/components/submit-button';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
@@ -8,6 +8,17 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { createPropertyAction } from '@/actions/properties';
 import { useRouter } from 'next/navigation';
+import AutocompleteInput from '../autocomplete-input';
+import { useDebounce } from '@/hooks/use-debounce';
+import { autocomplete, getPlaceDetails } from '@/lib/google';
+import { SelectInput } from '../select-input';
+
+interface FormData {
+  address: string;
+  city: string;
+  state: string;
+  postalCode: string;
+}
 
 export default function CreatePropertyForm() {
   const router = useRouter();
@@ -15,6 +26,47 @@ export default function CreatePropertyForm() {
     createPropertyAction,
     undefined,
   );
+  const [placeQueryTrigger, setPlaceQueryTrigger] = useState(false);
+  const [searchValue, setSearchValue] = useState('');
+  const [selectedValue, setSelectedValue] = useState('');
+  const [suggestions, setSuggestions] = useState<
+    { value: string; label: string }[]
+  >([]);
+  const [formData, setFormData] = useState<FormData>({
+    address: '',
+    city: '',
+    state: '',
+    postalCode: '',
+  });
+  const debouncedSearchValue = useDebounce(searchValue);
+
+  useEffect(() => {
+    if (debouncedSearchValue.length > 0) {
+      const fetchSuggestions = async () => {
+        try {
+          const results = await autocomplete(debouncedSearchValue);
+          setSuggestions(results);
+        } catch (err) {
+          console.error('Error fetching autocomplete suggestions:', err);
+        }
+      };
+      fetchSuggestions();
+    }
+  }, [debouncedSearchValue]);
+
+  useEffect(() => {
+    if (selectedValue && placeQueryTrigger) {
+      const fetchPlaceDetails = async () => {
+        try {
+          const res = await getPlaceDetails(selectedValue);
+          setFormData(res);
+        } catch (err) {
+          console.error('Error fetching place details:', err);
+        }
+      };
+      fetchPlaceDetails();
+    }
+  }, [selectedValue, placeQueryTrigger]);
 
   useEffect(() => {
     if (state?.success) {
@@ -32,18 +84,32 @@ export default function CreatePropertyForm() {
           <CardTitle>Property Address</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={action} className='space-y-8'>
+          <AutocompleteInput
+            placeholder='Search...'
+            items={suggestions ?? []}
+            searchValue={searchValue}
+            onSearchValueChange={setSearchValue}
+            selectedValue={selectedValue}
+            onSelectedValueChange={setSelectedValue}
+            dataFetchOnSelectionChange={setPlaceQueryTrigger}
+          />
+
+          <form action={action} className=' space-y-8'>
             <div className='space-y-3'>
               <Label htmlFor='address' className='text-base font-medium'>
                 Address
               </Label>
-              <Input
+              <SelectInput
                 type='text'
                 name='address'
                 id='address'
                 required
                 placeholder='123 Main Street'
                 className='h-12 text-base'
+                value={formData.address}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, address: e.target.value }))
+                }
               />
             </div>
 
@@ -51,13 +117,17 @@ export default function CreatePropertyForm() {
               <Label htmlFor='city' className='text-base font-medium'>
                 City
               </Label>
-              <Input
+              <SelectInput
                 type='text'
                 name='city'
                 id='city'
                 required
                 placeholder='Houston'
                 className='h-12 text-base'
+                value={formData.city}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, city: e.target.value }))
+                }
               />
             </div>
 
@@ -66,13 +136,20 @@ export default function CreatePropertyForm() {
                 <Label htmlFor='state' className='text-base font-medium'>
                   State
                 </Label>
-                <Input
+                <SelectInput
                   type='text'
                   name='state'
                   id='state'
                   required
                   placeholder='TX'
                   className='h-12 text-base'
+                  value={formData.state}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      state: e.target.value,
+                    }))
+                  }
                 />
               </div>
 
@@ -80,13 +157,20 @@ export default function CreatePropertyForm() {
                 <Label htmlFor='postalCode' className='text-base font-medium'>
                   Postal Code
                 </Label>
-                <Input
+                <SelectInput
                   type='text'
                   name='postalCode'
                   id='postalCode'
                   required
                   placeholder='77346'
                   className='h-12 text-base'
+                  value={formData.postalCode}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      postalCode: e.target.value,
+                    }))
+                  }
                 />
               </div>
             </div>

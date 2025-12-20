@@ -47,7 +47,7 @@ const AutocompleteInput = <T extends string>({
         acc[item.value] = item.label;
         return acc;
       }, {} as Record<string, string>),
-    [items]
+    [items],
   );
 
   const reset = () => {
@@ -130,7 +130,7 @@ const AutocompleteInput = <T extends string>({
                           'mr-2 h-4 w-4',
                           selectedValue === option.value
                             ? 'opacity-100'
-                            : 'opacity-0'
+                            : 'opacity-0',
                         )}
                       />
                       {option.label}
