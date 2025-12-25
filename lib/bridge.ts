@@ -33,8 +33,13 @@ export async function findSaleComparables(
     sortBy: 'CloseDate',
     order: 'desc',
     limit: 30,
-    'HAR_PropertyType.eq': 'Single-Family',
   };
+
+  if (searchComparables.type === 'SALE') {
+    query['HAR_PropertyType.eq'] = 'Single-Family';
+  } else {
+    query['HAR_PropertyType.eq'] = 'Rental';
+  }
 
   const cutoffDate = subDays(new Date(), searchComparables.daysOld ?? 365);
   const formattedDate = format(cutoffDate, 'yyyy-MM-dd');
@@ -66,7 +71,7 @@ export async function findSaleComparables(
 
     return response.data.bundle;
   } catch (err) {
-    console.error('Error finding sales comps from Bridge API', err);
+    console.error('Error finding comps from Bridge API', err);
     throw err;
   }
 }

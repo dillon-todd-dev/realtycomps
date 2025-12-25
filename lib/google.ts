@@ -17,6 +17,13 @@ interface AutocompleteResponse {
   ];
 }
 
+interface AddressComponent {
+  longText: string;
+  shortText: string;
+  types: string[];
+  languageCode: string;
+}
+
 export async function autocomplete(input: string) {
   try {
     const response = await axios.post<AutocompleteResponse>(
@@ -54,7 +61,7 @@ export async function getPlaceDetails(placeId: string) {
         },
       },
     );
-    console.log('PLACE DETAILS:', response.data.addressComponents);
+
     const { addressComponents } = response.data;
 
     let streetNumber = '';
@@ -64,7 +71,7 @@ export async function getPlaceDetails(placeId: string) {
     let state = '';
     let postalCode = '';
 
-    addressComponents.forEach((comp: any) => {
+    addressComponents.forEach((comp: AddressComponent) => {
       const types: string[] = comp.types;
       if (types.includes('street_number')) {
         streetNumber = comp.longText;
@@ -75,7 +82,7 @@ export async function getPlaceDetails(placeId: string) {
       } else if (types.includes('locality')) {
         city = comp.longText;
       } else if (types.includes('administrative_area_level_1')) {
-        state = comp.shortName;
+        state = comp.shortText;
       } else if (types.includes('postal_code')) {
         postalCode = comp.longText;
       }

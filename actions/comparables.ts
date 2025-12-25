@@ -3,9 +3,8 @@
 import { db } from '@/db/drizzle';
 import { comparableImagesTable, comparablesTable } from '@/db/schema';
 import { findSaleComparables } from '@/lib/bridge';
-import { eq, and, desc } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { revalidatePath } from 'next/cache';
-import { BridgeMedia } from './properties';
 
 export type SearchComparablesParams = {
   evaluationId: string;
@@ -22,16 +21,6 @@ export type SearchComparablesParams = {
   type: 'SALE' | 'RENT';
 };
 
-/**
- * Search for comparable properties
- *
- * NOTE: This is a placeholder implementation. In a real app, you would:
- * 1. Call an external API (like Zillow, Redfin, or an MLS service)
- * 2. Filter results based on the search criteria
- * 3. Calculate distance from the subject property
- * 4. Calculate correlation/similarity score
- * 5. Save results to database
- */
 export async function searchSaleComparables(params: SearchComparablesParams) {
   try {
     const comparables = await findSaleComparables(params);
@@ -40,7 +29,12 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
       // Delete existing comparables and their images (cascade handles images)
       await tx
         .delete(comparablesTable)
-        .where(eq(comparablesTable.evaluationId, params.evaluationId));
+        .where(
+          and(
+            eq(comparablesTable.evaluationId, params.evaluationId),
+            eq(comparablesTable.type, params.type),
+          ),
+        );
 
       // Insert comparables one by one to get their IDs
       const insertedComparables = [];
@@ -61,7 +55,7 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
             salePrice: comp.ClosePrice,
             closeDate: new Date(comp.CloseDate),
             daysOnMarket: comp.DaysOnMarket,
-            type: 'SALE',
+            type: params.type,
             included: true,
           })
           .returning({ id: comparablesTable.id });
@@ -86,7 +80,10 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
       }
 
       const comps = await tx.query.comparablesTable.findMany({
-        where: eq(comparablesTable.evaluationId, params.evaluationId),
+        where: and(
+          eq(comparablesTable.evaluationId, params.evaluationId),
+          eq(comparablesTable.type, params.type),
+        ),
         with: {
           images: {
             orderBy: (images, { asc }) => [asc(images.order)],

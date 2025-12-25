@@ -39,6 +39,8 @@ interface ComparablesProps {
   propertyId: string;
   propertyAddress: string | null;
   initialComparables?: ComparableWithImages[];
+  title: string;
+  compType: 'SALE' | 'RENT';
 }
 
 export default function Comparables({
@@ -46,6 +48,8 @@ export default function Comparables({
   propertyId,
   initialComparables = [],
   propertyAddress,
+  title,
+  compType,
 }: ComparablesProps) {
   const [comparables, setComparables] =
     useState<ComparableWithImages[]>(initialComparables);
@@ -68,7 +72,7 @@ export default function Comparables({
         minSquareFootage: Number(formData.get('minSquareFootage')) || undefined,
         maxSquareFootage: Number(formData.get('maxSquareFootage')) || undefined,
         daysOld: Number(formData.get('daysOld')) || 365,
-        type: formData.get('type') as 'SALE' | 'RENT',
+        type: compType,
       });
 
       setComparables(results);
@@ -121,7 +125,7 @@ export default function Comparables({
     <>
       <Card>
         <CardHeader>
-          <CardTitle>Comparable Properties</CardTitle>
+          <CardTitle>{title}</CardTitle>
           <p className='text-sm text-muted-foreground mt-1'>
             Search for similar properties to analyze market values
           </p>

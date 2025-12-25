@@ -16,6 +16,12 @@ interface EvaluationDetailViewProps {
 export default function EvaluationDetailView({
   evaluation,
 }: EvaluationDetailViewProps) {
+  const saleComps = evaluation.comparables.filter(
+    (comp) => comp.type === 'SALE',
+  );
+  const rentComps = evaluation.comparables.filter(
+    (comp) => comp.type === 'RENT',
+  );
   const handleExportClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -78,8 +84,19 @@ export default function EvaluationDetailView({
         <Comparables
           evaluationId={evaluation.id}
           propertyId={evaluation.propertyId}
-          initialComparables={evaluation.comparables || []}
+          initialComparables={saleComps || []}
           propertyAddress={evaluation.property.address}
+          title='Sale Comps'
+          compType='SALE'
+        />
+
+        <Comparables
+          evaluationId={evaluation.id}
+          propertyId={evaluation.propertyId}
+          initialComparables={rentComps || []}
+          propertyAddress={evaluation.property.address}
+          title='Rent Comps'
+          compType='RENT'
         />
 
         <DealTermsForm evaluation={evaluation} />

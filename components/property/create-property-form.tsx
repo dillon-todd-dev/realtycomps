@@ -59,6 +59,7 @@ export default function CreatePropertyForm() {
       const fetchPlaceDetails = async () => {
         try {
           const res = await getPlaceDetails(selectedValue);
+          console.log(res);
           setFormData(res);
         } catch (err) {
           console.error('Error fetching place details:', err);
