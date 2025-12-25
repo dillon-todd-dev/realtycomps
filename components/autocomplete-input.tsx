@@ -92,7 +92,7 @@ const AutocompleteInput = <T extends string>({
             >
               <Input
                 placeholder={placeholder}
-                className='bg-light-600 !important min-h-14 border border-gray-100 p-4 text-base font-semibold placeholder:font-normal placeholder:text-slate-500'
+                className='bg-light-600 !important min-h-12 border border-gray-100 p-4 text-base font-semibold placeholder:font-normal placeholder:text-slate-500'
               />
             </CommandPrimitive.Input>
           </PopoverAnchor>
@@ -108,7 +108,7 @@ const AutocompleteInput = <T extends string>({
                 e.preventDefault();
               }
             }}
-            className='w-[--radix-popover-trigger-width] p-0'
+            className='w-full p-0'
           >
             <CommandList>
               {isLoading && (
@@ -117,7 +117,7 @@ const AutocompleteInput = <T extends string>({
                 </div>
               )}
               {items.length > 0 && !isLoading ? (
-                <CommandGroup>
+                <CommandGroup className='w-full'>
                   {items.map((option) => (
                     <CommandItem
                       key={option.value}
@@ -138,7 +138,11 @@ const AutocompleteInput = <T extends string>({
                   ))}
                 </CommandGroup>
               ) : null}
-              {!isLoading ? <CommandEmpty>{emptyMessage}</CommandEmpty> : null}
+              {!isLoading ? (
+                <CommandEmpty className='min-w-full'>
+                  {emptyMessage}
+                </CommandEmpty>
+              ) : null}
             </CommandList>
           </PopoverContent>
         </Command>

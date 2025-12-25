@@ -94,7 +94,11 @@ export default function CreatePropertyForm() {
             onSelectedValueChange={setSelectedValue}
             dataFetchOnSelectionChange={setPlaceQueryTrigger}
           />
-
+          <div className='relative flex items-center my-6'>
+            <div className='flex-grow border-t border-gray-300'></div>
+            <span className='flex-shrink mx-4 text-gray-600'>or</span>
+            <div className='flex-grow border-t border-gray-300'></div>
+          </div>
           <form action={action} className=' space-y-8'>
             <div className='space-y-3'>
               <Label htmlFor='address' className='text-base font-medium'>
