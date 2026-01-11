@@ -4,7 +4,7 @@ import { ContactForm } from '@/components/contact-form';
 
 export default function ContactPage() {
   return (
-    <div className='flex min-h-screen items-center justify-center px-4 py-12'>
+    <div className='flex h-[calc(100vh-4rem)] items-center justify-center px-4 py-8'>
       <div className='grid w-full max-w-5xl gap-8 lg:grid-cols-2'>
         {/* Left side - Header and Form */}
         <div>
