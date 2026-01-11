@@ -4,7 +4,7 @@ import { ContactForm } from '@/components/contact-form';
 
 export default function ContactPage() {
   return (
-    <div className='flex h-[calc(100vh-4rem)] items-center justify-center px-4 py-8'>
+    <div className='flex min-h-[calc(100vh-4rem)] items-center justify-center px-4 py-8 lg:h-[calc(100vh-4rem)]'>
       <div className='grid w-full max-w-5xl gap-8 lg:grid-cols-2'>
         {/* Left side - Header and Form */}
         <div>
@@ -16,7 +16,7 @@ export default function ContactPage() {
           </div>
 
           {/* Heading */}
-          <h1 className='mb-4 text-4xl font-bold'>Connect With Us</h1>
+          <h1 className='mb-4 text-3xl font-bold sm:text-4xl'>Connect With Us</h1>
 
           {/* Subtitle */}
           <p className='text-muted-foreground mb-8'>
@@ -31,9 +31,9 @@ export default function ContactPage() {
         </div>
 
         {/* Right side - Image and Contact Info */}
-        <div className='flex h-full flex-col gap-4'>
-          {/* Image */}
-          <div className='relative min-h-[300px] flex-1 overflow-hidden rounded-lg'>
+        <div className='flex flex-col gap-4 lg:h-full'>
+          {/* Image - hidden on mobile */}
+          <div className='relative hidden min-h-[300px] flex-1 overflow-hidden rounded-lg lg:block'>
             <Image
               src='/resource-realty.jpeg'
               alt='Resource Realty'
