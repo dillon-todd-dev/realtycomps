@@ -108,3 +108,104 @@ export async function sendInvitationEmail({
     throw error;
   }
 }
+
+interface ContactEmailProps {
+  name: string;
+  email: string;
+  phone?: string;
+  message: string;
+}
+
+export async function sendContactEmail({
+  name,
+  email,
+  phone,
+  message,
+}: ContactEmailProps) {
+  try {
+    const { data, error } = await resend.emails.send({
+      from: ENV.EMAIL_FROM,
+      to: ENV.ADMIN_EMAIL,
+      replyTo: email,
+      subject: `New Contact Form Submission from ${name}`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .header { background-color: #f8f9fa; padding: 20px; border-radius: 8px 8px 0 0; }
+              .content { background-color: white; padding: 30px; border: 1px solid #e9ecef; }
+              .field { margin-bottom: 15px; }
+              .label { font-weight: bold; color: #555; }
+              .value { margin-top: 5px; }
+              .message-box {
+                background-color: #f8f9fa;
+                padding: 15px;
+                border-radius: 5px;
+                margin-top: 10px;
+                white-space: pre-wrap;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1 style="margin: 0; color: #212529;">New Contact Form Submission</h1>
+              </div>
+              <div class="content">
+                <div class="field">
+                  <div class="label">Name:</div>
+                  <div class="value">${name}</div>
+                </div>
+
+                <div class="field">
+                  <div class="label">Email:</div>
+                  <div class="value"><a href="mailto:${email}">${email}</a></div>
+                </div>
+
+                ${
+                  phone
+                    ? `
+                <div class="field">
+                  <div class="label">Phone:</div>
+                  <div class="value"><a href="tel:${phone}">${phone}</a></div>
+                </div>
+                `
+                    : ''
+                }
+
+                <div class="field">
+                  <div class="label">Message:</div>
+                  <div class="message-box">${message}</div>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `,
+      text: `
+        New Contact Form Submission
+
+        Name: ${name}
+        Email: ${email}
+        ${phone ? `Phone: ${phone}` : ''}
+
+        Message:
+        ${message}
+      `,
+    });
+
+    if (error) {
+      console.error('Failed to send contact email:', error);
+      throw new Error('Failed to send contact email');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error sending contact email:', error);
+    throw error;
+  }
+}
