@@ -1,9 +1,16 @@
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default async function Home() {
   return (
-    <div className='flex min-h-screen flex-col items-center justify-center bg-gray-100 px-4'>
+    <div className='flex min-h-screen flex-col items-center justify-center px-4 relative z-10'>
+      <Image
+        src='/realty-comps-frontpage.jpg'
+        alt='RealtyComps Frontpage'
+        fill
+        className='absolute inset-0 -z-10 h-full w-full object-cover opacity-30'
+      />
       <h1 className='mb-6 text-center text-4xl font-bold'>
         Welcome to RealtyComps
       </h1>
