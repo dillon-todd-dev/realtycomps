@@ -1,6 +1,5 @@
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandList,
@@ -11,7 +10,7 @@ import {
   PopoverAnchor,
   PopoverContent,
 } from '@/components/ui/popover';
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -76,29 +75,34 @@ const AutocompleteInput = <T extends string>({
     setOpen(false);
   };
 
+  const showDropdown = open && searchValue.length > 0;
+  const containerRef = useRef<HTMLDivElement>(null);
+
   return (
-    <div className='flex items-center'>
-      <Popover open={open} onOpenChange={setOpen}>
-        <Command shouldFilter={false}>
+    <div ref={containerRef} className='relative w-full'>
+      <Popover open={showDropdown} onOpenChange={setOpen}>
+        <Command shouldFilter={false} className='w-full'>
           <PopoverAnchor asChild>
             <CommandPrimitive.Input
               asChild
               value={searchValue}
               onValueChange={onSearchValueChange}
               onKeyDown={(e) => setOpen(e.key !== 'Escape')}
-              onMouseDown={() => setOpen((open) => !!searchValue || !open)}
+              onMouseDown={() => setOpen(true)}
               onFocus={() => setOpen(true)}
               onBlur={onInputBlur}
             >
               <Input
                 placeholder={placeholder}
-                className='bg-light-600 !important min-h-12 border border-gray-100 p-4 text-base font-semibold placeholder:font-normal placeholder:text-slate-500'
+                className='h-12 w-full border text-base placeholder:text-muted-foreground'
               />
             </CommandPrimitive.Input>
           </PopoverAnchor>
-          {!open && <CommandList aria-hidden='true' className='hidden' />}
+          {!showDropdown && <CommandList aria-hidden='true' className='hidden' />}
           <PopoverContent
             asChild
+            align='start'
+            sideOffset={4}
             onOpenAutoFocus={(e) => e.preventDefault()}
             onInteractOutside={(e) => {
               if (
@@ -108,22 +112,24 @@ const AutocompleteInput = <T extends string>({
                 e.preventDefault();
               }
             }}
-            className='w-full p-0'
+            className='p-0'
+            style={{ width: containerRef.current?.offsetWidth }}
           >
             <CommandList>
               {isLoading && (
-                <div className='justify-content flex h-28 items-center'>
-                  <Loader2 className='size-6 animate-spin' />
+                <div className='flex h-12 items-center justify-center'>
+                  <Loader2 className='h-5 w-5 animate-spin text-muted-foreground' />
                 </div>
               )}
               {items.length > 0 && !isLoading ? (
-                <CommandGroup className='w-full'>
+                <CommandGroup>
                   {items.map((option) => (
                     <CommandItem
                       key={option.value}
                       value={option.value}
                       onMouseDown={(e) => e.preventDefault()}
                       onSelect={onSelectItem}
+                      className='cursor-pointer'
                     >
                       <Check
                         className={cn(
@@ -138,10 +144,10 @@ const AutocompleteInput = <T extends string>({
                   ))}
                 </CommandGroup>
               ) : null}
-              {!isLoading ? (
-                <CommandEmpty className='min-w-full'>
+              {!isLoading && items.length === 0 && searchValue.length > 0 ? (
+                <div className='py-6 text-center text-sm text-muted-foreground'>
                   {emptyMessage}
-                </CommandEmpty>
+                </div>
               ) : null}
             </CommandList>
           </PopoverContent>
