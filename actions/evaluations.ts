@@ -39,6 +39,8 @@ export async function getEvaluation(
           city: true,
           state: true,
           postalCode: true,
+          latitude: true,
+          longitude: true,
         },
       },
       comparables: {

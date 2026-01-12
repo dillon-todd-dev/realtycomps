@@ -129,6 +129,8 @@ export async function getProperty(
       livingArea: propertiesTable.livingArea,
       yearBuilt: propertiesTable.yearBuilt,
       lotSize: propertiesTable.lotSize,
+      latitude: propertiesTable.latitude,
+      longitude: propertiesTable.longitude,
       status: propertiesTable.status,
       userId: propertiesTable.userId,
       createdAt: propertiesTable.createdAt,
@@ -164,6 +166,8 @@ export async function getProperty(
     livingArea: property.livingArea,
     yearBuilt: property.yearBuilt,
     lotSize: property.lotSize,
+    latitude: property.latitude,
+    longitude: property.longitude,
     status: property.status,
     userId: property.userId,
     createdAt: property.createdAt,
@@ -182,13 +186,85 @@ export async function createPropertyAction(
   const city = formData.get('city') as string;
   const state = formData.get('state') as string;
   const postalCode = formData.get('postalCode') as string;
+  const latitudeRaw = formData.get('latitude') as string;
+  const longitudeRaw = formData.get('longitude') as string;
+  const latitude =
+    latitudeRaw && !isNaN(Number(latitudeRaw)) ? latitudeRaw : null;
+  const longitude =
+    longitudeRaw && !isNaN(Number(longitudeRaw)) ? longitudeRaw : null;
+  const manualEntry = formData.get('manualEntry') === 'true';
 
-  const address = `${street}, ${city} ${state} ${postalCode}`;
+  // If manual entry mode, create property with user-provided data
+  if (manualEntry) {
+    const bedrooms = formData.get('bedrooms') as string;
+    const bathrooms = formData.get('bathrooms') as string;
+    const livingArea = formData.get('livingArea') as string;
+    const yearBuilt = formData.get('yearBuilt') as string;
+    const lotSize = formData.get('lotSize') as string;
+
+    try {
+      await db.insert(propertiesTable).values({
+        userId: user.id,
+        address: street,
+        city,
+        state,
+        postalCode,
+        country: 'United States',
+        bedrooms: bedrooms ? parseInt(bedrooms) : null,
+        bathrooms: bathrooms || null,
+        livingArea: livingArea ? parseInt(livingArea) : null,
+        yearBuilt: yearBuilt ? parseInt(yearBuilt) : null,
+        lotSize: lotSize || null,
+        latitude,
+        longitude,
+      });
+
+      return {
+        success: true,
+        message: 'Successfully created property',
+      };
+    } catch (err) {
+      console.error('Error creating property manually', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      return { success: false, error: msg };
+    }
+  }
+
+  // Parse street address to extract street number, street name, and street suffix
+  // Example: "123 Main Street" -> streetNumber: "123", streetName: "Main", streetSuffix: "Street"
+  const streetParts = street.trim().split(' ');
+  const streetNumber = streetParts[0];
+  const streetName =
+    streetParts.length > 2
+      ? streetParts.slice(1, -1).join(' ')
+      : streetParts[1] || '';
+  const streetSuffix =
+    streetParts.length > 2 ? streetParts[streetParts.length - 1] : undefined;
 
   try {
-    const mlsProperty = await findProperty(address);
+    const mlsProperty = await findProperty({
+      streetNumber,
+      streetName,
+      streetSuffix,
+      state,
+    });
+
     if (!mlsProperty) {
-      return { success: false, error: 'Property not found' };
+      // Return notFound state so frontend can show manual entry form
+      return {
+        success: false,
+        notFound: true,
+        addressData: {
+          address: street,
+          city,
+          state,
+          postalCode,
+          latitude: latitude ? Number(latitude) : undefined,
+          longitude: longitude ? Number(longitude) : undefined,
+        },
+        message:
+          'Property not found in MLS database. You can enter the details manually.',
+      };
     }
 
     let propertyAddress = `${mlsProperty.StreetNumber} ${mlsProperty.StreetName} ${mlsProperty.StreetSuffix}`;
@@ -216,6 +292,8 @@ export async function createPropertyAction(
           livingArea: mlsProperty.LivingArea,
           yearBuilt: mlsProperty.YearBuilt,
           lotSize: mlsProperty.LotSizeSquareFeet,
+          latitude: mlsProperty.Latitude?.toString() || latitude,
+          longitude: mlsProperty.Longitude?.toString() || longitude,
         })
         .returning({ id: propertiesTable.id });
 

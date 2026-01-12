@@ -5,12 +5,33 @@ import { ENV } from './env';
 import { SearchComparablesParams } from '@/actions/comparables';
 import { format, subDays } from 'date-fns';
 
-export async function findProperty(address: string) {
+interface FindPropertyParams {
+  streetNumber: string;
+  streetName: string;
+  streetSuffix?: string;
+  state: string;
+}
+
+export async function findProperty({
+  streetNumber,
+  streetName,
+  streetSuffix,
+  state,
+}: FindPropertyParams) {
   try {
+    // Search by street number, street name, and state for better matching
+    // Use contains on StreetName to handle partial matches
+    let filter = `StreetNumber eq '${streetNumber}' and contains(tolower(StreetName), '${streetName.toLowerCase()}') and StateOrProvince eq '${state.toUpperCase()}'`;
+
+    // If street suffix provided, add it to filter
+    if (streetSuffix) {
+      filter += ` and contains(tolower(StreetSuffix), '${streetSuffix.toLowerCase()}')`;
+    }
+
     const response = await axios.get(`${ENV.BRIDGE_ODATA_BASE_URL}/Property`, {
       params: {
         access_token: ENV.BRIDGE_ACCESS_TOKEN,
-        $filter: `tolower(UnparsedAddress) eq '${address.toLowerCase()}'`,
+        $filter: filter,
         $orderby: 'BridgeModificationTimestamp desc',
         $top: 1,
       },
@@ -26,9 +47,15 @@ export async function findProperty(address: string) {
 export async function findSaleComparables(
   searchComparables: SearchComparablesParams,
 ) {
+  // Use latitude/longitude if available, otherwise fall back to address
+  const nearValue =
+    searchComparables.latitude && searchComparables.longitude
+      ? `${searchComparables.longitude},${searchComparables.latitude}`
+      : searchComparables.address;
+
   const query: Record<string, unknown> = {
     access_token: ENV.BRIDGE_ACCESS_TOKEN,
-    near: searchComparables.address,
+    near: nearValue,
     radius: searchComparables.maxRadius,
     sortBy: 'CloseDate',
     order: 'desc',

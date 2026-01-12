@@ -86,6 +86,8 @@ export default function EvaluationDetailView({
           propertyId={evaluation.propertyId}
           initialComparables={saleComps || []}
           propertyAddress={evaluation.property.address}
+          latitude={evaluation.property.latitude}
+          longitude={evaluation.property.longitude}
           title='Sale Comps'
           compType='SALE'
         />
@@ -95,6 +97,8 @@ export default function EvaluationDetailView({
           propertyId={evaluation.propertyId}
           initialComparables={rentComps || []}
           propertyAddress={evaluation.property.address}
+          latitude={evaluation.property.latitude}
+          longitude={evaluation.property.longitude}
           title='Rent Comps'
           compType='RENT'
         />

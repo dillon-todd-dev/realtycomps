@@ -59,6 +59,8 @@ export const propertiesTable = pgTable('properties', {
   livingArea: integer('living_area'),
   yearBuilt: integer('year_built'),
   lotSize: decimal('lot_size', { precision: 10, scale: 2 }), // Lot size in square feet
+  latitude: decimal('latitude', { precision: 10, scale: 7 }),
+  longitude: decimal('longitude', { precision: 10, scale: 7 }),
   status: text('status'),
   userId: uuid('user_id')
     .references(() => usersTable.id)

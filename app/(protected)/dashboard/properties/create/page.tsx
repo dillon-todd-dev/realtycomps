@@ -1,5 +1,4 @@
 import { requireUser } from '@/lib/session';
-import PageHeader from '@/components/page-header';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -10,20 +9,15 @@ export default async function AddPropertyPage() {
 
   return (
     <>
-      <PageHeader
-        title='Add Property'
-        description='Add a new Property'
-        action={
-          <Button variant='outline' asChild>
-            <Link href='/dashboard/properties'>
-              <ArrowLeft className='h-4 w-4 mr-2' />
-              Back to Properties
-            </Link>
-          </Button>
-        }
-      />
-
-      <div className='p-6 flex justify-center'>
+      <div className='flex h-14 items-center border-b bg-background px-6'>
+        <Button variant='ghost' size='sm' asChild>
+          <Link href='/dashboard/properties'>
+            <ArrowLeft className='h-4 w-4 mr-2' />
+            Back to Properties
+          </Link>
+        </Button>
+      </div>
+      <div className='flex justify-center px-6 py-12'>
         <CreatePropertyForm />
       </div>
     </>

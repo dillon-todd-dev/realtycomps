@@ -38,6 +38,8 @@ interface ComparablesProps {
   evaluationId: string;
   propertyId: string;
   propertyAddress: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
   initialComparables?: ComparableWithImages[];
   title: string;
   compType: 'SALE' | 'RENT';
@@ -48,6 +50,8 @@ export default function Comparables({
   propertyId,
   initialComparables = [],
   propertyAddress,
+  latitude,
+  longitude,
   title,
   compType,
 }: ComparablesProps) {
@@ -64,6 +68,8 @@ export default function Comparables({
         evaluationId,
         propertyId,
         address: propertyAddress || '',
+        latitude,
+        longitude,
         maxRadius: Number(formData.get('maxRadius')),
         minBeds: Number(formData.get('minBeds')) || undefined,
         maxBeds: Number(formData.get('maxBeds')) || undefined,

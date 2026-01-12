@@ -62,7 +62,9 @@ export async function getPlaceDetails(placeId: string) {
       },
     );
 
-    const { addressComponents } = response.data;
+    console.log(response.data);
+
+    const { addressComponents, location } = response.data;
 
     let streetNumber = '';
     let street = '';
@@ -98,6 +100,8 @@ export async function getPlaceDetails(placeId: string) {
       city,
       state,
       postalCode,
+      latitude: location.latitude,
+      longitude: location.longitude,
     };
   } catch (err) {
     console.error('Error fetching place details from Google', err);

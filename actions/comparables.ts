@@ -10,6 +10,8 @@ export type SearchComparablesParams = {
   evaluationId: string;
   propertyId: string;
   address: string;
+  latitude?: string | null;
+  longitude?: string | null;
   maxRadius: number;
   minBeds?: number;
   maxBeds?: number;
