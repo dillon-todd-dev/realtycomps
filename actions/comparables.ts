@@ -52,6 +52,7 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
             bathrooms: comp.BathroomsTotalDecimal,
             garageSpaces: comp.GarageSpaces ?? 0,
             yearBuilt: comp.YearBuilt,
+            lotSize: comp.LotSizeSquareFeet,
             squareFootage: comp.LivingArea,
             listPrice: comp.ListPrice,
             salePrice: comp.ClosePrice,

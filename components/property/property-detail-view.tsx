@@ -178,39 +178,17 @@ export default function PropertyDetailView({
         <Card>
           <CardHeader>
             <div className='flex items-start justify-between flex-wrap gap-4'>
-              <div className='space-y-2'>
-                {/* Price */}
-                {price && (
-                  <div className='flex items-center gap-2'>
-                    <div className='text-3xl font-bold'>
-                      ${price.toLocaleString()}
-                    </div>
-                    {property.status && (
-                      <Badge
-                        variant={
-                          property.status === 'active' ? 'default' : 'secondary'
-                        }
-                        className='capitalize'
-                      >
-                        {property.status}
-                      </Badge>
-                    )}
-                  </div>
-                )}
-
-                {/* Address */}
-                {property.address && (
-                  <div className='flex items-center gap-2 text-muted-foreground'>
-                    <MapPin className='h-4 w-4 flex-shrink-0' />
-                    <span>
-                      {property.address}
-                      {property.city && `, ${property.city}`}
-                      {property.state && `, ${property.state}`}
-                      {property.postalCode && ` ${property.postalCode}`}
-                    </span>
-                  </div>
-                )}
-              </div>
+              {property.address && (
+                <div className='flex items-center gap-2 text-muted-foreground'>
+                  <MapPin className='h-4 w-4 flex-shrink-0' />
+                  <span>
+                    {property.address}
+                    {property.city && `, ${property.city}`}
+                    {property.state && `, ${property.state}`}
+                    {property.postalCode && ` ${property.postalCode}`}
+                  </span>
+                </div>
+              )}
             </div>
           </CardHeader>
 

@@ -477,6 +477,16 @@ export default function Comparables({
                       {selectedComparable.squareFootage.toLocaleString()}
                     </div>
                   </div>
+                  {selectedComparable.lotSize && (
+                    <div>
+                      <div className='text-sm text-muted-foreground'>
+                        Lot Size (Sq Ft)
+                      </div>
+                      <div className='text-lg font-semibold'>
+                        {Number(selectedComparable.lotSize).toLocaleString()}
+                      </div>
+                    </div>
+                  )}
                   <div>
                     <div className='text-sm text-muted-foreground'>
                       Year Built
@@ -485,16 +495,12 @@ export default function Comparables({
                       {selectedComparable.yearBuilt}
                     </div>
                   </div>
-                  {selectedComparable.garageSpaces && (
-                    <div>
-                      <div className='text-sm text-muted-foreground'>
-                        Garage
-                      </div>
-                      <div className='text-lg font-semibold'>
-                        {selectedComparable.garageSpaces} spaces
-                      </div>
+                  <div>
+                    <div className='text-sm text-muted-foreground'>Garage</div>
+                    <div className='text-lg font-semibold'>
+                      {selectedComparable.garageSpaces} spaces
                     </div>
-                  )}
+                  </div>
                   <div>
                     <div className='text-sm text-muted-foreground'>
                       Days on Market

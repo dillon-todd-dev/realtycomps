@@ -92,6 +92,6 @@ export type EvaluationListItem = {
 };
 
 export type EvaluationWithRelations = Evaluation & {
-  property: Pick<Property, 'id' | 'address' | 'city' | 'state' | 'postalCode' | 'latitude' | 'longitude'>;
+  property: Property;
   comparables: ComparableWithImages[];
 };

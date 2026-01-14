@@ -6,7 +6,16 @@ import HardMoneyFinancingForm from '@/components/evaluation/forms/hard-money-fin
 import Comparables from '@/components/evaluation/comparables';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { ArrowLeft, Download } from 'lucide-react';
+import {
+  ArrowLeft,
+  Bath,
+  Bed,
+  Calendar,
+  Download,
+  MapPin,
+  Ruler,
+  Square,
+} from 'lucide-react';
 import { EvaluationWithRelations } from '@/lib/types';
 
 interface EvaluationDetailViewProps {
@@ -62,23 +71,105 @@ export default function EvaluationDetailView({
         {/* Property Summary Card */}
         <Card>
           <CardHeader>
-            <div className='flex items-start justify-between'>
-              <div>
-                <CardTitle className='text-2xl'>
-                  {evaluation.property.address || 'Property Address'}
-                </CardTitle>
-                {(evaluation.property.city || evaluation.property.state) && (
-                  <p className='text-muted-foreground mt-1'>
-                    {evaluation.property.city}
+            <div className='flex items-start justify-between flex-wrap gap-4'>
+              {evaluation.property.address && (
+                <div className='flex items-center gap-2 text-muted-foreground'>
+                  <MapPin className='h-4 w-4 flex-shrink-0' />
+                  <span>
+                    {evaluation.property.address}
                     {evaluation.property.city &&
-                      evaluation.property.state &&
-                      ', '}
-                    {evaluation.property.state} {evaluation.property.postalCode}
-                  </p>
-                )}
-              </div>
+                      `, ${evaluation.property.city}`}
+                    {evaluation.property.state &&
+                      `, ${evaluation.property.state}`}
+                    {evaluation.property.postalCode &&
+                      ` ${evaluation.property.postalCode}`}
+                  </span>
+                </div>
+              )}
             </div>
           </CardHeader>
+          <CardContent>
+            {/* Key Features */}
+            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-6'>
+              {evaluation.property.bedrooms && (
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 bg-muted rounded-lg'>
+                    <Bed className='h-5 w-5 text-muted-foreground' />
+                  </div>
+                  <div>
+                    <div className='font-semibold text-lg'>
+                      {evaluation.property.bedrooms}
+                    </div>
+                    <div className='text-sm text-muted-foreground'>
+                      Bedrooms
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {evaluation.property.bathrooms && (
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 bg-muted rounded-lg'>
+                    <Bath className='h-5 w-5 text-muted-foreground' />
+                  </div>
+                  <div>
+                    <div className='font-semibold text-lg'>
+                      {evaluation.property.bathrooms}
+                    </div>
+                    <div className='text-sm text-muted-foreground'>
+                      Bathrooms
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {evaluation.property.livingArea && (
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 bg-muted rounded-lg'>
+                    <Square className='h-5 w-5 text-muted-foreground' />
+                  </div>
+                  <div>
+                    <div className='font-semibold text-lg'>
+                      {evaluation.property.livingArea.toLocaleString()}
+                    </div>
+                    <div className='text-sm text-muted-foreground'>Sq Ft</div>
+                  </div>
+                </div>
+              )}
+
+              {evaluation.property.yearBuilt && (
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 bg-muted rounded-lg'>
+                    <Calendar className='h-5 w-5 text-muted-foreground' />
+                  </div>
+                  <div>
+                    <div className='font-semibold text-lg'>
+                      {evaluation.property.yearBuilt}
+                    </div>
+                    <div className='text-sm text-muted-foreground'>
+                      Year Built
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {evaluation.property.lotSize && (
+                <div className='flex items-center gap-3'>
+                  <div className='p-2 bg-muted rounded-lg'>
+                    <Ruler className='h-5 w-5 text-muted-foreground' />
+                  </div>
+                  <div>
+                    <div className='font-semibold text-lg'>
+                      {Number(evaluation.property.lotSize).toLocaleString()}
+                    </div>
+                    <div className='text-sm text-muted-foreground'>
+                      Lot (sq ft)
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
         </Card>
 
         <Comparables

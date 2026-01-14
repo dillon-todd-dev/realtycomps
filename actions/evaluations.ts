@@ -32,17 +32,7 @@ export async function getEvaluation(
       eq(evaluationsTable.userId, userId),
     ),
     with: {
-      property: {
-        columns: {
-          id: true,
-          address: true,
-          city: true,
-          state: true,
-          postalCode: true,
-          latitude: true,
-          longitude: true,
-        },
-      },
+      property: true,
       comparables: {
         with: {
           images: true,

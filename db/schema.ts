@@ -195,6 +195,7 @@ export const comparablesTable = pgTable('comparables', {
   garageSpaces: integer('garage_spaces').notNull(),
   yearBuilt: integer('year_built').notNull(),
   squareFootage: integer('square_footage').notNull(),
+  lotSize: decimal('lot_size', { precision: 12, scale: 2 }),
   listPrice: decimal('list_price', { precision: 12, scale: 2 }).notNull(),
   salePrice: decimal('sale_price', { precision: 12, scale: 2 }).notNull(),
   closeDate: timestamp('close_date').notNull(),
