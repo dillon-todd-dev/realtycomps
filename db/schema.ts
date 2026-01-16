@@ -4,6 +4,13 @@ import { pgTable, text, timestamp, boolean, uuid } from 'drizzle-orm/pg-core';
 
 export const userRoleEnum = pgEnum('user_role', ['ROLE_USER', 'ROLE_ADMIN']);
 export const comparableTypeEnum = pgEnum('comparable_type', ['SALE', 'RENT']);
+export const documentCategoryEnum = pgEnum('document_category', [
+  'CONTRACT',
+  'DISCLOSURE',
+  'MARKETING',
+  'FINANCIAL',
+  'OTHER',
+]);
 
 export const usersTable = pgTable('users', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -227,9 +234,31 @@ export const comparableImagesTable = pgTable('comparable_images', {
     .notNull(),
 });
 
+export const documentsTable = pgTable('documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull(), // Display name
+  description: text('description'),
+  fileName: text('file_name').notNull(), // Original filename
+  fileType: text('file_type').notNull(), // MIME type (e.g., 'application/pdf')
+  fileSize: integer('file_size').notNull(), // Size in bytes
+  url: text('url').notNull(), // S3/cloud storage URL
+  category: documentCategoryEnum('category').notNull().default('OTHER'),
+  order: integer('order').default(0), // For sorting within category
+  isTemplate: boolean('is_template').default(false).notNull(), // True = admin template, False = user file
+  userId: uuid('user_id').references(() => usersTable.id, { onDelete: 'cascade' }), // null for templates
+  propertyId: uuid('property_id').references(() => propertiesTable.id, { onDelete: 'cascade' }), // null for templates
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const usersRelations = relations(usersTable, ({ one, many }) => ({
   invitation: one(userInvitationsTable),
   properties: many(propertiesTable),
+  documents: many(documentsTable),
 }));
 
 export const userInvitationsRelations = relations(
@@ -251,6 +280,7 @@ export const propertiesRelations = relations(
     }),
     images: many(propertyImagesTable),
     evaluations: many(evaluationsTable),
+    documents: many(documentsTable),
   }),
 );
 
@@ -300,3 +330,14 @@ export const comparableImagesRelations = relations(
     }),
   }),
 );
+
+export const documentsRelations = relations(documentsTable, ({ one }) => ({
+  user: one(usersTable, {
+    fields: [documentsTable.userId],
+    references: [usersTable.id],
+  }),
+  property: one(propertiesTable, {
+    fields: [documentsTable.propertyId],
+    references: [propertiesTable.id],
+  }),
+}));

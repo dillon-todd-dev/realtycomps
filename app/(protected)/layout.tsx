@@ -1,4 +1,6 @@
-import DashboardSidebar from '@/components/dashboard-sidebar';
+import { cookies } from 'next/headers';
+import { AppSidebar } from '@/components/app-sidebar';
+import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import { requireUser } from '@/lib/session';
 
 export default async function DashboardLayout({
@@ -7,18 +9,17 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await requireUser();
+  const cookieStore = await cookies();
+  const defaultOpen = cookieStore.get('sidebar_state')?.value !== 'false';
 
   return (
-    <div className='flex min-h-screen bg-background'>
-      {/* Sidebar */}
-      <DashboardSidebar
+    <SidebarProvider defaultOpen={defaultOpen}>
+      <AppSidebar
         firstName={user.firstName}
         lastName={user.lastName}
         role={user.role}
       />
-
-      {/* Main content - no padding since PageHeader handles the layout */}
-      <main className='flex-1 lg:ml-64'>{children}</main>
-    </div>
+      <SidebarInset>{children}</SidebarInset>
+    </SidebarProvider>
   );
 }

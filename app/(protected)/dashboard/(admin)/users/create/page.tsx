@@ -23,7 +23,7 @@ export default async function CreateUserPage() {
         }
       />
 
-      <div className='p-6 flex justify-center'>
+      <div className="p-4 md:p-6 flex justify-center">
         <CreateUserForm />
       </div>
     </>

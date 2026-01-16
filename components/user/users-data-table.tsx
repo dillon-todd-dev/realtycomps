@@ -34,6 +34,8 @@ import { Loader2, ChevronUp, ChevronDown, Plus } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'sonner';
 import Link from 'next/link';
+import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface UsersDataTableProps {
   userId: string;
@@ -124,31 +126,33 @@ export default function UsersDataTable({
 
   return (
     <>
-      <div className='flex h-14 items-center justify-between border-b bg-background px-6'>
-        <div className='flex flex-col justify-center'>
-          <h1 className='text-lg font-semibold text-foreground'>
-            User Management
-          </h1>
-          <p className='text-xs text-muted-foreground'>
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-10 bg-background">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+
+        <div className="flex flex-col justify-center min-w-0">
+          <h1 className="text-sm font-medium">User Management</h1>
+          <p className="text-xs text-muted-foreground hidden sm:block">
             Manage all of your users here
           </p>
         </div>
-        <div className='flex items-center gap-3'>
+
+        <div className="flex items-center gap-2 ml-auto">
           <Input
-            placeholder='Search users...'
+            placeholder="Search users..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className='min-w-sm'
+            className="w-40 sm:w-64"
           />
           <Button asChild>
-            <Link href='/dashboard/users/create'>
-              <Plus className='h-4 w-4 mr-2' />
-              Add User
+            <Link href="/dashboard/users/create">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add User</span>
             </Link>
           </Button>
         </div>
-      </div>
-      <div className='space-y-6 p-6'>
+      </header>
+      <div className="space-y-6 p-4 md:p-6">
         {/* Table - Much better spacing and layout */}
         <Card>
           <CardContent className='p-0'>

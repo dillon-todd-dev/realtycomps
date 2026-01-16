@@ -14,6 +14,8 @@ export const ENV = createEnv({
     BRIDGE_ODATA_BASE_URL: z.url(),
     BRIDGE_BASE_URL: z.url(),
     GOOGLE_API_KEY: z.string(),
+    GCS_BUCKET_NAME: z.string().min(1, 'GCS_BUCKET_NAME is required'),
+    GCS_KEYFILE: z.string().min(1, 'GCS_KEYFILE is required'),
   },
 
   client: {
@@ -31,6 +33,8 @@ export const ENV = createEnv({
     BRIDGE_ODATA_BASE_URL: process.env.BRIDGE_ODATA_BASE_URL,
     BRIDGE_BASE_URL: process.env.BRIDGE_BASE_URL,
     GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
+    GCS_BUCKET_NAME: process.env.GCS_BUCKET_NAME,
+    GCS_KEYFILE: process.env.GCS_KEYFILE,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_GOOGLE_API_KEY: process.env.NEXT_PUBLIC_GOOGLE_API_KEY,
   },

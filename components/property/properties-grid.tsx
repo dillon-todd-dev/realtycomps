@@ -19,6 +19,8 @@ import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'sonner';
 import Link from 'next/link';
 import PropertyCard from '@/components/property/property-card';
+import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface PropertiesGridProps {
   initialData: {
@@ -73,29 +75,33 @@ export default function PropertiesGrid({
 
   return (
     <>
-      <div className='flex h-14 items-center justify-between border-b bg-background px-6 sticky top-0 z-10'>
-        <div className='flex flex-col justify-center'>
-          <h1 className='text-lg font-semibold text-foreground'>Properties</h1>
-          <p className='text-xs text-muted-foreground'>
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-10 bg-background">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+
+        <div className="flex flex-col justify-center min-w-0">
+          <h1 className="text-sm font-medium">Properties</h1>
+          <p className="text-xs text-muted-foreground hidden sm:block">
             Manage and view your property portfolio
           </p>
         </div>
-        <div className='flex items-center gap-2'>
+
+        <div className="flex items-center gap-2 ml-auto">
           <Input
-            placeholder='Search properties...'
+            placeholder="Search properties..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className='min-w-sm'
+            className="w-40 sm:w-64"
           />
           <Button asChild>
-            <Link href='/dashboard/properties/create'>
-              <Plus className='h-4 w-4 mr-2' />
-              Add Property
+            <Link href="/dashboard/properties/create">
+              <Plus className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Add Property</span>
             </Link>
           </Button>
         </div>
-      </div>
-      <div className='space-y-6 p-6'>
+      </header>
+      <div className="space-y-6 p-4 md:p-6">
         {/* Loading overlay */}
         {isPending && (
           <div className='flex items-center justify-center py-12'>
@@ -107,28 +113,28 @@ export default function PropertiesGrid({
         {!isPending && (
           <>
             {properties.length > 0 ? (
-              <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 {properties.map((property) => (
                   <PropertyCard key={property.id} property={property} />
                 ))}
               </div>
             ) : (
-              <Card>
-                <CardContent className='py-12'>
-                  <div className='text-center'>
-                    <Home className='mx-auto h-12 w-12 text-muted-foreground' />
-                    <h3 className='mt-4 text-lg font-semibold'>
+              <Card className="p-0">
+                <CardContent className="py-12">
+                  <div className="text-center">
+                    <Home className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <h3 className="mt-4 text-lg font-semibold">
                       No properties found
                     </h3>
-                    <p className='text-muted-foreground'>
+                    <p className="text-muted-foreground">
                       {search
                         ? 'Try adjusting your search or filters'
                         : 'Get started by adding your first property'}
                     </p>
                     {!search && (
-                      <Button asChild className='mt-4'>
-                        <Link href='/dashboard/properties/create'>
-                          <Plus className='h-4 w-4 mr-2' />
+                      <Button asChild className="mt-4">
+                        <Link href="/dashboard/properties/create">
+                          <Plus className="h-4 w-4 mr-2" />
                           Add Property
                         </Link>
                       </Button>
@@ -140,13 +146,13 @@ export default function PropertiesGrid({
 
             {/* Pagination */}
             {pageCount > 1 && (
-              <Card>
-                <CardContent className='py-4'>
-                  <div className='flex flex-col sm:flex-row items-center justify-between gap-4'>
-                    <div className='text-sm text-muted-foreground'>
+              <Card className="p-0">
+                <CardContent className="py-4">
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-sm text-muted-foreground">
                       Showing{' '}
-                      <span className='font-medium'>{properties.length}</span>{' '}
-                      of <span className='font-medium'>{totalCount}</span>{' '}
+                      <span className="font-medium">{properties.length}</span>{' '}
+                      of <span className="font-medium">{totalCount}</span>{' '}
                       properties
                     </div>
 

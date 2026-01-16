@@ -1,6 +1,5 @@
 'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import DealTermsForm from '@/components/evaluation/forms/deal-terms-form';
 import HardMoneyFinancingForm from '@/components/evaluation/forms/hard-money-financing-form';
 import Comparables from '@/components/evaluation/comparables';
@@ -17,6 +16,8 @@ import {
   Square,
 } from 'lucide-react';
 import { EvaluationWithRelations } from '@/lib/types';
+import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface EvaluationDetailViewProps {
   evaluation: EvaluationWithRelations;
@@ -31,147 +32,115 @@ export default function EvaluationDetailView({
   const rentComps = evaluation.comparables.filter(
     (comp) => comp.type === 'RENT',
   );
+
   const handleExportClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     window.print();
   };
 
+  const fullAddress = [
+    evaluation.property.address,
+    evaluation.property.city,
+    evaluation.property.state,
+    evaluation.property.postalCode,
+  ]
+    .filter(Boolean)
+    .join(', ');
+
+  const bathrooms = evaluation.property.bathrooms
+    ? parseFloat(evaluation.property.bathrooms)
+    : null;
+  const lotSize = evaluation.property.lotSize
+    ? Number(evaluation.property.lotSize)
+    : null;
+
   return (
     <>
-      <div className='flex h-14 items-center justify-between border-b bg-background px-6 sticky top-0 z-10'>
-        <div className='flex flex-col justify-center'>
-          <h1 className='text-lg font-semibold text-foreground'>
-            Investment Evaluation
-          </h1>
-          <p className='text-xs text-muted-foreground'>{`Analysis for ${
-            evaluation.property.address || 'property'
-          }`}</p>
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b px-4 sticky top-0 z-10 bg-background">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+
+        <div className="flex flex-col justify-center min-w-0 flex-1">
+          <h1 className="text-sm font-medium truncate">Investment Evaluation</h1>
+          <p className="text-xs text-muted-foreground truncate hidden sm:block">
+            {evaluation.property.address || 'Property Analysis'}
+          </p>
         </div>
-        <div className='flex items-center gap-3'>
+
+        <div className="flex items-center gap-2 shrink-0">
           <Button
-            variant='outline'
-            size='sm'
+            variant="outline"
+            size="sm"
             onClick={handleExportClick}
-            className='shrink-0'
-            title='Export to PDF'
+            title="Export to PDF"
           >
-            <Download className='h-4 w-4 md:mr-2' />
-            <span className='hidden md:inline'>Export PDF</span>
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export PDF</span>
           </Button>
-          <Button variant='outline' asChild>
+          <Button variant="outline" size="sm" asChild>
             <Link href={`/dashboard/properties/${evaluation.property.id}`}>
-              <ArrowLeft className='h-4 w-4 mr-2' />
-              Back to Property
+              <ArrowLeft className="h-4 w-4 sm:mr-2" />
+              <span className="hidden sm:inline">Back</span>
             </Link>
           </Button>
         </div>
-      </div>
-      <div className='space-y-6 p-6'>
-        {/* Property Summary Card */}
-        <Card>
-          <CardHeader>
-            <div className='flex items-start justify-between flex-wrap gap-4'>
-              {evaluation.property.address && (
-                <div className='flex items-center gap-2 text-muted-foreground'>
-                  <MapPin className='h-4 w-4 flex-shrink-0' />
-                  <span>
-                    {evaluation.property.address}
-                    {evaluation.property.city &&
-                      `, ${evaluation.property.city}`}
-                    {evaluation.property.state &&
-                      `, ${evaluation.property.state}`}
-                    {evaluation.property.postalCode &&
-                      ` ${evaluation.property.postalCode}`}
-                  </span>
-                </div>
-              )}
+      </header>
+
+      <div className="p-4 md:p-6 space-y-8">
+        {/* Property Summary - No card, just clean display */}
+        <div className="space-y-4">
+          {fullAddress && (
+            <div className="flex items-start gap-2 text-muted-foreground">
+              <MapPin className="h-5 w-5 shrink-0 mt-0.5" />
+              <span className="text-lg">{fullAddress}</span>
             </div>
-          </CardHeader>
-          <CardContent>
-            {/* Key Features */}
-            <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-6'>
-              {evaluation.property.bedrooms && (
-                <div className='flex items-center gap-3'>
-                  <div className='p-2 bg-muted rounded-lg'>
-                    <Bed className='h-5 w-5 text-muted-foreground' />
-                  </div>
-                  <div>
-                    <div className='font-semibold text-lg'>
-                      {evaluation.property.bedrooms}
-                    </div>
-                    <div className='text-sm text-muted-foreground'>
-                      Bedrooms
-                    </div>
-                  </div>
-                </div>
-              )}
+          )}
 
-              {evaluation.property.bathrooms && (
-                <div className='flex items-center gap-3'>
-                  <div className='p-2 bg-muted rounded-lg'>
-                    <Bath className='h-5 w-5 text-muted-foreground' />
-                  </div>
-                  <div>
-                    <div className='font-semibold text-lg'>
-                      {evaluation.property.bathrooms}
-                    </div>
-                    <div className='text-sm text-muted-foreground'>
-                      Bathrooms
-                    </div>
-                  </div>
-                </div>
-              )}
+          <div className="flex flex-wrap gap-3">
+            {evaluation.property.bedrooms && (
+              <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-full">
+                <Bed className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{evaluation.property.bedrooms}</span>
+                <span className="text-muted-foreground">beds</span>
+              </div>
+            )}
+            {bathrooms && (
+              <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-full">
+                <Bath className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{bathrooms}</span>
+                <span className="text-muted-foreground">baths</span>
+              </div>
+            )}
+            {evaluation.property.livingArea && (
+              <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-full">
+                <Square className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">
+                  {evaluation.property.livingArea.toLocaleString()}
+                </span>
+                <span className="text-muted-foreground">sqft</span>
+              </div>
+            )}
+            {evaluation.property.yearBuilt && (
+              <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-full">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <span className="text-muted-foreground">Built</span>
+                <span className="font-medium">{evaluation.property.yearBuilt}</span>
+              </div>
+            )}
+            {lotSize && (
+              <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-full">
+                <Ruler className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{lotSize.toLocaleString()}</span>
+                <span className="text-muted-foreground">sqft lot</span>
+              </div>
+            )}
+          </div>
+        </div>
 
-              {evaluation.property.livingArea && (
-                <div className='flex items-center gap-3'>
-                  <div className='p-2 bg-muted rounded-lg'>
-                    <Square className='h-5 w-5 text-muted-foreground' />
-                  </div>
-                  <div>
-                    <div className='font-semibold text-lg'>
-                      {evaluation.property.livingArea.toLocaleString()}
-                    </div>
-                    <div className='text-sm text-muted-foreground'>Sq Ft</div>
-                  </div>
-                </div>
-              )}
+        <Separator />
 
-              {evaluation.property.yearBuilt && (
-                <div className='flex items-center gap-3'>
-                  <div className='p-2 bg-muted rounded-lg'>
-                    <Calendar className='h-5 w-5 text-muted-foreground' />
-                  </div>
-                  <div>
-                    <div className='font-semibold text-lg'>
-                      {evaluation.property.yearBuilt}
-                    </div>
-                    <div className='text-sm text-muted-foreground'>
-                      Year Built
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {evaluation.property.lotSize && (
-                <div className='flex items-center gap-3'>
-                  <div className='p-2 bg-muted rounded-lg'>
-                    <Ruler className='h-5 w-5 text-muted-foreground' />
-                  </div>
-                  <div>
-                    <div className='font-semibold text-lg'>
-                      {Number(evaluation.property.lotSize).toLocaleString()}
-                    </div>
-                    <div className='text-sm text-muted-foreground'>
-                      Lot (sq ft)
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
+        {/* Sale Comps */}
         <Comparables
           evaluationId={evaluation.id}
           propertyId={evaluation.propertyId}
@@ -179,10 +148,13 @@ export default function EvaluationDetailView({
           propertyAddress={evaluation.property.address}
           latitude={evaluation.property.latitude}
           longitude={evaluation.property.longitude}
-          title='Sale Comps'
-          compType='SALE'
+          title="Sale Comps"
+          compType="SALE"
         />
 
+        <Separator />
+
+        {/* Rent Comps */}
         <Comparables
           evaluationId={evaluation.id}
           propertyId={evaluation.propertyId}
@@ -190,23 +162,19 @@ export default function EvaluationDetailView({
           propertyAddress={evaluation.property.address}
           latitude={evaluation.property.latitude}
           longitude={evaluation.property.longitude}
-          title='Rent Comps'
-          compType='RENT'
+          title="Rent Comps"
+          compType="RENT"
         />
 
+        <Separator />
+
+        {/* Deal Terms */}
         <DealTermsForm evaluation={evaluation} />
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Financing Analysis</CardTitle>
-            <p className='text-sm text-muted-foreground mt-1'>
-              Choose your financing strategy to see detailed calculations
-            </p>
-          </CardHeader>
-          <CardContent>
-            <HardMoneyFinancingForm evaluation={evaluation} />
-          </CardContent>
-        </Card>
+        <Separator />
+
+        {/* Financing Analysis */}
+        <HardMoneyFinancingForm evaluation={evaluation} />
       </div>
     </>
   );

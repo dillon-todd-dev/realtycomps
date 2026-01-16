@@ -9,6 +9,7 @@ import {
   evaluationsTable,
   comparablesTable,
   comparableImagesTable,
+  documentsTable,
 } from '@/db/schema';
 
 // Extract types from tables
@@ -32,6 +33,10 @@ export type ComparableImage = InferSelectModel<typeof comparableImagesTable>;
 export type ComparableWithImages = Comparable & {
   images: ComparableImage[];
 };
+
+export type Document = InferSelectModel<typeof documentsTable>;
+export type NewDocument = InferInsertModel<typeof documentsTable>;
+export type DocumentCategory = Document['category'];
 
 // You can also create custom types by extending the base types
 export type PropertyWithImages = Property & {
