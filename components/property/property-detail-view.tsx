@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   Trash,
   Home,
+  Pencil,
 } from 'lucide-react';
 import Image from 'next/image';
 import { useState, useEffect } from 'react';
@@ -32,6 +33,7 @@ import { deleteProperty } from '@/actions/properties';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import PropertyDocumentsSection from '@/components/documents/property-documents-section';
+import EditPropertyModal from '@/components/property/edit-property-modal';
 
 interface PropertyDetailViewProps {
   property: PropertyWithImages;
@@ -47,6 +49,7 @@ export default function PropertyDetailView({
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const images = property.images || [];
 
   useEffect(() => {
@@ -94,6 +97,14 @@ export default function PropertyDetailView({
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditModalOpen(true)}
+          >
+            <Pencil className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">Edit</span>
+          </Button>
           <Button
             variant="destructive"
             size="sm"
@@ -237,6 +248,12 @@ export default function PropertyDetailView({
               <span className="text-muted-foreground">sqft lot</span>
             </div>
           )}
+          {property.subdivision && (
+            <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-full">
+              <Home className="h-4 w-4 text-muted-foreground" />
+              <span className="font-medium">{property.subdivision}</span>
+            </div>
+          )}
         </div>
 
         <Separator />
@@ -298,6 +315,12 @@ export default function PropertyDetailView({
         {/* Property Documents */}
         <PropertyDocumentsSection documents={documents} property={property} />
       </div>
+
+      <EditPropertyModal
+        property={property}
+        open={editModalOpen}
+        onOpenChange={setEditModalOpen}
+      />
     </>
   );
 }

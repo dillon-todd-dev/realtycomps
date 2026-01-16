@@ -11,6 +11,7 @@ import {
   Bed,
   Calendar,
   Download,
+  Home,
   MapPin,
   Ruler,
   Square,
@@ -133,6 +134,12 @@ export default function EvaluationDetailView({
                 <Ruler className="h-4 w-4 text-muted-foreground" />
                 <span className="font-medium">{lotSize.toLocaleString()}</span>
                 <span className="text-muted-foreground">sqft lot</span>
+              </div>
+            )}
+            {evaluation.property.subdivision && (
+              <div className="flex items-center gap-2 bg-muted px-4 py-2 rounded-full">
+                <Home className="h-4 w-4 text-muted-foreground" />
+                <span className="font-medium">{evaluation.property.subdivision}</span>
               </div>
             )}
           </div>

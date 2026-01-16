@@ -29,6 +29,7 @@ interface ManualFormData {
   livingArea: string;
   yearBuilt: string;
   lotSize: string;
+  subdivision: string;
 }
 
 export default function CreatePropertyForm() {
@@ -57,6 +58,7 @@ export default function CreatePropertyForm() {
     livingArea: '',
     yearBuilt: '',
     lotSize: '',
+    subdivision: '',
   });
   const [showManualEntry, setShowManualEntry] = useState(false);
   const debouncedSearchValue = useDebounce(searchValue);
@@ -113,6 +115,7 @@ export default function CreatePropertyForm() {
       livingArea: '',
       yearBuilt: '',
       lotSize: '',
+      subdivision: '',
     });
     setSearchValue('');
     setSelectedValue('');
@@ -239,7 +242,7 @@ export default function CreatePropertyForm() {
                   />
                 </div>
 
-                <div className='space-y-2 sm:col-span-2'>
+                <div className='space-y-2'>
                   <Label htmlFor='lotSize'>Lot Size (sq ft)</Label>
                   <SelectInput
                     type='number'
@@ -251,6 +254,23 @@ export default function CreatePropertyForm() {
                       setManualFormData((prev) => ({
                         ...prev,
                         lotSize: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+
+                <div className='space-y-2'>
+                  <Label htmlFor='subdivision'>Subdivision</Label>
+                  <SelectInput
+                    type='text'
+                    name='subdivision'
+                    id='subdivision'
+                    placeholder='Oak Hills'
+                    value={manualFormData.subdivision}
+                    onChange={(e) =>
+                      setManualFormData((prev) => ({
+                        ...prev,
+                        subdivision: e.target.value,
                       }))
                     }
                   />

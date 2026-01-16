@@ -54,6 +54,7 @@ export const propertiesTable = pgTable('properties', {
   state: text('state'),
   postalCode: text('postal_code'),
   country: text('country').default('United States'),
+  subdivision: text('subdivision'),
   originalListPrice: decimal('original_list_price', {
     precision: 12,
     scale: 2,

@@ -120,6 +120,7 @@ export async function getProperty(
       state: propertiesTable.state,
       postalCode: propertiesTable.postalCode,
       country: propertiesTable.country,
+      subdivision: propertiesTable.subdivision,
       originalListPrice: propertiesTable.originalListPrice,
       closePrice: propertiesTable.closePrice,
       currentPrice: propertiesTable.currentPrice,
@@ -157,6 +158,7 @@ export async function getProperty(
     state: property.state,
     postalCode: property.postalCode,
     country: property.country,
+    subdivision: property.subdivision,
     originalListPrice: property.originalListPrice,
     currentPrice: property.currentPrice,
     closePrice: property.closePrice,
@@ -201,6 +203,7 @@ export async function createPropertyAction(
     const livingArea = formData.get('livingArea') as string;
     const yearBuilt = formData.get('yearBuilt') as string;
     const lotSize = formData.get('lotSize') as string;
+    const subdivision = formData.get('subdivision') as string;
 
     try {
       await db.insert(propertiesTable).values({
@@ -210,6 +213,7 @@ export async function createPropertyAction(
         state,
         postalCode,
         country: 'United States',
+        subdivision: subdivision || null,
         bedrooms: bedrooms ? parseInt(bedrooms) : null,
         bathrooms: bathrooms || null,
         livingArea: livingArea ? parseInt(livingArea) : null,
@@ -282,6 +286,7 @@ export async function createPropertyAction(
           state: mlsProperty.StateOrProvince,
           postalCode: mlsProperty.PostalCode,
           country: mlsProperty.Country,
+          subdivision: mlsProperty.SubdivisionName || null,
           originalListPrice: mlsProperty.OriginalListPrice,
           currentPrice: mlsProperty.CurrentPrice,
           closePrice: mlsProperty.ClosePrice,
@@ -320,6 +325,59 @@ export async function createPropertyAction(
     const msg = err instanceof Error ? err.message : String(err);
     return { success: false, error: msg };
   }
+}
+
+export async function updateProperty(
+  propertyId: string,
+  data: {
+    address?: string;
+    city?: string;
+    state?: string;
+    postalCode?: string;
+    subdivision?: string;
+    bedrooms?: number | null;
+    bathrooms?: string | null;
+    livingArea?: number | null;
+    yearBuilt?: number | null;
+    lotSize?: string | null;
+  },
+) {
+  const user = await requireUser();
+
+  // Verify the user owns this property or is admin
+  const [property] = await db
+    .select()
+    .from(propertiesTable)
+    .where(eq(propertiesTable.id, propertyId))
+    .limit(1);
+
+  if (!property) {
+    throw new Error('Property not found');
+  }
+
+  if (property.userId !== user.id && user.role !== 'ROLE_ADMIN') {
+    throw new Error('Not authorized to update this property');
+  }
+
+  await db
+    .update(propertiesTable)
+    .set({
+      address: data.address,
+      city: data.city,
+      state: data.state,
+      postalCode: data.postalCode,
+      subdivision: data.subdivision,
+      bedrooms: data.bedrooms,
+      bathrooms: data.bathrooms,
+      livingArea: data.livingArea,
+      yearBuilt: data.yearBuilt,
+      lotSize: data.lotSize,
+      updatedAt: new Date(),
+    })
+    .where(eq(propertiesTable.id, propertyId));
+
+  revalidatePath(`/dashboard/properties/${propertyId}`);
+  revalidatePath('/dashboard/properties');
 }
 
 export async function deleteProperty(propertyId: string) {

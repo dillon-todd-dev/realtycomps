@@ -35,7 +35,6 @@ import { ComparableWithImages } from '@/lib/types';
 import {
   Collapsible,
   CollapsibleContent,
-  CollapsibleTrigger,
 } from '@/components/ui/collapsible';
 
 interface ComparablesProps {
@@ -129,7 +128,22 @@ export default function Comparables({
     return `$${parseFloat(value).toLocaleString()}`;
   };
 
-  const includedCount = comparables.filter((c) => c.included).length;
+  const includedComps = comparables.filter((c) => c.included);
+  const includedCount = includedComps.length;
+
+  // Calculate averages for included comps
+  const averages = includedCount > 0
+    ? {
+        avgPrice:
+          includedComps.reduce((sum, c) => sum + parseFloat(c.salePrice), 0) /
+          includedCount,
+        avgPricePerSqFt:
+          includedComps.reduce(
+            (sum, c) => sum + parseFloat(c.salePrice) / c.squareFootage,
+            0,
+          ) / includedCount,
+      }
+    : null;
 
   return (
     <>
@@ -421,6 +435,34 @@ export default function Comparables({
                   ))}
                 </TableBody>
               </Table>
+            </div>
+          </div>
+        )}
+
+        {/* Averages Display */}
+        {averages && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <div className="text-sm text-muted-foreground">
+                Avg {compType === 'SALE' ? 'Sale' : 'Rent'} Price
+              </div>
+              <div className="text-2xl font-bold">
+                ${averages.avgPrice.toLocaleString(undefined, {
+                  minimumFractionDigits: 0,
+                  maximumFractionDigits: 0,
+                })}
+              </div>
+            </div>
+            <div className="p-4 bg-muted/50 rounded-lg">
+              <div className="text-sm text-muted-foreground">
+                Avg Price / Sq Ft
+              </div>
+              <div className="text-2xl font-bold">
+                ${averages.avgPricePerSqFt.toLocaleString(undefined, {
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                })}
+              </div>
             </div>
           </div>
         )}
