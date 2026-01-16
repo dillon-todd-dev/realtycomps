@@ -1,5 +1,21 @@
 import { Storage } from '@google-cloud/storage';
 import { ENV } from '@/lib/env';
+import { mkdtemp, writeFile } from 'fs/promises';
+import path from 'path';
+import { tmpdir } from 'os';
+
+async function createTempKeyFile() {
+  const tmpDir = await mkdtemp(path.join(tmpdir(), 'gcs-key'));
+  const keyFilePath = path.join(tmpDir, 'gcs-keyfile.json');
+  await writeFile(
+    keyFilePath,
+    JSON.stringify(JSON.parse(ENV.GCS_KEYFILE)),
+    'utf-8',
+  );
+  process.env.GOOGLE_APPLICATION_CREDENTIALS = keyFilePath;
+}
+
+createTempKeyFile();
 
 // Initialize Google Cloud Storage
 const storage = new Storage();
