@@ -303,9 +303,91 @@ export default function Comparables({
           </CollapsibleContent>
         </Collapsible>
 
-        {/* Results Table */}
+        {/* Results - Mobile Card View */}
         {comparables.length > 0 && (
-          <div className="border rounded-lg overflow-hidden">
+          <div className="space-y-3 md:hidden">
+            {comparables.map((comp) => (
+              <div
+                key={comp.id}
+                className={`rounded-lg border bg-card p-4 transition-all ${
+                  !comp.included ? 'opacity-50' : ''
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={comp.included}
+                    onCheckedChange={() =>
+                      handleToggleInclude(comp.id, comp.included)
+                    }
+                    className="mt-1"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-2">
+                      <p
+                        className={`font-medium text-sm ${
+                          !comp.included ? 'line-through' : ''
+                        }`}
+                      >
+                        {comp.address}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 shrink-0"
+                        onClick={() => handleViewDetails(comp)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {comp.subdivision && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {comp.subdivision}
+                      </p>
+                    )}
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+                      <span>{comp.bedrooms} bed</span>
+                      <span>{parseFloat(comp.bathrooms)} bath</span>
+                      <span>{comp.squareFootage.toLocaleString()} sqft</span>
+                      <span>Built {comp.yearBuilt}</span>
+                    </div>
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t">
+                      <div>
+                        <p className="text-xs text-muted-foreground">Listed</p>
+                        <p
+                          className={`font-semibold ${
+                            !comp.included ? 'line-through' : ''
+                          }`}
+                        >
+                          {formatCurrency(comp.listPrice)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Sold</p>
+                        <p
+                          className={`font-semibold ${
+                            !comp.included ? 'line-through' : ''
+                          }`}
+                        >
+                          {formatCurrency(comp.salePrice)}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground">Closed</p>
+                        <p className="text-sm">
+                          {new Date(comp.closeDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Results - Desktop Table View */}
+        {comparables.length > 0 && (
+          <div className="hidden md:block border rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -326,7 +408,7 @@ export default function Comparables({
                     <TableHead className="text-right w-24">Sq Ft</TableHead>
                     <TableHead className="text-center w-28">Listed</TableHead>
                     <TableHead className="text-center w-28">Sold</TableHead>
-                    <TableHead className="hidden md:table-cell text-center w-28">
+                    <TableHead className="text-center w-28">
                       Close Date
                     </TableHead>
                     <TableHead className="w-12"></TableHead>
@@ -416,7 +498,7 @@ export default function Comparables({
                         {formatCurrency(comp.salePrice)}
                       </TableCell>
                       <TableCell
-                        className={`hidden md:table-cell text-center ${
+                        className={`text-center ${
                           !comp.included ? 'line-through' : ''
                         }`}
                       >
