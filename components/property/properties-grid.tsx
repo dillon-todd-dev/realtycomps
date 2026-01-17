@@ -119,29 +119,27 @@ export default function PropertiesGrid({
                 ))}
               </div>
             ) : (
-              <Card className="p-0">
-                <CardContent className="py-12">
-                  <div className="text-center">
-                    <Home className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">
-                      No properties found
-                    </h3>
-                    <p className="text-muted-foreground">
-                      {search
-                        ? 'Try adjusting your search or filters'
-                        : 'Get started by adding your first property'}
-                    </p>
-                    {!search && (
-                      <Button asChild className="mt-4">
-                        <Link href="/dashboard/properties/create">
-                          <Plus className="h-4 w-4 mr-2" />
-                          Add Property
-                        </Link>
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+              <div className="flex flex-col items-center justify-center py-16 md:py-24">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-muted">
+                  <Home className="h-10 w-10 text-muted-foreground" />
+                </div>
+                <h3 className="mt-6 text-xl font-semibold">
+                  {search ? 'No properties found' : 'No properties yet'}
+                </h3>
+                <p className="mt-2 text-center text-muted-foreground max-w-sm">
+                  {search
+                    ? 'Try adjusting your search terms'
+                    : 'Add your first property to start tracking your real estate portfolio'}
+                </p>
+                {!search && (
+                  <Button asChild className="mt-6" size="lg">
+                    <Link href="/dashboard/properties/create">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Your First Property
+                    </Link>
+                  </Button>
+                )}
+              </div>
             )}
 
             {/* Pagination */}

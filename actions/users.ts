@@ -129,12 +129,54 @@ export async function updateUserStatus(userId: string, isActive: boolean) {
   try {
     await db
       .update(usersTable)
-      .set({ isActive })
+      .set({ isActive, updatedAt: new Date() })
       .where(eq(usersTable.id, userId));
 
-    revalidatePath('/users');
+    revalidatePath('/dashboard/users');
   } catch (err) {
-    console.error('Error deactivating user', err);
+    console.error('Error updating user status', err);
+    throw err;
+  }
+}
+
+export async function updateUser(
+  userId: string,
+  data: {
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    role?: 'ROLE_USER' | 'ROLE_ADMIN';
+  }
+) {
+  try {
+    await db
+      .update(usersTable)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(usersTable.id, userId));
+
+    revalidatePath('/dashboard/users');
+  } catch (err) {
+    console.error('Error updating user', err);
+    throw err;
+  }
+}
+
+export async function deleteUser(userId: string) {
+  try {
+    // Delete user invitations first (foreign key constraint)
+    await db
+      .delete(userInvitationsTable)
+      .where(eq(userInvitationsTable.userId, userId));
+
+    // Delete the user
+    await db.delete(usersTable).where(eq(usersTable.id, userId));
+
+    revalidatePath('/dashboard/users');
+  } catch (err) {
+    console.error('Error deleting user', err);
     throw err;
   }
 }
