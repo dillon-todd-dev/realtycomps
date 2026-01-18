@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   FileText,
-  Building2,
+  Home,
   Users,
   UserCheck,
   LogOut,
@@ -60,7 +60,7 @@ const navItems: NavItem[] = [
   {
     href: '/dashboard/properties',
     label: 'Properties',
-    icon: Building2,
+    icon: Home,
     roles: ['ROLE_USER', 'ROLE_ADMIN'],
   },
   {
@@ -115,7 +115,7 @@ export function AppSidebar({
 
   return (
     <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b">
+      <SidebarHeader className="h-14 border-b justify-center">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
@@ -125,7 +125,7 @@ export function AppSidebar({
             >
               <Link href="/dashboard" onClick={handleNavClick}>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <Building2 className="size-4" />
+                  <Home className="size-4" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">RealtyComps</span>
