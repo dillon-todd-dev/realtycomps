@@ -28,6 +28,17 @@ export function PublicNavbar() {
             Home
           </Link>
           <Link
+            href='/projects'
+            className={cn(
+              'text-sm font-medium transition-colors hover:text-foreground',
+              pathname === '/projects'
+                ? 'text-foreground'
+                : 'text-muted-foreground'
+            )}
+          >
+            Recent Projects
+          </Link>
+          <Link
             href='/contact'
             className={cn(
               'text-sm font-medium transition-colors hover:text-foreground',
@@ -52,6 +63,17 @@ export function PublicNavbar() {
               )}
             >
               Home
+            </Link>
+            <Link
+              href='/projects'
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-foreground',
+                pathname === '/projects'
+                  ? 'text-foreground'
+                  : 'text-muted-foreground'
+              )}
+            >
+              Projects
             </Link>
             <Link
               href='/contact'
