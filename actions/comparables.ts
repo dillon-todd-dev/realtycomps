@@ -38,10 +38,15 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
           ),
         );
 
+      // Filter out comparables without square footage
+      const validComparables = comparables.filter(
+        (comp: any) => comp.LivingArea != null && comp.LivingArea > 0
+      );
+
       // Insert comparables one by one to get their IDs
       const insertedComparables = [];
 
-      for (const comp of comparables) {
+      for (const comp of validComparables) {
         const [insertedComp] = await tx
           .insert(comparablesTable)
           .values({
@@ -51,8 +56,8 @@ export async function searchSaleComparables(params: SearchComparablesParams) {
             bedrooms: comp.BedroomsTotal,
             bathrooms: comp.BathroomsTotalDecimal,
             garageSpaces: comp.GarageSpaces ?? 0,
-            yearBuilt: comp.YearBuilt,
-            lotSize: comp.LotSizeSquareFeet,
+            yearBuilt: comp.YearBuilt ?? 0,
+            lotSize: comp.LotSizeSquareFeet ?? 0,
             squareFootage: comp.LivingArea,
             listPrice: comp.ListPrice,
             salePrice: comp.ClosePrice,

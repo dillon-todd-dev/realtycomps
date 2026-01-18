@@ -10,6 +10,7 @@ import {
   LogOut,
   Settings,
   ChevronUp,
+  FolderOpen,
 } from 'lucide-react';
 
 import {
@@ -62,6 +63,12 @@ const navItems: NavItem[] = [
     label: 'Properties',
     icon: Home,
     roles: ['ROLE_USER', 'ROLE_ADMIN'],
+  },
+  {
+    href: '/dashboard/projects',
+    label: 'Projects',
+    icon: FolderOpen,
+    roles: ['ROLE_ADMIN'],
   },
   {
     href: '/dashboard/users',

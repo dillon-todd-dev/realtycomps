@@ -342,3 +342,48 @@ export const documentsRelations = relations(documentsTable, ({ one }) => ({
     references: [propertiesTable.id],
   }),
 }));
+
+// Projects (for public Recent Projects page)
+export const projectsTable = pgTable('projects', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  title: text('title').notNull(),
+  description: text('description').notNull(),
+  isPublished: boolean('is_published').default(true).notNull(),
+  order: integer('order').default(0).notNull(),
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const projectImagesTable = pgTable('project_images', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  url: text('url').notNull(),
+  alt: text('alt'),
+  order: integer('order').default(0).notNull(),
+  projectId: uuid('project_id')
+    .references(() => projectsTable.id, { onDelete: 'cascade' })
+    .notNull(),
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const projectsRelations = relations(projectsTable, ({ many }) => ({
+  images: many(projectImagesTable),
+}));
+
+export const projectImagesRelations = relations(
+  projectImagesTable,
+  ({ one }) => ({
+    project: one(projectsTable, {
+      fields: [projectImagesTable.projectId],
+      references: [projectsTable.id],
+    }),
+  }),
+);
