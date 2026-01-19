@@ -9,12 +9,10 @@ export default async function Home() {
         {/* Content */}
         <div className='flex flex-col justify-center text-center lg:text-left'>
           <h1 className='mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl'>
-            Welcome to ResourceRealty
+            Welcome to <span className='whitespace-nowrap'>Resource Realty</span>
           </h1>
           <p className='text-muted-foreground mb-8 text-base sm:text-lg'>
-            Your ultimate platform for real estate property evaluation and
-            management. Analyze properties, find comparables, and make informed
-            investment decisions.
+            Resource Realty services all aspects of real estate
           </p>
           <div className='flex justify-center gap-4 lg:justify-start'>
             <Button asChild size='lg'>
