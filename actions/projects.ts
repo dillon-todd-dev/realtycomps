@@ -97,7 +97,9 @@ export async function createProject(formData: FormData) {
   try {
     // Get the highest order value to place new project at the end
     const maxOrder = await db
-      .select({ maxOrder: sql<number>`COALESCE(MAX(${projectsTable.order}), -1)` })
+      .select({
+        maxOrder: sql<number>`COALESCE(MAX(${projectsTable.order}), -1)`,
+      })
       .from(projectsTable)
       .then((result) => result[0].maxOrder);
 
@@ -231,7 +233,9 @@ export async function deleteProjectImage(imageId: string) {
     }
 
     // Delete from DB
-    await db.delete(projectImagesTable).where(eq(projectImagesTable.id, imageId));
+    await db
+      .delete(projectImagesTable)
+      .where(eq(projectImagesTable.id, imageId));
 
     revalidatePath('/projects');
     revalidatePath(`/projects/${image.projectId}`);
@@ -245,7 +249,10 @@ export async function deleteProjectImage(imageId: string) {
 /**
  * Reorder project images
  */
-export async function reorderProjectImages(projectId: string, imageIds: string[]) {
+export async function reorderProjectImages(
+  projectId: string,
+  imageIds: string[],
+) {
   try {
     await db.transaction(async (tx) => {
       for (let i = 0; i < imageIds.length; i++) {

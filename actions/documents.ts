@@ -50,16 +50,13 @@ export async function getTemplates(): Promise<Document[]> {
 export async function getTemplatesByCategory(): Promise<DocumentsByCategory[]> {
   const templates = await getTemplates();
 
-  const grouped = templates.reduce(
-    (acc, doc) => {
-      if (!acc[doc.category]) {
-        acc[doc.category] = [];
-      }
-      acc[doc.category].push(doc);
-      return acc;
-    },
-    {} as Record<DocumentCategory, Document[]>,
-  );
+  const grouped = templates.reduce((acc, doc) => {
+    if (!acc[doc.category]) {
+      acc[doc.category] = [];
+    }
+    acc[doc.category].push(doc);
+    return acc;
+  }, {} as Record<DocumentCategory, Document[]>);
 
   return categoryOrder
     .filter((category) => grouped[category]?.length > 0)
@@ -79,7 +76,10 @@ export async function getUserDocuments(
       property: propertiesTable,
     })
     .from(documentsTable)
-    .innerJoin(propertiesTable, eq(documentsTable.propertyId, propertiesTable.id))
+    .innerJoin(
+      propertiesTable,
+      eq(documentsTable.propertyId, propertiesTable.id),
+    )
     .where(
       and(
         eq(documentsTable.userId, userId),
@@ -89,26 +89,25 @@ export async function getUserDocuments(
     .orderBy(desc(propertiesTable.createdAt), desc(documentsTable.createdAt));
 
   // Group by property
-  const grouped = userDocs.reduce(
-    (acc, { document, property }) => {
-      const propertyId = property.id;
-      if (!acc[propertyId]) {
-        acc[propertyId] = {
-          property,
-          documents: [],
-        };
-      }
-      acc[propertyId].documents.push(document);
-      return acc;
-    },
-    {} as Record<string, UserDocumentsByProperty>,
-  );
+  const grouped = userDocs.reduce((acc, { document, property }) => {
+    const propertyId = property.id;
+    if (!acc[propertyId]) {
+      acc[propertyId] = {
+        property,
+        documents: [],
+      };
+    }
+    acc[propertyId].documents.push(document);
+    return acc;
+  }, {} as Record<string, UserDocumentsByProperty>);
 
   return Object.values(grouped);
 }
 
 // Get all user documents (admin only)
-export async function getAllUserDocuments(): Promise<DocumentWithPropertyAndUser[]> {
+export async function getAllUserDocuments(): Promise<
+  DocumentWithPropertyAndUser[]
+> {
   await requireAdmin();
 
   const docs = await db
@@ -118,7 +117,10 @@ export async function getAllUserDocuments(): Promise<DocumentWithPropertyAndUser
       user: usersTable,
     })
     .from(documentsTable)
-    .leftJoin(propertiesTable, eq(documentsTable.propertyId, propertiesTable.id))
+    .leftJoin(
+      propertiesTable,
+      eq(documentsTable.propertyId, propertiesTable.id),
+    )
     .leftJoin(usersTable, eq(documentsTable.userId, usersTable.id))
     .where(eq(documentsTable.isTemplate, false))
     .orderBy(desc(documentsTable.createdAt));
