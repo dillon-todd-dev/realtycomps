@@ -62,8 +62,6 @@ export async function getPlaceDetails(placeId: string) {
       },
     );
 
-    console.log(response.data);
-
     const { addressComponents, location } = response.data;
 
     let streetNumber = '';
@@ -108,5 +106,3 @@ export async function getPlaceDetails(placeId: string) {
     throw err;
   }
 }
-
-autocomplete('17375 Merigold');

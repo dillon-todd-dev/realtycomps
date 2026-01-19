@@ -55,8 +55,11 @@ const AutocompleteInput = <T extends string>({
   };
 
   const onInputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    // Only reset if focus moved to another element on the page (not when switching tabs/apps)
+    // When switching tabs/apps, relatedTarget is null
     if (
-      !e.relatedTarget?.hasAttribute('cmdk-list') &&
+      e.relatedTarget &&
+      !e.relatedTarget.hasAttribute('cmdk-list') &&
       labels[selectedValue] !== searchValue
     ) {
       reset();
