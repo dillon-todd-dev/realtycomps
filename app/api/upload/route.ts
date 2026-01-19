@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { decrypt } from '@/lib/session';
 import { db } from '@/db/drizzle';
-import { documentsTable, usersTable } from '@/db/schema';
+import { documentsTable, usersTable, templateCategoriesTable } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { uploadFile } from '@/lib/gcs';
 import path from 'path';
@@ -63,7 +63,8 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null;
     const name = formData.get('name') as string;
     const description = formData.get('description') as string | null;
-    const category = formData.get('category') as string;
+    const category = formData.get('category') as string | null;
+    const categoryId = formData.get('categoryId') as string | null; // For templates with dynamic categories
     const isTemplate = formData.get('isTemplate') === 'true';
     const propertyId = formData.get('propertyId') as string | null;
 
@@ -75,18 +76,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 });
     }
 
-    if (!category) {
-      return NextResponse.json(
-        { error: 'Category is required' },
-        { status: 400 },
-      );
-    }
-
     // Only admins can create templates
     if (isTemplate && user.role !== 'ROLE_ADMIN') {
       return NextResponse.json(
         { error: 'Only admins can create templates' },
         { status: 403 },
+      );
+    }
+
+    // Templates require categoryId (dynamic categories)
+    if (isTemplate && !categoryId) {
+      return NextResponse.json(
+        { error: 'Category is required for templates' },
+        { status: 400 },
+      );
+    }
+
+    // User documents require category (enum)
+    if (!isTemplate && !category) {
+      return NextResponse.json(
+        { error: 'Category is required' },
+        { status: 400 },
       );
     }
 
@@ -96,6 +106,19 @@ export async function POST(request: NextRequest) {
         { error: 'Property ID is required for user files' },
         { status: 400 },
       );
+    }
+
+    // Validate categoryId exists for templates
+    if (isTemplate && categoryId) {
+      const categoryExists = await db.query.templateCategoriesTable.findFirst({
+        where: eq(templateCategoriesTable.id, categoryId),
+      });
+      if (!categoryExists) {
+        return NextResponse.json(
+          { error: 'Invalid category' },
+          { status: 400 },
+        );
+      }
     }
 
     // Validate file size
@@ -147,12 +170,16 @@ export async function POST(request: NextRequest) {
         fileType: file.type,
         fileSize: file.size,
         url: gcsPath, // Store GCS path instead of public URL
-        category: category as
-          | 'CONTRACT'
-          | 'DISCLOSURE'
-          | 'MARKETING'
-          | 'FINANCIAL'
-          | 'OTHER',
+        // For templates, use categoryId; for user docs, use category enum
+        category: isTemplate
+          ? 'OTHER'
+          : (category as
+              | 'CONTRACT'
+              | 'DISCLOSURE'
+              | 'MARKETING'
+              | 'FINANCIAL'
+              | 'OTHER'),
+        categoryId: isTemplate ? categoryId : null,
         isTemplate,
         userId: isTemplate ? null : user.id,
         propertyId: isTemplate ? null : propertyId,

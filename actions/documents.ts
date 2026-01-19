@@ -1,15 +1,28 @@
 'use server';
 
 import { db } from '@/db/drizzle';
-import { documentsTable, propertiesTable, usersTable } from '@/db/schema';
-import { eq, and, asc, desc } from 'drizzle-orm';
+import {
+  documentsTable,
+  propertiesTable,
+  usersTable,
+  templateCategoriesTable,
+} from '@/db/schema';
+import { eq, and, asc, desc, isNotNull } from 'drizzle-orm';
 import { Document, DocumentCategory, Property, User } from '@/lib/types';
 import { requireUser, requireAdmin } from '@/lib/session';
 import { revalidatePath } from 'next/cache';
 import { deleteFile, extractGcsPath } from '@/lib/gcs';
 
+export type TemplateCategory = typeof templateCategoriesTable.$inferSelect;
+
 export type DocumentsByCategory = {
   category: DocumentCategory;
+  documents: Document[];
+};
+
+// New type for dynamic categories
+export type TemplatesByCategory = {
+  category: TemplateCategory;
   documents: Document[];
 };
 
@@ -46,7 +59,7 @@ export async function getTemplates(): Promise<Document[]> {
   return templates;
 }
 
-// Get templates grouped by category
+// Get templates grouped by category (legacy - uses enum categories)
 export async function getTemplatesByCategory(): Promise<DocumentsByCategory[]> {
   const templates = await getTemplates();
 
@@ -64,6 +77,48 @@ export async function getTemplatesByCategory(): Promise<DocumentsByCategory[]> {
       category,
       documents: grouped[category],
     }));
+}
+
+// Get templates grouped by dynamic categories (new - uses categoryId)
+export async function getTemplatesByDynamicCategory(): Promise<
+  TemplatesByCategory[]
+> {
+  // First get all categories
+  const categories = await db.query.templateCategoriesTable.findMany({
+    orderBy: [asc(templateCategoriesTable.order)],
+  });
+
+  // Get all templates with categoryId
+  const templates = await db
+    .select()
+    .from(documentsTable)
+    .where(
+      and(
+        eq(documentsTable.isTemplate, true),
+        isNotNull(documentsTable.categoryId),
+      ),
+    )
+    .orderBy(asc(documentsTable.order));
+
+  // Group templates by categoryId
+  const templatesByCategory = templates.reduce(
+    (acc, doc) => {
+      if (doc.categoryId) {
+        if (!acc[doc.categoryId]) {
+          acc[doc.categoryId] = [];
+        }
+        acc[doc.categoryId].push(doc);
+      }
+      return acc;
+    },
+    {} as Record<string, Document[]>,
+  );
+
+  // Map categories to include their templates
+  return categories.map((category) => ({
+    category,
+    documents: templatesByCategory[category.id] || [],
+  }));
 }
 
 // Get user's documents grouped by property

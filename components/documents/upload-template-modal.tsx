@@ -12,32 +12,24 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Upload, Loader2, FileUp, X, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 
-const CATEGORIES = [
-  { value: 'CONTRACT', label: 'Contracts & Agreements' },
-  { value: 'DISCLOSURE', label: 'Disclosures' },
-  { value: 'MARKETING', label: 'Marketing Materials' },
-  { value: 'FINANCIAL', label: 'Financial Documents' },
-  { value: 'OTHER', label: 'Other' },
-];
+interface UploadTemplateModalProps {
+  categoryId: string;
+  categoryName: string;
+}
 
-export default function UploadTemplateModal() {
+export default function UploadTemplateModal({
+  categoryId,
+  categoryName,
+}: UploadTemplateModalProps) {
   const [open, setOpen] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('OTHER');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
@@ -45,7 +37,6 @@ export default function UploadTemplateModal() {
     setFile(null);
     setName('');
     setDescription('');
-    setCategory('OTHER');
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -95,7 +86,7 @@ export default function UploadTemplateModal() {
       formData.append('file', file);
       formData.append('name', name);
       formData.append('description', description);
-      formData.append('category', category);
+      formData.append('categoryId', categoryId);
       formData.append('isTemplate', 'true');
 
       const response = await fetch('/api/upload', {
@@ -125,7 +116,7 @@ export default function UploadTemplateModal() {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
+        <Button size="sm">
           <Plus className="h-4 w-4 mr-2" />
           Add Template
         </Button>
@@ -134,7 +125,7 @@ export default function UploadTemplateModal() {
         <DialogHeader>
           <DialogTitle>Upload Template</DialogTitle>
           <DialogDescription>
-            Upload a new template document for all users
+            Add a template to &quot;{categoryName}&quot;
           </DialogDescription>
         </DialogHeader>
 
@@ -211,23 +202,6 @@ export default function UploadTemplateModal() {
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Brief description of the template"
             />
-          </div>
-
-          {/* Category */}
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Select value={category} onValueChange={setCategory}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
-              </SelectTrigger>
-              <SelectContent>
-                {CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>
-                    {cat.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           {/* Submit */}

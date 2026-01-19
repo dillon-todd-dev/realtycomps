@@ -1,12 +1,11 @@
 import { requireUser } from '@/lib/session';
 import PageHeader from '@/components/page-header';
 import {
-  getTemplatesByCategory,
+  getTemplatesByDynamicCategory,
   getUserDocuments,
   getAllUserDocuments,
   getUserProperties,
 } from '@/actions/documents';
-import { getCategoryLabel } from '@/lib/document-utils';
 import { FileText, Settings, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -20,7 +19,7 @@ export default async function DocumentsPage() {
 
   const [templatesByCategory, userDocsByProperty, userProperties] =
     await Promise.all([
-      getTemplatesByCategory(),
+      getTemplatesByDynamicCategory(),
       getUserDocuments(user.id),
       getUserProperties(),
     ]);
@@ -52,7 +51,8 @@ export default async function DocumentsPage() {
             <h2 className="text-lg font-semibold">Templates</h2>
           </div>
 
-          {templatesByCategory.length === 0 ? (
+          {templatesByCategory.length === 0 ||
+          templatesByCategory.every((tc) => tc.documents.length === 0) ? (
             <div className="text-center py-8 border rounded-lg bg-muted/50">
               <FileText className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
               <p className="text-sm text-muted-foreground">
@@ -61,18 +61,20 @@ export default async function DocumentsPage() {
             </div>
           ) : (
             <div className="space-y-6">
-              {templatesByCategory.map(({ category, documents }) => (
-                <div key={category}>
-                  <h3 className="text-sm font-medium text-muted-foreground mb-3">
-                    {getCategoryLabel(category)}
-                  </h3>
-                  <div className="grid gap-3">
-                    {documents.map((doc) => (
-                      <DocumentListItem key={doc.id} document={doc} />
-                    ))}
+              {templatesByCategory
+                .filter((tc) => tc.documents.length > 0)
+                .map(({ category, documents }) => (
+                  <div key={category.id}>
+                    <h3 className="text-sm font-medium text-muted-foreground mb-3">
+                      {category.name}
+                    </h3>
+                    <div className="grid gap-3">
+                      {documents.map((doc) => (
+                        <DocumentListItem key={doc.id} document={doc} />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </section>

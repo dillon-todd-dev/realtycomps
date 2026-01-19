@@ -235,6 +235,19 @@ export const comparableImagesTable = pgTable('comparable_images', {
     .notNull(),
 });
 
+// Template categories (admin-defined)
+export const templateCategoriesTable = pgTable('template_categories', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: text('name').notNull().unique(),
+  order: integer('order').default(0).notNull(),
+  createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp('updated_at', { mode: 'date', withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const documentsTable = pgTable('documents', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(), // Display name
@@ -243,7 +256,8 @@ export const documentsTable = pgTable('documents', {
   fileType: text('file_type').notNull(), // MIME type (e.g., 'application/pdf')
   fileSize: integer('file_size').notNull(), // Size in bytes
   url: text('url').notNull(), // S3/cloud storage URL
-  category: documentCategoryEnum('category').notNull().default('OTHER'),
+  category: documentCategoryEnum('category').notNull().default('OTHER'), // For user documents
+  categoryId: uuid('category_id').references(() => templateCategoriesTable.id, { onDelete: 'set null' }), // For templates
   order: integer('order').default(0), // For sorting within category
   isTemplate: boolean('is_template').default(false).notNull(), // True = admin template, False = user file
   userId: uuid('user_id').references(() => usersTable.id, { onDelete: 'cascade' }), // null for templates
@@ -332,6 +346,13 @@ export const comparableImagesRelations = relations(
   }),
 );
 
+export const templateCategoriesRelations = relations(
+  templateCategoriesTable,
+  ({ many }) => ({
+    documents: many(documentsTable),
+  }),
+);
+
 export const documentsRelations = relations(documentsTable, ({ one }) => ({
   user: one(usersTable, {
     fields: [documentsTable.userId],
@@ -340,6 +361,10 @@ export const documentsRelations = relations(documentsTable, ({ one }) => ({
   property: one(propertiesTable, {
     fields: [documentsTable.propertyId],
     references: [propertiesTable.id],
+  }),
+  templateCategory: one(templateCategoriesTable, {
+    fields: [documentsTable.categoryId],
+    references: [templateCategoriesTable.id],
   }),
 }));
 
