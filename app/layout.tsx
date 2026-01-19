@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'RealtyComps',
+  title: 'Resource Realty',
   description:
     'Your ultimate platform for real estate property evaluation and management. Analyze properties, find comparables, and make informed investment decisions.',
 };
