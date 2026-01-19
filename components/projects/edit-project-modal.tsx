@@ -19,7 +19,15 @@ import {
   getProjectImageUrl,
 } from '@/actions/projects';
 import { toast } from 'sonner';
-import { Loader2, X, Upload, ImageIcon, Star, ChevronLeft, ChevronRight } from 'lucide-react';
+import {
+  Loader2,
+  X,
+  Upload,
+  ImageIcon,
+  Star,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import Image from 'next/image';
 
 interface PendingImage {
@@ -49,10 +57,12 @@ export default function EditProjectModal({
     description: project.description,
   });
   // Existing images from the database (ordered locally)
-  const [existingImages, setExistingImages] = useState<ExistingImage[]>(project.images);
+  const [existingImages, setExistingImages] = useState<ExistingImage[]>(
+    project.images,
+  );
   // Original order to detect changes
   const [originalImageOrder, setOriginalImageOrder] = useState<string[]>(
-    project.images.map((img) => img.id)
+    project.images.map((img) => img.id),
   );
   // IDs of existing images marked for deletion
   const [imagesToDelete, setImagesToDelete] = useState<Set<string>>(new Set());
@@ -103,7 +113,7 @@ export default function EditProjectModal({
       .filter((img) => !imagesToDelete.has(img.id))
       .map((img) => img.id);
     const originalFiltered = originalImageOrder.filter(
-      (id) => !imagesToDelete.has(id)
+      (id) => !imagesToDelete.has(id),
     );
     if (currentOrder.length !== originalFiltered.length) return true;
     return currentOrder.some((id, index) => id !== originalFiltered[index]);
@@ -113,32 +123,46 @@ export default function EditProjectModal({
     e.preventDefault();
     setIsSubmitting(true);
 
+    let uploadErrors = 0;
+
     try {
       // 1. Update project details
       await updateProject(project.id, {
         title: formData.title,
         description: formData.description,
       });
+    } catch (error) {
+      console.error('Failed to update project details:', error);
+      toast.error('Failed to update project details');
+      setIsSubmitting(false);
+      return;
+    }
 
-      // 2. Delete images that were marked for deletion
-      for (const imageId of imagesToDelete) {
-        try {
-          await deleteProjectImage(imageId);
-        } catch (error) {
-          console.error('Failed to delete image:', error);
-        }
+    // 2. Delete images that were marked for deletion
+    for (const imageId of imagesToDelete) {
+      try {
+        await deleteProjectImage(imageId);
+      } catch (error) {
+        console.error('Failed to delete image:', error);
       }
+    }
 
-      // 3. Reorder existing images if order changed
-      if (hasOrderChanged()) {
+    // 3. Reorder existing images if order changed
+    if (hasOrderChanged()) {
+      try {
         const newOrder = existingImages
           .filter((img) => !imagesToDelete.has(img.id))
           .map((img) => img.id);
         await reorderProjectImages(project.id, newOrder);
+      } catch (error) {
+        console.error('Failed to reorder images:', error);
+        // Continue anyway, reordering is not critical
       }
+    }
 
-      // 4. Upload new images
-      for (const pendingImage of pendingImages) {
+    // 4. Upload new images
+    for (const pendingImage of pendingImages) {
+      try {
         const uploadData = new FormData();
         uploadData.append('file', pendingImage.file);
         uploadData.append('projectId', project.id);
@@ -151,21 +175,28 @@ export default function EditProjectModal({
         if (!response.ok) {
           const error = await response.json();
           console.error('Failed to upload image:', error);
+          uploadErrors++;
         }
+      } catch (error) {
+        console.error('Failed to upload image:', error);
+        uploadErrors++;
       }
-
-      // Clean up previews
-      pendingImages.forEach((img) => URL.revokeObjectURL(img.preview));
-
-      toast.success('Project updated');
-      onOpenChange(false);
-      onSuccess();
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to update project');
-    } finally {
-      setIsSubmitting(false);
     }
+
+    // Clean up previews
+    pendingImages.forEach((img) => URL.revokeObjectURL(img.preview));
+
+    if (uploadErrors > 0) {
+      toast.error(
+        `Failed to upload ${uploadErrors} image${uploadErrors > 1 ? 's' : ''}`,
+      );
+    } else {
+      toast.success('Project updated');
+    }
+
+    onOpenChange(false);
+    onSuccess();
+    setIsSubmitting(false);
   };
 
   const handleMarkForDeletion = (imageId: string) => {
@@ -181,14 +212,20 @@ export default function EditProjectModal({
   };
 
   const handleMoveExistingImage = (fromIndex: number, toIndex: number) => {
-    const visibleImages = existingImages.filter((img) => !imagesToDelete.has(img.id));
+    const visibleImages = existingImages.filter(
+      (img) => !imagesToDelete.has(img.id),
+    );
     if (toIndex < 0 || toIndex >= visibleImages.length) return;
 
     // Get the actual indices in the full array
     const fromImage = visibleImages[fromIndex];
     const toImage = visibleImages[toIndex];
-    const actualFromIndex = existingImages.findIndex((img) => img.id === fromImage.id);
-    const actualToIndex = existingImages.findIndex((img) => img.id === toImage.id);
+    const actualFromIndex = existingImages.findIndex(
+      (img) => img.id === fromImage.id,
+    );
+    const actualToIndex = existingImages.findIndex(
+      (img) => img.id === toImage.id,
+    );
 
     setExistingImages((prev) => {
       const newImages = [...prev];
@@ -242,7 +279,7 @@ export default function EditProjectModal({
 
   // Calculate visible images (existing minus deleted)
   const visibleExistingImages = existingImages.filter(
-    (img) => !imagesToDelete.has(img.id)
+    (img) => !imagesToDelete.has(img.id),
   );
   const totalImageCount = visibleExistingImages.length + pendingImages.length;
   const hasChanges =
@@ -254,16 +291,16 @@ export default function EditProjectModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className='max-w-2xl max-h-[90vh] overflow-y-auto'>
         <DialogHeader>
           <DialogTitle>Edit Project</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+        <form onSubmit={handleSubmit} className='space-y-6'>
+          <div className='space-y-2'>
+            <Label htmlFor='title'>Title</Label>
             <Input
-              id="title"
+              id='title'
               value={formData.title}
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, title: e.target.value }))
@@ -272,13 +309,16 @@ export default function EditProjectModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+          <div className='space-y-2'>
+            <Label htmlFor='description'>Description</Label>
             <Textarea
-              id="description"
+              id='description'
               value={formData.description}
               onChange={(e) =>
-                setFormData((prev) => ({ ...prev, description: e.target.value }))
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
               }
               rows={3}
               required
@@ -286,32 +326,32 @@ export default function EditProjectModal({
           </div>
 
           {/* Images Section */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
+          <div className='space-y-3'>
+            <div className='flex items-center justify-between'>
               <Label>Images ({totalImageCount})</Label>
               <Button
-                type="button"
-                variant="outline"
-                size="sm"
+                type='button'
+                variant='outline'
+                size='sm'
                 onClick={() => fileInputRef.current?.click()}
               >
-                <Upload className="h-4 w-4 mr-2" />
+                <Upload className='h-4 w-4 mr-2' />
                 Add Images
               </Button>
               <input
                 ref={fileInputRef}
-                type="file"
-                accept="image/jpeg,image/png,image/gif,image/webp"
+                type='file'
+                accept='image/jpeg,image/png,image/gif,image/webp'
                 multiple
                 onChange={handleFileSelect}
-                className="hidden"
+                className='hidden'
               />
             </div>
 
             {totalImageCount === 0 ? (
-              <div className="border border-dashed rounded-lg p-8 text-center">
-                <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                <p className="text-sm text-muted-foreground">
+              <div className='border border-dashed rounded-lg p-8 text-center'>
+                <ImageIcon className='h-8 w-8 mx-auto text-muted-foreground mb-2' />
+                <p className='text-sm text-muted-foreground'>
                   No images yet. Click &quot;Add Images&quot; to upload.
                 </p>
               </div>
@@ -319,11 +359,11 @@ export default function EditProjectModal({
               <>
                 {/* Existing Images */}
                 {visibleExistingImages.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
+                  <div className='space-y-2'>
+                    <p className='text-xs text-muted-foreground'>
                       Current images (hover to reorder)
                     </p>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    <div className='grid grid-cols-3 sm:grid-cols-4 gap-3'>
                       {visibleExistingImages.map((image, index) => (
                         <div
                           key={image.id}
@@ -338,54 +378,56 @@ export default function EditProjectModal({
                               src={imageUrls[image.id]}
                               alt={image.alt || 'Project image'}
                               fill
-                              className="object-cover"
-                              sizes="(max-width: 640px) 33vw, 25vw"
+                              className='object-cover'
+                              sizes='(max-width: 640px) 33vw, 25vw'
                             />
                           ) : (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                            <div className='absolute inset-0 flex items-center justify-center'>
+                              <Loader2 className='h-4 w-4 animate-spin text-muted-foreground' />
                             </div>
                           )}
                           {index === 0 && (
-                            <div className="absolute top-1 left-1 p-1 rounded-full bg-primary text-primary-foreground">
-                              <Star className="h-3 w-3 fill-current" />
+                            <div className='absolute top-1 left-1 p-1 rounded-full bg-primary text-primary-foreground'>
+                              <Star className='h-3 w-3 fill-current' />
                             </div>
                           )}
                           {/* Reorder controls - always visible */}
                           {visibleExistingImages.length > 1 && (
-                            <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-2">
+                            <div className='absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-2'>
                               <button
-                                type="button"
+                                type='button'
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleMoveExistingImage(index, index - 1);
                                 }}
                                 disabled={index === 0}
-                                className="p-1.5 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="Move left"
+                                className='p-1.5 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
+                                title='Move left'
                               >
-                                <ChevronLeft className="h-4 w-4" />
+                                <ChevronLeft className='h-4 w-4' />
                               </button>
                               <button
-                                type="button"
+                                type='button'
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleMoveExistingImage(index, index + 1);
                                 }}
-                                disabled={index === visibleExistingImages.length - 1}
-                                className="p-1.5 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="Move right"
+                                disabled={
+                                  index === visibleExistingImages.length - 1
+                                }
+                                className='p-1.5 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
+                                title='Move right'
                               >
-                                <ChevronRight className="h-4 w-4" />
+                                <ChevronRight className='h-4 w-4' />
                               </button>
                             </div>
                           )}
                           <button
-                            type="button"
+                            type='button'
                             onClick={() => handleMarkForDeletion(image.id)}
-                            className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                            className='absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity'
                           >
-                            <X className="h-3 w-3" />
+                            <X className='h-3 w-3' />
                           </button>
                         </div>
                       ))}
@@ -395,57 +437,57 @@ export default function EditProjectModal({
 
                 {/* Pending Images */}
                 {pendingImages.length > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
+                  <div className='space-y-2'>
+                    <p className='text-xs text-muted-foreground'>
                       New images (will be uploaded on save)
                     </p>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
+                    <div className='grid grid-cols-3 sm:grid-cols-4 gap-3'>
                       {pendingImages.map((image, index) => (
                         <div
                           key={image.id}
-                          className="relative group aspect-square rounded-lg overflow-hidden bg-muted border-2 border-dashed border-primary/50"
+                          className='relative group aspect-square rounded-lg overflow-hidden bg-muted border-2 border-dashed border-primary/50'
                         >
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={image.preview}
                             alt={`New image ${index + 1}`}
-                            className="w-full h-full object-cover"
+                            className='w-full h-full object-cover'
                           />
                           {/* Reorder controls - always visible */}
                           {pendingImages.length > 1 && (
-                            <div className="absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-2">
+                            <div className='absolute inset-x-0 bottom-0 p-1.5 bg-gradient-to-t from-black/70 to-transparent flex items-center justify-center gap-2'>
                               <button
-                                type="button"
+                                type='button'
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleMovePendingImage(index, index - 1);
                                 }}
                                 disabled={index === 0}
-                                className="p-1.5 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="Move left"
+                                className='p-1.5 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
+                                title='Move left'
                               >
-                                <ChevronLeft className="h-4 w-4" />
+                                <ChevronLeft className='h-4 w-4' />
                               </button>
                               <button
-                                type="button"
+                                type='button'
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   handleMovePendingImage(index, index + 1);
                                 }}
                                 disabled={index === pendingImages.length - 1}
-                                className="p-1.5 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-                                title="Move right"
+                                className='p-1.5 rounded-full bg-white/20 text-white hover:bg-white/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors'
+                                title='Move right'
                               >
-                                <ChevronRight className="h-4 w-4" />
+                                <ChevronRight className='h-4 w-4' />
                               </button>
                             </div>
                           )}
                           <button
-                            type="button"
+                            type='button'
                             onClick={() => handleRemovePendingImage(image.id)}
-                            className="absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                            className='absolute top-1 right-1 p-1 rounded-full bg-destructive text-destructive-foreground opacity-0 group-hover:opacity-100 transition-opacity'
                           >
-                            <X className="h-3 w-3" />
+                            <X className='h-3 w-3' />
                           </button>
                         </div>
                       ))}
@@ -455,32 +497,32 @@ export default function EditProjectModal({
 
                 {/* Deleted images that can be restored */}
                 {imagesToDelete.size > 0 && (
-                  <div className="space-y-2">
-                    <p className="text-xs text-muted-foreground">
+                  <div className='space-y-2'>
+                    <p className='text-xs text-muted-foreground'>
                       Images to delete (click to restore)
                     </p>
-                    <div className="flex flex-wrap gap-2">
+                    <div className='flex flex-wrap gap-2'>
                       {existingImages
                         .filter((img) => imagesToDelete.has(img.id))
                         .map((image) => (
                           <button
                             key={image.id}
-                            type="button"
+                            type='button'
                             onClick={() => handleUndoDeletion(image.id)}
-                            className="relative w-12 h-12 rounded opacity-50 hover:opacity-75 transition-opacity overflow-hidden"
+                            className='relative w-12 h-12 rounded opacity-50 hover:opacity-75 transition-opacity overflow-hidden'
                           >
                             {imageUrls[image.id] ? (
                               <Image
                                 src={imageUrls[image.id]}
-                                alt="Deleted image"
+                                alt='Deleted image'
                                 fill
-                                className="object-cover"
-                                sizes="48px"
+                                className='object-cover'
+                                sizes='48px'
                               />
                             ) : (
-                              <div className="w-full h-full bg-muted" />
+                              <div className='w-full h-full bg-muted' />
                             )}
-                            <div className="absolute inset-0 bg-destructive/30" />
+                            <div className='absolute inset-0 bg-destructive/30' />
                           </button>
                         ))}
                     </div>
@@ -488,8 +530,8 @@ export default function EditProjectModal({
                 )}
 
                 {visibleExistingImages.length > 0 && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Star className="h-3 w-3" />
+                  <p className='text-xs text-muted-foreground flex items-center gap-1'>
+                    <Star className='h-3 w-3' />
                     First image is the thumbnail
                   </p>
                 )}
@@ -497,19 +539,19 @@ export default function EditProjectModal({
             )}
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
+          <div className='flex justify-end gap-3 pt-4'>
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={() => onOpenChange(false)}
               disabled={isSubmitting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting || !hasChanges}>
+            <Button type='submit' disabled={isSubmitting || !hasChanges}>
               {isSubmitting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className='h-4 w-4 mr-2 animate-spin' />
                   Saving...
                 </>
               ) : (
