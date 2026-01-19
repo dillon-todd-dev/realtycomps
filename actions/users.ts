@@ -21,10 +21,12 @@ export async function createUserByAdmin(state: unknown, formData: FormData) {
     };
   }
 
+  const normalizedEmail = email.toLowerCase();
+
   try {
     await db.transaction(async (tx) => {
       const existingUser = await tx.query.usersTable.findFirst({
-        where: eq(usersTable.email, email),
+        where: eq(usersTable.email, normalizedEmail),
       });
 
       if (existingUser) {
@@ -34,7 +36,7 @@ export async function createUserByAdmin(state: unknown, formData: FormData) {
       const [newUser] = await tx
         .insert(usersTable)
         .values({
-          email,
+          email: normalizedEmail,
           firstName,
           lastName,
           role: role || 'ROLE_USER',
@@ -149,12 +151,15 @@ export async function updateUser(
   }
 ) {
   try {
+    const updateData = {
+      ...data,
+      ...(data.email && { email: data.email.toLowerCase() }),
+      updatedAt: new Date(),
+    };
+
     await db
       .update(usersTable)
-      .set({
-        ...data,
-        updatedAt: new Date(),
-      })
+      .set(updateData)
       .where(eq(usersTable.id, userId));
 
     revalidatePath('/dashboard/users');

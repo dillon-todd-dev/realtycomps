@@ -40,3 +40,25 @@ export type ContactFormState =
       message?: string;
     }
   | undefined;
+
+export const UpdateProfileSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+});
+
+export const UpdateEmailSchema = z.object({
+  email: z.email({ message: 'Valid email is required' }).trim(),
+});
+
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z
+      .string()
+      .min(8, 'Password must be at least 8 characters'),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });

@@ -24,10 +24,11 @@ export async function login(
   }
 
   const { email, password } = validatedFields.data;
+  const normalizedEmail = email.toLowerCase();
 
   const user = await db.query.usersTable.findFirst({
     where: and(
-      eq(usersTable.email, email),
+      eq(usersTable.email, normalizedEmail),
       eq(usersTable.hasSetPassword, true),
       eq(usersTable.isActive, true)
     ),
