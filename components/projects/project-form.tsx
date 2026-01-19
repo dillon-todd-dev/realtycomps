@@ -165,14 +165,14 @@ export default function ProjectForm() {
               Click to upload images
             </p>
             <p className="text-xs text-muted-foreground mt-1">
-              JPEG, PNG, GIF, or WebP (max 10MB each)
+              JPEG, PNG, GIF, WebP, or HEIC (max 10MB each)
             </p>
           </div>
 
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png,image/gif,image/webp"
+            accept="image/jpeg,image/png,image/gif,image/webp,image/heic,image/heif,.heic,.heif"
             multiple
             onChange={handleFileSelect}
             className="hidden"

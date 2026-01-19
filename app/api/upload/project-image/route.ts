@@ -8,7 +8,14 @@ import { uploadFile } from '@/lib/gcs';
 import path from 'path';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/heic',
+  'image/heif',
+];
 
 async function getAdminUser() {
   const cookieStore = await cookies();
@@ -77,7 +84,7 @@ export async function POST(request: NextRequest) {
     // Validate file type
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json(
-        { error: 'Only image files are allowed (JPEG, PNG, GIF, WebP)' },
+        { error: 'Only image files are allowed (JPEG, PNG, GIF, WebP, HEIC)' },
         { status: 400 },
       );
     }
