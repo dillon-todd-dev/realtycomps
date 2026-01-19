@@ -9,7 +9,7 @@ export default async function Home() {
         {/* Content */}
         <div className='flex flex-col justify-center text-center lg:text-left'>
           <h1 className='mb-4 text-3xl font-bold sm:text-4xl lg:text-5xl'>
-            Welcome to RealtyComps
+            Welcome to ResourceRealty
           </h1>
           <p className='text-muted-foreground mb-8 text-base sm:text-lg'>
             Your ultimate platform for real estate property evaluation and
@@ -31,7 +31,7 @@ export default async function Home() {
           <div className='relative w-full max-w-md overflow-hidden rounded-lg lg:max-w-none'>
             <Image
               src='/realty-comps-frontpage.jpg'
-              alt='RealtyComps'
+              alt='ResourceRealty'
               width={600}
               height={600}
               className='h-auto w-full'

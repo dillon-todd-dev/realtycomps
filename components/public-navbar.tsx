@@ -13,7 +13,7 @@ export function PublicNavbar() {
       <div className='relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4'>
         {/* Logo */}
         <Link href='/' className='text-lg font-bold sm:text-xl'>
-          RealtyComps
+          ResourceRealty
         </Link>
 
         {/* Navigation Links - Centered on large screens */}
@@ -22,7 +22,7 @@ export function PublicNavbar() {
             href='/'
             className={cn(
               'text-sm font-medium transition-colors hover:text-foreground',
-              pathname === '/' ? 'text-foreground' : 'text-muted-foreground'
+              pathname === '/' ? 'text-foreground' : 'text-muted-foreground',
             )}
           >
             Home
@@ -33,7 +33,7 @@ export function PublicNavbar() {
               'text-sm font-medium transition-colors hover:text-foreground',
               pathname === '/projects'
                 ? 'text-foreground'
-                : 'text-muted-foreground'
+                : 'text-muted-foreground',
             )}
           >
             Recent Projects
@@ -44,7 +44,7 @@ export function PublicNavbar() {
               'text-sm font-medium transition-colors hover:text-foreground',
               pathname === '/contact'
                 ? 'text-foreground'
-                : 'text-muted-foreground'
+                : 'text-muted-foreground',
             )}
           >
             Contact
@@ -59,7 +59,7 @@ export function PublicNavbar() {
               href='/'
               className={cn(
                 'text-sm font-medium transition-colors hover:text-foreground',
-                pathname === '/' ? 'text-foreground' : 'text-muted-foreground'
+                pathname === '/' ? 'text-foreground' : 'text-muted-foreground',
               )}
             >
               Home
@@ -70,7 +70,7 @@ export function PublicNavbar() {
                 'text-sm font-medium transition-colors hover:text-foreground',
                 pathname === '/projects'
                   ? 'text-foreground'
-                  : 'text-muted-foreground'
+                  : 'text-muted-foreground',
               )}
             >
               Projects
@@ -81,7 +81,7 @@ export function PublicNavbar() {
                 'text-sm font-medium transition-colors hover:text-foreground',
                 pathname === '/contact'
                   ? 'text-foreground'
-                  : 'text-muted-foreground'
+                  : 'text-muted-foreground',
               )}
             >
               Contact
