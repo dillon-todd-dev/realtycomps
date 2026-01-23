@@ -7,7 +7,7 @@ import { eq } from 'drizzle-orm';
 import { uploadFile } from '@/lib/gcs';
 import path from 'path';
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 const ALLOWED_TYPES = [
   'application/pdf',
   'application/msword',
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     // Validate file size
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
-        { error: 'File size exceeds 10MB limit' },
+        { error: 'File size exceeds 25MB limit' },
         { status: 400 },
       );
     }

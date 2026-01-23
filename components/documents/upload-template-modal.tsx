@@ -168,7 +168,7 @@ export default function UploadTemplateModal({
                   Drop a file here or click to browse
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  PDF, Word, Excel, PowerPoint, Images (max 10MB)
+                  PDF, Word, Excel, PowerPoint, Images (max 25MB)
                 </p>
               </>
             )}

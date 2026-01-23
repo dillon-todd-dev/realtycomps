@@ -80,7 +80,7 @@ export default function DocumentPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[95vw] h-[90vh] flex flex-col">
+      <DialogContent className="sm:max-w-7xl w-[95vw] h-[90vh] flex flex-col">
         <DialogHeader className="flex-shrink-0">
           <DialogTitle className="truncate pr-8">{document.name}</DialogTitle>
         </DialogHeader>
