@@ -13,7 +13,7 @@ export function PublicNavbar() {
       <div className='relative mx-auto flex h-16 max-w-7xl items-center justify-between px-4'>
         {/* Logo */}
         <Link href='/' className='text-lg font-bold sm:text-xl'>
-          ResourceRealty
+          Resource Realty
         </Link>
 
         {/* Navigation Links - Centered on large screens */}
