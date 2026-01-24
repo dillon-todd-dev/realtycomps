@@ -18,10 +18,7 @@ interface DocumentPreviewModalProps {
 }
 
 function isPreviewable(fileType: string): boolean {
-  return (
-    fileType === 'application/pdf' ||
-    fileType.startsWith('image/')
-  );
+  return fileType === 'application/pdf' || fileType.startsWith('image/');
 }
 
 function isImage(fileType: string): boolean {
@@ -80,49 +77,49 @@ export default function DocumentPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-7xl w-[95vw] h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="truncate pr-8">{document.name}</DialogTitle>
+      <DialogContent className='sm:max-w-7xl w-[95vw] h-[90vh] flex flex-col'>
+        <DialogHeader className='flex-shrink-0'>
+          <DialogTitle className='truncate pr-8'>{document.name}</DialogTitle>
         </DialogHeader>
 
-        <div className="flex-1 min-h-0 flex flex-col">
+        <div className='flex-1 min-h-0 flex flex-col'>
           {isLoading ? (
-            <div className="flex-1 flex items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className='flex-1 flex items-center justify-center'>
+              <Loader2 className='h-8 w-8 animate-spin text-muted-foreground' />
             </div>
           ) : error ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <FileX className="h-12 w-12 text-muted-foreground" />
-              <p className="text-muted-foreground">{error}</p>
+            <div className='flex-1 flex flex-col items-center justify-center gap-4'>
+              <FileX className='h-12 w-12 text-muted-foreground' />
+              <p className='text-muted-foreground'>{error}</p>
               <Button onClick={fetchPreviewUrl}>Try Again</Button>
             </div>
           ) : !canPreview ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-4">
-              <FileX className="h-12 w-12 text-muted-foreground" />
-              <p className="text-muted-foreground text-center">
+            <div className='flex-1 flex flex-col items-center justify-center gap-4'>
+              <FileX className='h-12 w-12 text-muted-foreground' />
+              <p className='text-muted-foreground text-center'>
                 Preview is not available for this file type.
                 <br />
-                <span className="text-sm">({document.fileType})</span>
+                <span className='text-sm'>({document.fileType})</span>
               </p>
               <Button onClick={handleDownload} disabled={!previewUrl}>
-                <Download className="h-4 w-4 mr-2" />
+                <Download className='h-4 w-4 mr-2' />
                 Download to View
               </Button>
             </div>
           ) : previewUrl ? (
-            <div className="flex-1 min-h-0 bg-muted rounded-lg overflow-hidden">
+            <div className='flex-1 min-h-0 bg-muted rounded-lg overflow-hidden'>
               {isImageFile ? (
-                <div className="w-full h-full flex items-center justify-center p-4">
+                <div className='w-full h-full flex items-center justify-center p-4'>
                   <img
                     src={previewUrl}
                     alt={document.name}
-                    className="max-w-full max-h-full object-contain"
+                    className='max-w-full max-h-full object-contain'
                   />
                 </div>
               ) : (
                 <iframe
                   src={previewUrl}
-                  className="w-full h-full border-0"
+                  className='w-full h-full border-0'
                   title={document.name}
                 />
               )}
@@ -131,9 +128,9 @@ export default function DocumentPreviewModal({
         </div>
 
         {previewUrl && canPreview && (
-          <div className="flex-shrink-0 flex justify-end pt-4 border-t">
-            <Button variant="outline" onClick={handleDownload}>
-              <Download className="h-4 w-4 mr-2" />
+          <div className='flex-shrink-0 flex justify-end pt-4 border-t'>
+            <Button variant='outline' onClick={handleDownload}>
+              <Download className='h-4 w-4 mr-2' />
               Download
             </Button>
           </div>

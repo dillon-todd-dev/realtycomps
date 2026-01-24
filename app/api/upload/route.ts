@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { decrypt } from '@/lib/session';
 import { db } from '@/db/drizzle';
-import { documentsTable, usersTable, templateCategoriesTable } from '@/db/schema';
+import {
+  documentsTable,
+  usersTable,
+  templateCategoriesTable,
+} from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import { uploadFile } from '@/lib/gcs';
 import path from 'path';
@@ -17,6 +21,7 @@ const ALLOWED_TYPES = [
   'application/vnd.ms-powerpoint',
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'image/jpeg',
+  'image/jpg',
   'image/png',
   'image/gif',
   'image/webp',
