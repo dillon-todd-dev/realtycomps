@@ -39,12 +39,14 @@ export default async function Home() {
           <div className='mx-auto max-w-3xl text-center'>
             <h1 className='mb-6 text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl'>
               Welcome to{' '}
-              <span className='whitespace-nowrap text-primary'>Resource Realty</span>
+              <span className='whitespace-nowrap text-primary'>
+                Resource Realty
+              </span>
             </h1>
             <p className='text-muted-foreground mb-10 text-lg leading-relaxed'>
-              Resource Realty services all aspects of real estate. We're actively
-              building our team of agents who want to work smarter, close more deals,
-              and grow together.
+              Resource Realty services all aspects of real estate. We&apos;re
+              actively building our team of agents who want to work smarter,
+              close more deals, and grow together.
             </p>
             <div className='flex justify-center gap-4'>
               <Button asChild size='lg'>
@@ -70,8 +72,12 @@ export default async function Home() {
               >
                 <CardContent className='p-6'>
                   <service.icon className='text-primary mb-4 h-10 w-10' />
-                  <h3 className='mb-2 text-lg font-semibold'>{service.title}</h3>
-                  <p className='text-muted-foreground text-sm'>{service.description}</p>
+                  <h3 className='mb-2 text-lg font-semibold'>
+                    {service.title}
+                  </h3>
+                  <p className='text-muted-foreground text-sm'>
+                    {service.description}
+                  </p>
                 </CardContent>
               </Card>
             ))}
