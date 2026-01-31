@@ -7,7 +7,7 @@ import { eq, sql } from 'drizzle-orm';
 import { uploadFile } from '@/lib/gcs';
 import path from 'path';
 
-const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 25MB
 const ALLOWED_TYPES = [
   'image/jpeg',
   'image/jpg',
