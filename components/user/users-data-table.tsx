@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useTransition, useCallback } from 'react';
-import { getUsers, updateUserStatus, deleteUser } from '@/actions/users';
-import { User } from '@/lib/types';
+import { getUsers, updateUserStatus, deleteUser, resendInvitation } from '@/actions/users';
+import { UserWithInvitation } from '@/lib/types';
 import { format } from 'date-fns';
 import { Input } from '@/components/ui/input';
 import {
@@ -38,7 +38,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { Loader2, ChevronUp, ChevronDown, Plus, MoreHorizontal, Pencil, UserX, UserCheck, Trash2 } from 'lucide-react';
+import { Loader2, ChevronUp, ChevronDown, Plus, MoreHorizontal, Pencil, UserX, UserCheck, Trash2, Mail } from 'lucide-react';
 import { useDebounce } from '@/hooks/use-debounce';
 import { toast } from 'sonner';
 import Link from 'next/link';
@@ -49,11 +49,21 @@ import EditUserModal from './edit-user-modal';
 interface UsersDataTableProps {
   userId: string;
   initialData: {
-    users: User[];
+    users: UserWithInvitation[];
     totalCount: number;
     pageCount: number;
     currentPage: number;
   };
+}
+
+function getInvitationStatus(user: UserWithInvitation): 'accepted' | 'pending' | 'expired' {
+  if (user.hasSetPassword) {
+    return 'accepted';
+  }
+  if (user.invitationExpiresAt && new Date(user.invitationExpiresAt) < new Date()) {
+    return 'expired';
+  }
+  return 'pending';
 }
 
 export default function UsersDataTable({
@@ -73,9 +83,10 @@ export default function UsersDataTable({
   );
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [isPending, startTransition] = useTransition();
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [deletingUser, setDeletingUser] = useState<User | null>(null);
+  const [editingUser, setEditingUser] = useState<UserWithInvitation | null>(null);
+  const [deletingUser, setDeletingUser] = useState<UserWithInvitation | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [resendingUserId, setResendingUserId] = useState<string | null>(null);
 
   const debouncedSearch = useDebounce(search, 300);
 
@@ -149,6 +160,20 @@ export default function UsersDataTable({
       toast.error('Failed to delete user');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const handleResendInvitation = async (userId: string) => {
+    setResendingUserId(userId);
+    try {
+      await resendInvitation(userId);
+      toast.success('Invitation resent successfully');
+      fetchUsers();
+    } catch (error) {
+      console.error('Failed to resend invitation:', error);
+      toast.error('Failed to resend invitation');
+    } finally {
+      setResendingUserId(null);
     }
   };
 
@@ -250,6 +275,20 @@ export default function UsersDataTable({
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
+                        {getInvitationStatus(user) === 'expired' && (
+                          <DropdownMenuItem
+                            onClick={() => handleResendInvitation(user.id)}
+                            disabled={resendingUserId === user.id}
+                          >
+                            {resendingUserId === user.id ? (
+                              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            ) : (
+                              <Mail className="h-4 w-4 mr-2" />
+                            )}
+                            Resend Invitation
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem
                           onClick={() => setDeletingUser(user)}
                           className="text-destructive focus:text-destructive"
@@ -271,8 +310,8 @@ export default function UsersDataTable({
                         {user.isActive ? 'Active' : 'Inactive'}
                       </span>
                     </div>
-                    <span className="text-muted-foreground">
-                      {user.hasSetPassword ? 'Accepted' : 'Pending'}
+                    <span className={`${getInvitationStatus(user) === 'expired' ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                      {getInvitationStatus(user) === 'accepted' ? 'Accepted' : getInvitationStatus(user) === 'expired' ? 'Invitation Expired' : 'Pending'}
                     </span>
                     <span className="text-muted-foreground ml-auto">
                       {format(user.createdAt, 'MMM d, yyyy')}
@@ -357,8 +396,8 @@ export default function UsersDataTable({
                             {user.isActive ? 'Active' : 'Inactive'}
                           </span>
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          {user.hasSetPassword ? 'Accepted' : 'Pending invite'}
+                        <span className={`text-xs ${getInvitationStatus(user) === 'expired' ? 'text-amber-600' : 'text-muted-foreground'}`}>
+                          {getInvitationStatus(user) === 'accepted' ? 'Accepted' : getInvitationStatus(user) === 'expired' ? 'Invitation Expired' : 'Pending invite'}
                         </span>
                       </TableCell>
                       <TableCell className="text-muted-foreground">
@@ -391,6 +430,19 @@ export default function UsersDataTable({
                                 </>
                               )}
                             </DropdownMenuItem>
+                            {getInvitationStatus(user) === 'expired' && (
+                              <DropdownMenuItem
+                                onClick={() => handleResendInvitation(user.id)}
+                                disabled={resendingUserId === user.id}
+                              >
+                                {resendingUserId === user.id ? (
+                                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                  <Mail className="h-4 w-4 mr-2" />
+                                )}
+                                Resend Invitation
+                              </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
                               onClick={() => setDeletingUser(user)}

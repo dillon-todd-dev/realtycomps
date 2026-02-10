@@ -15,6 +15,9 @@ import {
 // Extract types from tables
 export type User = InferSelectModel<typeof usersTable>;
 export type NewUser = InferInsertModel<typeof usersTable>;
+export type UserWithInvitation = User & {
+  invitationExpiresAt: Date | null;
+};
 
 export type UserInvitation = InferSelectModel<typeof userInvitationsTable>;
 export type NewUserInvitation = InferInsertModel<typeof userInvitationsTable>;
@@ -69,7 +72,7 @@ export type GetPropertiesResponse = {
 };
 
 export type GetUsersResponse = {
-  users: User[];
+  users: UserWithInvitation[];
   totalCount: number;
   pageCount: number;
   currentPage: number;

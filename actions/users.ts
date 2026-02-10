@@ -176,7 +176,7 @@ export async function deleteUser(userId: string) {
       .delete(userInvitationsTable)
       .where(eq(userInvitationsTable.userId, userId));
 
-    // Delete the user
+    // Delete the user (cascade will handle properties, evaluations, etc.)
     await db.delete(usersTable).where(eq(usersTable.id, userId));
 
     revalidatePath('/dashboard/users');
@@ -256,10 +256,23 @@ export async function getUsers({
       break;
   }
 
-  const [users, totalCount] = await Promise.all([
+  const [usersWithInvitations, totalCount] = await Promise.all([
     db
-      .select()
+      .select({
+        id: usersTable.id,
+        email: usersTable.email,
+        password: usersTable.password,
+        hasSetPassword: usersTable.hasSetPassword,
+        firstName: usersTable.firstName,
+        lastName: usersTable.lastName,
+        role: usersTable.role,
+        isActive: usersTable.isActive,
+        createdAt: usersTable.createdAt,
+        updatedAt: usersTable.updatedAt,
+        invitationExpiresAt: userInvitationsTable.expiresAt,
+      })
       .from(usersTable)
+      .leftJoin(userInvitationsTable, eq(usersTable.id, userInvitationsTable.userId))
       .where(whereClause)
       .orderBy(...orderByClause)
       .limit(pageSize)
@@ -272,9 +285,50 @@ export async function getUsers({
   ]);
 
   return {
-    users,
+    users: usersWithInvitations,
     totalCount,
     pageCount: Math.ceil(totalCount / pageSize),
     currentPage: page,
   };
+}
+
+export async function resendInvitation(userId: string) {
+  try {
+    const user = await db.query.usersTable.findFirst({
+      where: eq(usersTable.id, userId),
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (user.hasSetPassword) {
+      throw new Error('User has already accepted their invitation');
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+
+    await db
+      .update(userInvitationsTable)
+      .set({
+        token,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        used: false,
+        usedAt: null,
+      })
+      .where(eq(userInvitationsTable.userId, userId));
+
+    await sendInvitationEmail({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      token,
+    });
+
+    revalidatePath('/dashboard/users');
+    return { success: true };
+  } catch (err) {
+    console.error('Error resending invitation', err);
+    throw err;
+  }
 }

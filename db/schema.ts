@@ -71,7 +71,7 @@ export const propertiesTable = pgTable('properties', {
   longitude: decimal('longitude', { precision: 10, scale: 7 }),
   status: text('status'),
   userId: uuid('user_id')
-    .references(() => usersTable.id)
+    .references(() => usersTable.id, { onDelete: 'cascade' })
     .notNull(),
   createdAt: timestamp('created_at', { mode: 'date', withTimezone: true })
     .defaultNow()
